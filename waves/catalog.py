@@ -185,6 +185,33 @@ PATTERN_EXPECTED = {
 
 COMPLEX_PATTERNS = {"MATCH", "ROUTE", "POLICY", "RECONCILE", "FORECAST", "VERIFY", "GOVERNOR", "SAVINGS", "RETENTION"}
 
+PATTERN_PURPOSE = {
+    "NORMALIZE": "Normalize and validate the input contract for",
+    "MATCH": "Resolve candidate identity or relationship matches for",
+    "DEDUPE": "Detect duplicate business identity and replay conditions for",
+    "SCORE": "Calculate a transparent decision score for",
+    "ROUTE": "Select and route work to the best eligible destination for",
+    "MONITOR": "Monitor operational state and surface threshold breaches for",
+    "SEQUENCE": "Control bounded, stateful follow-up sequencing for",
+    "POLICY": "Evaluate explicit policy and approval rules for",
+    "STATE": "Enforce valid business-state transitions for",
+    "AGGREGATE": "Aggregate business records into an auditable summary for",
+    "VALIDATE": "Validate deterministic business invariants for",
+    "COMPOSE": "Compose a stable, idempotent downstream action payload for",
+    "RECONCILE": "Reconcile expected and observed business values for",
+    "FORECAST": "Produce an evidence-labelled forecast for",
+    "VERIFY": "Verify authenticity and freshness constraints for",
+    "GOVERNOR": "Apply bounded operational governance controls for",
+    "SAVINGS": "Calculate auditable capacity/value metrics for",
+    "RETENTION": "Enforce tenant data-retention and legal-hold policy for",
+}
+
+
+def semantic_purpose(key: str, pattern: str, theme: str) -> str:
+    label = key.replace("_", " ").lower()
+    prefix = PATTERN_PURPOSE[pattern]
+    return f"{prefix} {label} within the {theme} domain without binding the business semantic to a provider."
+
 
 def iter_capabilities():
     for wave, spec in WAVES.items():
@@ -195,6 +222,7 @@ def iter_capabilities():
                 "family": spec["family"],
                 "key": key,
                 "pattern": pattern,
+                "purpose": semantic_purpose(key, pattern, spec["theme"]),
                 "side_effect": side_effect,
                 "risk": risk,
             }
