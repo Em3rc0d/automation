@@ -54,7 +54,9 @@ REQUIRED_PATHS = [
     "mk1/README.md",
     "certification/COVERAGE-MATRIX.md",
     "certification/CAPABILITY-COVERAGE-MAP.md",
+    "certification/TOOLBOX-READINESS-POLICY.json",
     "certification/CRITERIA.md",
+    "tools/report_toolbox_readiness.py",
 ]
 
 QUARRY_STAGE_DIRS = [
@@ -104,7 +106,6 @@ def validate() -> list[str]:
             fail(errors, f"missing quarry stage/directory: {dirname}")
 
     if (quarry_root / ".external-cache").exists():
-        # The local directory may exist in developer clones, but must remain ignored.
         gitignore = read(".gitignore") if (ROOT / ".gitignore").exists() else ""
         if "quarries/workflow-quarry/.external-cache/" not in gitignore:
             fail(errors, ".external-cache exists but is not explicitly ignored")
@@ -118,21 +119,13 @@ def validate() -> list[str]:
         if "APPROVED_BASELINE" not in text:
             fail(errors, "capability library must distinguish approved baselines")
 
-    # Toolbox governance: count is never the North Star; coverage + composition are.
     north_star = ROOT / "workflows/TOOLBOX-NORTH-STAR.md"
     if north_star.is_file():
         text = north_star.read_text(encoding="utf-8")
         required_tokens = [
-            "CAPABILITY",
-            "ADAPTER",
-            "POLICY_CONFIG",
-            "VERSION",
-            "Common Process Coverage",
-            "Assembly Coverage",
-            "Certification Ratio",
-            "Reuse Density",
-            "Provider Independence",
-            "Duplicate Semantic Rate",
+            "CAPABILITY", "ADAPTER", "POLICY_CONFIG", "VERSION",
+            "Common Process Coverage", "Assembly Coverage", "Certification Ratio",
+            "Reuse Density", "Provider Independence", "Duplicate Semantic Rate",
             "W11 is a milestone, not a catalog ceiling",
             "MINING NEVER STOPS; CERTIFICATION REMAINS SELECTIVE",
         ]
@@ -152,32 +145,22 @@ def validate() -> list[str]:
         if not expected.issubset(family_rows):
             fail(errors, f"coverage map missing canonical SMB families: {sorted(expected-family_rows)}")
         for token in [
-            "BROAD_TOOLBOX_READY",
-            "10/12 reference archetypes",
+            "BROAD_TOOLBOX_READY", "10/12 reference archetypes",
             "Provider-specific variants are not counted as new capabilities",
             "W11 proves breadth of the current production program",
         ]:
             if token not in text:
                 fail(errors, f"capability coverage map missing readiness invariant: {token}")
         reference_archetypes = [
-            "Service-sales engine",
-            "Document accounting",
-            "Quote-to-cash",
-            "Appointment/service",
-            "Support desk",
-            "Client onboarding",
-            "Procure-to-pay",
-            "Order-to-fulfillment",
-            "Employee lifecycle",
-            "Smart operations inbox",
-            "Management control",
-            "Integration operations",
+            "Service-sales engine", "Document accounting", "Quote-to-cash",
+            "Appointment/service", "Support desk", "Client onboarding",
+            "Procure-to-pay", "Order-to-fulfillment", "Employee lifecycle",
+            "Smart operations inbox", "Management control", "Integration operations",
         ]
         for archetype in reference_archetypes:
             if archetype not in text:
                 fail(errors, f"coverage map missing reference archetype: {archetype}")
 
-    # Current wave catalogs must remain provider-neutral, unique and classified.
     catalog = ROOT / "waves/catalog.py"
     if catalog.is_file():
         try:
@@ -198,8 +181,23 @@ def validate() -> list[str]:
                     for required in ["wave", "family", "key", "pattern", "purpose", "risk", "side_effect"]:
                         if required not in cap:
                             fail(errors, f"wave capability missing field {required}: {key or cap}")
+                    purpose = str(cap.get("purpose", ""))
+                    if len(purpose) < 60 or key.replace("_", " ").lower() not in purpose.lower():
+                        fail(errors, f"wave capability purpose is not sufficiently explicit: {key}")
         except Exception as exc:
             fail(errors, f"failed to load waves catalog for governance validation: {exc}")
+
+    readiness_reporter = ROOT / "tools/report_toolbox_readiness.py"
+    if readiness_reporter.is_file():
+        try:
+            ns = runpy.run_path(str(readiness_reporter))
+            report_main = ns.get("main")
+            if not callable(report_main):
+                fail(errors, "toolbox readiness reporter missing main()")
+            elif report_main() != 0:
+                fail(errors, "toolbox readiness claim is inconsistent with computed evidence")
+        except Exception as exc:
+            fail(errors, f"toolbox readiness reporter failed: {exc}")
 
     registry_path = ROOT / "quarries/workflow-quarry/registry.yaml"
     if registry_path.is_file():
@@ -214,13 +212,10 @@ def validate() -> list[str]:
             if flag not in registry:
                 fail(errors, f"workflow quarry registry missing invariant: {flag}")
 
-    # No external raw cache may be committed. A checked-out ignored cache is tolerated.
     for path in ROOT.rglob("*"):
         if path.is_file() and ".external-cache" in path.parts:
-            # Cannot determine Git tracking without invoking git; CI does that separately.
             pass
 
-    # Any promoted package under workflows/n8n must be complete.
     n8n_root = ROOT / "workflows/n8n"
     if n8n_root.exists():
         for family in n8n_root.iterdir():
@@ -240,7 +235,6 @@ def validate() -> list[str]:
                 if not fixtures.is_dir():
                     fail(errors, f"approved package lacks fixtures: {package.relative_to(ROOT)}")
 
-    # Certification language must preserve level distinction.
     criteria = ROOT / "certification/CRITERIA.md"
     if criteria.is_file():
         text = criteria.read_text(encoding="utf-8")
