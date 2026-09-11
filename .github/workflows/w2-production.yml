@@ -1,0 +1,98 @@
+name: W2 Factory Production
+
+on:
+  push:
+    branches:
+      - w2/document-accounting-wave
+    paths:
+      - 'w2/**'
+      - '.github/workflows/w2-production.yml'
+      - 'factory/runtime/compose.yml'
+      - 'factory/mock/wiremock/mappings/control-plane.json'
+      - 'factory/tools/promote.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: w2-factory-production
+  cancel-in-progress: true
+
+jobs:
+  manufacture-w2:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[w2-generated]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate sophisticated W2 HARDENED wave
+        run: |
+          python w2/tools/produce_w2.py --clean-generated
+          python w2/tools/compact_w2_generated.py
+
+      - name: Static modular sophistication gate
+        run: python w2/tools/validate_w2_modularity.py
+
+      - name: Runtime and domain certify all W2 components
+        env:
+          N8N_VERSION: '2.38.7'
+          AUTOMATION_CONTROL_PLANE_TOKEN: factory-test-token
+        run: python w2/tools/certify_w2.py
+
+      - name: Release topology gate
+        run: python w2/tools/validate_release.py
+
+      - name: Write W2 production ledger
+        run: |
+          cat > w2/STATUS.md <<EOF
+          # W2 Status Ledger
+
+          Updated: 2026-09-11
+
+          ## Evidence
+          - production source SHA: \`${GITHUB_SHA}\`
+          - production run: \`${GITHUB_RUN_ID}\`
+          - runtime: n8n \`2.38.7\`
+          - factory profile: \`n8n-base-js-v1\`
+
+          ## Materialized sophisticated wave
+          \`\`\`text
+          HARDENED             11
+          TESTED               11
+          APPROVED_BASELINE    11
+          workflows/n8n        11
+          W2 CERTIFIED         PENDING FINAL SAME-SHA SEAL
+          \`\`\`
+
+          W2 optimizes for capability density rather than raw workflow count. Each component contains only
+          its own semantic business logic (no dead branches borrowed from sibling capabilities), and passed
+          domain-invariant, runtime failure/idempotency and capability-specific decision tests.
+          Source HARDENED and TESTED packages remain preserved; promotion is copy-only.
+
+          ## Next gate
+          The generated commit must independently pass W2 release validation plus inherited repository/factory gates
+          before the W2 certificate can be sealed.
+          EOF
+
+      - name: Commit manufactured W2 library
+        run: |
+          git config user.name "W2 Baseline Factory"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            quarries/workflow-quarry/30-hardened \
+            quarries/workflow-quarry/40-tested \
+            quarries/workflow-quarry/50-approved-baseline \
+            workflows/n8n \
+            w2/STATUS.md
+          if git diff --cached --quiet; then
+            echo "No W2 production changes to commit."
+            exit 0
+          fi
+          git commit -m "w2: manufacture sophisticated document-accounting wave [w2-generated]"
+          git push origin HEAD:w2/document-accounting-wave
