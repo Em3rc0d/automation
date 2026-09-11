@@ -1,0 +1,20 @@
+source:
+  repository: https://github.com/felipfr/awesome-n8n-workflows
+  repository_full_name: felipfr/awesome-n8n-workflows
+  observed_tree: 8aa4a25a373b812aafe44454e68554a4d568c873
+  observed_at: 2026-09-11
+  repository_license: MIT
+status:
+  gate_reached: LICENSE_CHECKED_REPOSITORY
+  blocked_at: RAW_REDISTRIBUTION
+  category: provenance-blocked
+  keep: true
+reason:
+  - Repository-level license is MIT.
+  - The repository is an aggregation corpus; per-workflow origin/provenance is not assumed solely from the repository license.
+policy:
+  - Workflow metadata, paths, blob SHAs, architectural patterns and inspection findings may be retained.
+  - Raw workflow code is not mirrored into our public repository until candidate provenance/redistribution status is adequate.
+  - We may create our own hardened implementation from general patterns and requirements.
+reentry:
+  - Establish source/author chain or other adequate redistribution evidence per candidate.
