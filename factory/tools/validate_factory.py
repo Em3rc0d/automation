@@ -45,8 +45,15 @@ def main() -> int:
             errors.append("factory n8n runtime is not pinned to 2.38.7")
         if ":latest" in text or "N8N_VERSION:-latest" in text:
             errors.append("factory runtime must not use latest")
-        if "mock-control-plane" not in text:
-            errors.append("factory compose lacks mock control plane")
+        for token in [
+            "mock-control-plane",
+            '18080:8080',
+            "AUTOMATION_CONTROL_PLANE_URL",
+            "AUTOMATION_CONTROL_PLANE_TOKEN",
+            "factory-test-token",
+        ]:
+            if token not in text:
+                errors.append(f"factory compose missing W1 harness invariant: {token}")
 
     policy = ROOT / "factory/RUNTIME-SUPPORT-POLICY.md"
     if policy.is_file():
@@ -70,10 +77,17 @@ def main() -> int:
     if mapping.is_file():
         try:
             data = json.loads(mapping.read_text(encoding="utf-8"))
-            urls = {m.get("request", {}).get("urlPath") for m in data.get("mappings", [])}
-            for url in ["/internal/execution-events", "/internal/incidents", "/internal/savings-events", "/internal/approvals", "/healthz"]:
-                if url not in urls:
-                    errors.append(f"mock control plane missing endpoint: {url}")
+            mappings = data.get("mappings", [])
+            exact_urls = {m.get("request", {}).get("urlPath") for m in mappings}
+            patterns = {m.get("request", {}).get("urlPathPattern") for m in mappings}
+            if "/healthz" not in exact_urls:
+                errors.append("mock control plane missing health endpoint")
+            if "/internal/.*" not in patterns:
+                errors.append("mock control plane missing generalized internal API route")
+            raw = mapping.read_text(encoding="utf-8")
+            for token in ["trace-transient-", "SECOND_FAILURE", "SUCCESS", "trace-permanent-", '"status": 500', '"status": 202']:
+                if token not in raw:
+                    errors.append(f"mock control plane missing deterministic failure invariant: {token}")
         except Exception as exc:
             errors.append(f"invalid WireMock mapping: {exc}")
 
@@ -121,6 +135,7 @@ def main() -> int:
 
     print("FACTORY VALIDATION: PASS")
     print("Discovery intake + immutable human gate evidence + non-destructive promotion/failure tooling: PRESENT")
+    print("W1 generalized control-plane mock + deterministic retry/failure scenarios: PRESENT")
     print("Certified base runtime profile: n8n-base-js-v1 / n8n 2.38.7")
     print("Scope: factory configuration/static invariants; runtime gate remains separate.")
     return 0
