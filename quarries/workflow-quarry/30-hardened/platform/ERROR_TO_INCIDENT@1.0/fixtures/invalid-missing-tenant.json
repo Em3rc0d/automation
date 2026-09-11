@@ -1,0 +1,6 @@
+{
+  "automationInstanceId": "automation_fixture",
+  "traceId": "trace_incident_invalid_001",
+  "occurredAt": "2026-09-11T17:00:00.000Z",
+  "message": "Failure without tenant"
+}
