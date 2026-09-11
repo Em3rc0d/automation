@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Em3rc0d/automation/quarries/workflow-quarry/MANIFEST.schema.json",
+  "title": "Workflow Quarry Manifest",
+  "type": "object",
+  "required": [
+    "id",
+    "stage",
+    "source",
+    "artifact",
+    "classification",
+    "license",
+    "inspection",
+    "hardening",
+    "testing",
+    "approval"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 3 },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "DISCOVERED",
+        "LICENSE_CHECKED",
+        "INSPECTED",
+        "HARDENED",
+        "TESTED",
+        "APPROVED_BASELINE",
+        "REJECTED"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": ["url", "retrievedAt"],
+      "properties": {
+        "url": { "type": "string" },
+        "repository": { "type": ["string", "null"] },
+        "originalPath": { "type": ["string", "null"] },
+        "templateId": { "type": ["string", "null"] },
+        "commit": { "type": ["string", "null"] },
+        "tag": { "type": ["string", "null"] },
+        "retrievedAt": { "type": "string" },
+        "provenanceNotes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["filename", "sha256"],
+      "properties": {
+        "filename": { "type": "string" },
+        "sha256": { "type": "string" },
+        "engine": { "type": "string", "default": "n8n" },
+        "engineVersionObserved": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "object",
+      "required": ["domain", "capabilities"],
+      "properties": {
+        "domain": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "providers": { "type": "array", "items": { "type": "string" } },
+        "triggerType": { "type": ["string", "null"] },
+        "risk": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"] },
+        "commercialPriority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] }
+      },
+      "additionalProperties": false
+    },
+    "license": {
+      "type": "object",
+      "required": ["status", "commercialUse", "redistribution", "decision"],
+      "properties": {
+        "status": { "type": "string" },
+        "commercialUse": { "type": "string", "enum": ["YES", "NO", "UNKNOWN", "CONDITIONAL"] },
+        "redistribution": { "type": "string", "enum": ["YES", "NO", "UNKNOWN", "CONDITIONAL"] },
+        "attributionRequired": { "type": ["boolean", "null"] },
+        "decision": { "type": "string", "enum": ["PENDING", "ALLOW_ADAPT", "REFERENCE_ONLY", "REJECT"] },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "inspection": {
+      "type": "object",
+      "properties": {
+        "completed": { "type": "boolean" },
+        "nodes": { "type": "array", "items": { "type": "string" } },
+        "credentials": { "type": "array", "items": { "type": "string" } },
+        "sideEffects": { "type": "array", "items": { "type": "string" } },
+        "communityNodes": { "type": "array", "items": { "type": "string" } },
+        "hardcodedSecretsFound": { "type": "boolean" },
+        "pii": { "type": "array", "items": { "type": "string" } },
+        "destructiveActions": { "type": "array", "items": { "type": "string" } },
+        "approvalNeeded": { "type": "boolean" },
+        "idempotencyObserved": { "type": "boolean" },
+        "retryObserved": { "type": "boolean" },
+        "findings": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "hardening": {
+      "type": "object",
+      "properties": {
+        "completed": { "type": "boolean" },
+        "changes": { "type": "array", "items": { "type": "string" } },
+        "platformContracts": { "type": "array", "items": { "type": "string" } },
+        "configSchemaDefined": { "type": "boolean" },
+        "rollbackDefined": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "testing": {
+      "type": "object",
+      "properties": {
+        "completed": { "type": "boolean" },
+        "cases": { "type": "array", "items": { "type": "string" } },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "result": { "type": "string", "enum": ["NOT_RUN", "PASS", "FAIL"] }
+      },
+      "additionalProperties": false
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED"] },
+        "approvedBy": { "type": ["string", "null"] },
+        "approvedAt": { "type": ["string", "null"] },
+        "baselineKey": { "type": ["string", "null"] },
+        "baselineVersion": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
