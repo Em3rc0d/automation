@@ -1,0 +1,27 @@
+source:
+  repository: https://github.com/mlnjsh/n8n-workflows-mega
+  repository_full_name: mlnjsh/n8n-workflows-mega
+  default_branch: main
+  observed_at: 2026-09-11
+  repository_license: MIT
+  claimed_scale: "5000+ workflows"
+verification:
+  github_code_search_extension_json_total: 0
+  finance_accounting_observed_content:
+    - README.md
+  finance_readme_claim: "300+ production-ready finance/accounting workflow specifications"
+status:
+  gate_reached: LICENSE_CHECKED
+  code_pipeline_result: NO_EXECUTABLE_JSON_FOUND_IN_VERIFIED_SEARCH
+  classification: knowledge-only
+  keep: true
+reason:
+  - The repository is valuable as a large automation use-case/specification catalog.
+  - At the observed pass, GitHub code search returned zero JSON files; therefore the advertised scale must not be counted as import-ready n8n workflows.
+value_retained:
+  - Commercial use-case catalog.
+  - Trigger/integration/complexity ideas.
+  - Acceptance-test scenarios.
+  - Quote2Cash, AP/AR, reporting and future template backlog.
+reentry_conditions:
+  - If executable workflows are added later, newly observed code can re-enter DISCOVERED with commit/path/hash evidence.
