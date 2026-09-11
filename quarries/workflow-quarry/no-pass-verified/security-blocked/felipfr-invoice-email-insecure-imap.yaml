@@ -1,0 +1,23 @@
+candidate:
+  source_repository: https://github.com/felipfr/awesome-n8n-workflows
+  source_tree: 8aa4a25a373b812aafe44454e68554a4d568c873
+  source_path: notification/Slack_Emailreadimap_Create_1_1.json
+  source_blob_sha: 0de234d2a9bf854f22a0ac70024cbecaa672d2a4
+  target_family: OPSFLOW/INVOICE_INGEST
+status:
+  gate_reached: INSPECTED
+  failed_gate: HARDENED
+  classification: security-blocked
+  preserve: true
+blocking_reasons:
+  - IMAP options explicitly set allowUnauthorizedCerts=true.
+  - Workflow export contains source credential references and fixed recipients/channels.
+  - No duplicate-invoice/idempotency control.
+  - Direct notification side effects are not protected by our telemetry/action policy.
+value_retained:
+  - Useful pattern: email intake → invoice detection → OCR → high-value branch → finance notification.
+reentry_conditions:
+  - Enforce TLS certificate verification.
+  - Replace source credential/config literals with tenant connector/config references.
+  - Add duplicate detection, ProcessRecord, ExecutionEvent, Incident and SavingsEvent hooks.
+  - Add acceptance/security tests.
