@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: w1-factory-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   manufacture-w1:
