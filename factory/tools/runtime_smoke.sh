@@ -36,28 +36,38 @@ if [[ "$RUNTIME_VERSION" != "$N8N_VERSION" ]]; then
 fi
 
 echo "[factory] importing runtime probe"
-docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input=/workspace/factory/probes/runtime-probe.json
+docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input=/workspace/factory/probes/runtime-probe.json </dev/null
 
-echo "[factory] importing every HARDENED candidate"
-count=0
-while IFS= read -r -d '' workflow; do
-  rel="${workflow#"$ROOT/"}"
-  echo "[factory] import $rel"
-  docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel"
-  count=$((count + 1))
-done < <(find "$ROOT/quarries/workflow-quarry/30-hardened" -type f -name workflow.json -print0 | sort -z)
-
-if [[ "$count" -lt 1 ]]; then
+echo "[factory] discovering every HARDENED candidate"
+mapfile -d '' HARDENED_WORKFLOWS < <(
+  find "$ROOT/quarries/workflow-quarry/30-hardened" -type f -name workflow.json -print0 | sort -z
+)
+expected="${#HARDENED_WORKFLOWS[@]}"
+if [[ "$expected" -lt 1 ]]; then
   echo "FACTORY RUNTIME REFUSED: no HARDENED candidates found"
   exit 2
 fi
 
-echo "[factory] imported HARDENED candidates: $count"
+echo "[factory] HARDENED candidates discovered: $expected"
+count=0
+for workflow in "${HARDENED_WORKFLOWS[@]}"; do
+  rel="${workflow#"$ROOT/"}"
+  echo "[factory] import $rel"
+  docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel" </dev/null
+  count=$((count + 1))
+done
+
+if [[ "$count" -ne "$expected" ]]; then
+  echo "FACTORY RUNTIME REFUSED: discovered=$expected imported=$count"
+  exit 2
+fi
+
+echo "[factory] imported HARDENED candidates: $count/$expected"
 
 echo "[factory] stop server before direct CLI execution against same database"
 docker compose -f "$COMPOSE" stop n8n
 
 echo "[factory] executing runtime probe"
-docker compose -f "$COMPOSE" run --rm --no-deps n8n execute --id=factoryRuntimeProbeV1
+docker compose -f "$COMPOSE" run --rm --no-deps n8n execute --id=factoryRuntimeProbeV1 </dev/null
 
 echo "FACTORY RUNTIME SMOKE: PASS"
