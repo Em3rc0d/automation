@@ -1,0 +1,27 @@
+name: W2 Release Validation
+
+on:
+  push:
+    branches:
+      - w2/document-accounting-wave
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  w2-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate W2 materialized release when present
+        run: |
+          python w2/tools/produce_w2.py --clean-generated
+          python w2/tools/validate_w2_candidates.py
+          if find quarries/workflow-quarry/50-approved-baseline -name workflow.json -print | xargs -r grep -l '"wave": "W2"' | grep -q .; then
+            python w2/tools/validate_release.py
+          else
+            echo "W2 approved release not materialized yet; static candidate gate only."
+          fi
