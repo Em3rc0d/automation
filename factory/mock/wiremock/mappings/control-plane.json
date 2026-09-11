@@ -1,0 +1,24 @@
+{
+  "mappings": [
+    {
+      "request": {"method": "POST", "urlPath": "/internal/execution-events"},
+      "response": {"status": 202, "jsonBody": {"accepted": true, "kind": "execution-event"}, "headers": {"Content-Type": "application/json"}}
+    },
+    {
+      "request": {"method": "POST", "urlPath": "/internal/incidents"},
+      "response": {"status": 201, "jsonBody": {"accepted": true, "kind": "incident"}, "headers": {"Content-Type": "application/json"}}
+    },
+    {
+      "request": {"method": "POST", "urlPath": "/internal/savings-events"},
+      "response": {"status": 202, "jsonBody": {"accepted": true, "kind": "savings-event"}, "headers": {"Content-Type": "application/json"}}
+    },
+    {
+      "request": {"method": "POST", "urlPath": "/internal/approvals"},
+      "response": {"status": 201, "jsonBody": {"accepted": true, "kind": "approval"}, "headers": {"Content-Type": "application/json"}}
+    },
+    {
+      "request": {"method": "GET", "urlPath": "/healthz"},
+      "response": {"status": 200, "jsonBody": {"status": "ok"}, "headers": {"Content-Type": "application/json"}}
+    }
+  ]
+}
