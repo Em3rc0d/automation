@@ -11,6 +11,7 @@ on:
       - '.github/workflows/w1-production.yml'
       - 'factory/runtime/compose.yml'
       - 'factory/mock/wiremock/mappings/control-plane.json'
+      - 'factory/tools/validate_factory.py'
 
 permissions:
   contents: write
