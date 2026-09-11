@@ -20,11 +20,14 @@ REQUIRED = [
     "factory/mock/wiremock/mappings/control-plane.json",
     "factory/probes/runtime-probe.json",
     "factory/tools/runtime_smoke.sh",
+    "factory/tools/record_gate.py",
     "factory/tools/promote.py",
     "factory/tools/record_failure.py",
+    "factory/tools/self_test.py",
     "factory/tools/validate_factory.py",
     "factory/CERTIFICATION-CRITERIA.md",
     "factory/STATUS.md",
+    "quarries/workflow-quarry/tools/index_workflow_corpus.py",
     ".github/workflows/factory-validation.yml",
 ]
 
@@ -74,6 +77,17 @@ def main() -> int:
         except Exception as exc:
             errors.append(f"invalid WireMock mapping: {exc}")
 
+    gate = ROOT / "factory/tools/record_gate.py"
+    if gate.is_file():
+        gtext = gate.read_text(encoding="utf-8")
+        for token in ["automatedDecision", "preserved", "LICENSE_CHECKED", "APPROVED_BASELINE"]:
+            if token not in gtext:
+                errors.append(f"gate recorder missing evidence invariant: {token}")
+        forbidden = ["shutil.rmtree", ".unlink(", "os.remove(", "os.unlink("]
+        for token in forbidden:
+            if token in gtext:
+                errors.append(f"gate recorder contains destructive primitive: {token}")
+
     promote = ROOT / "factory/tools/promote.py"
     if promote.is_file():
         ptext = promote.read_text(encoding="utf-8")
@@ -92,6 +106,13 @@ def main() -> int:
         if "copy2" not in ftext and "copytree" not in ftext:
             errors.append("failure recorder must preserve evidence by copying")
 
+    indexer = ROOT / "quarries/workflow-quarry/tools/index_workflow_corpus.py"
+    if indexer.is_file():
+        itext = indexer.read_text(encoding="utf-8")
+        for token in ["candidates.jsonl", "semantic_fingerprint", '"deleted": 0', "approval_performed"]:
+            if token not in itext:
+                errors.append(f"discovery indexer missing preservation/inventory invariant: {token}")
+
     if errors:
         print("FACTORY VALIDATION: FAIL")
         for err in errors:
@@ -99,6 +120,7 @@ def main() -> int:
         return 1
 
     print("FACTORY VALIDATION: PASS")
+    print("Discovery intake + immutable human gate evidence + non-destructive promotion/failure tooling: PRESENT")
     print("Certified base runtime profile: n8n-base-js-v1 / n8n 2.38.7")
     print("Scope: factory configuration/static invariants; runtime gate remains separate.")
     return 0
