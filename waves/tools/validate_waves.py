@@ -67,13 +67,39 @@ def main():
         probes=list((OUT/'runtime-probes'/f"W{cap['wave']}").glob(f"probe*{''.join(p.title() for p in cap['key'].lower().split('_'))}V1*.json"))
         if len(probes)!=2: errors.append(f'{cap["key"]} expected valid+edge probes, got {len(probes)}')
         probe_count+=len(probes)
-        if cap['pattern'] not in PATTERN_EXPECTED: errors.append(f'{cap["key"]} unknown expected-decision pattern')
+        expected_pair=PATTERN_EXPECTED.get(cap['pattern'])
+        if not expected_pair:
+            errors.append(f'{cap["key"]} unknown expected-decision pattern')
+        for probe_path in probes:
+            probe=json.loads(probe_path.read_text())
+            pnodes=probe.get('nodes',[])
+            names={n.get('name'):n for n in pnodes}
+            assertion=names.get('Assert Domain Decision')
+            if assertion is None:
+                errors.append(f'{cap["key"]} probe missing Assert Domain Decision: {probe_path.name}')
+                continue
+            assertion_code=assertion.get('parameters',{}).get('jsCode','')
+            for token in ('DECISION_MISMATCH','CAPABILITY_MISMATCH',"probe:'PASS'"):
+                if token not in assertion_code:
+                    errors.append(f'{cap["key"]} probe assertion missing {token}: {probe_path.name}')
+            main_connections=probe.get('connections',{}).get('Capability Engine',{}).get('main',[])
+            destinations=[edge.get('node') for group in main_connections for edge in group]
+            if 'Assert Domain Decision' not in destinations:
+                errors.append(f'{cap["key"]} probe assertion is not downstream of Capability Engine: {probe_path.name}')
+            case=probe.get('meta',{}).get('case')
+            if case not in ('valid','edge'):
+                errors.append(f'{cap["key"]} probe case invalid: {probe_path.name}')
+            elif expected_pair:
+                expected=expected_pair[1 if case=='edge' else 0]
+                if f'expected={expected}' not in assertion_code:
+                    errors.append(f'{cap["key"]} probe expected decision not embedded ({expected}): {probe_path.name}')
 
     if probe_count!=198: errors.append(f'expected 198 runtime probes, got {probe_count}')
     if errors: return fail(errors)
     print('WAVES QUALITY GATE: PASS')
     print('W3-W11: 9 waves x 11 semantic capabilities = 99')
     print('Runtime probes: 198 (valid + adversarial edge per capability)')
+    print('Every probe contains a connected domain assertion that throws on capability/decision mismatch.')
     print('Quality bar: >=24/30; no dimension <3; side-effect resilience/security >=4')
     print('Provider variants are configuration/adapters, never new capabilities.')
     return 0
