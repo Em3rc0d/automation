@@ -10,6 +10,7 @@ This directory preserves candidates that do not currently qualify for the next s
 - `provenance-blocked/` — origin/author/source chain cannot yet be established.
 - `security-blocked/` — secrets, unsafe side effects, untrusted community nodes, or other unresolved security concerns.
 - `quality-blocked/` — malformed, obsolete, incomplete, brittle, or too environment-specific.
+- `knowledge-only/` — valuable source of use cases/specifications/patterns but not verified importable workflow code.
 - `test-failed/` — hardening was attempted but acceptance/security/idempotency/error-path tests failed.
 - `superseded/` — useful historical candidate replaced by a better baseline. Never delete; keep provenance and replacement pointer.
 - `not-current-priority/` — valid candidate but outside current LeadFlow / Quote2Cash / OpsFlow / platform priorities.
@@ -31,5 +32,7 @@ Every blocked candidate must keep at minimum:
 - capabilities/providers classification;
 - remediation/re-entry condition;
 - pointer to any local raw copy if redistribution is allowed.
+
+`knowledge-only` is not a trash folder. It is a durable quarry for commercial use cases, acceptance scenarios, architecture patterns and future backlog ideas that are useful even when no executable workflow is present.
 
 A candidate can move from `no-pass-verified/*` back to the earliest valid pipeline stage when evidence changes.
