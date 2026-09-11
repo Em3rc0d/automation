@@ -5,7 +5,8 @@ stage: HARDENED
 origin: ORIGINAL_SYNTHESIS
 runtime:
   engine: n8n
-  minimum_version: "to-pin-during-test"
+  profile: n8n-base-js-v1
+  tested_version: "2.38.7"
 
 purpose: >-
   Convert one tenant-scoped workflow/runtime failure into a normalized Incident payload,
