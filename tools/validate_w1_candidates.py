@@ -2,13 +2,15 @@
 """Static integrity checks for W1 workflow candidates.
 
 This validator does NOT certify runtime behavior. It verifies that candidates in
-30-hardened are packaged consistently and are not carrying bound n8n credentials.
+30-hardened are packaged consistently, carry stable engine workflow IDs required
+by the pinned n8n runtime, and are not carrying bound n8n credentials.
 Runtime promotion remains gated by actual TEST-REPORT evidence.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -23,6 +25,8 @@ REQUIRED_HARDENED = {
     "README.md",
 }
 
+STABLE_WORKFLOW_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{5,127}$")
+
 
 def fail(errors: list[str], message: str) -> None:
     errors.append(message)
@@ -35,13 +39,29 @@ def candidate_dirs(root: Path):
         yield workflow.parent
 
 
-def validate_workflow_json(package: Path, errors: list[str]) -> None:
-    workflow_path = package / "workflow.json"
+def load_workflow(package: Path, errors: list[str]) -> dict | None:
     try:
-        data = json.loads(workflow_path.read_text(encoding="utf-8"))
+        return json.loads((package / "workflow.json").read_text(encoding="utf-8"))
     except Exception as exc:
         fail(errors, f"invalid workflow JSON: {package.relative_to(ROOT)}: {exc}")
+        return None
+
+
+def validate_workflow_json(package: Path, errors: list[str], seen_ids: dict[str, Path]) -> None:
+    data = load_workflow(package, errors)
+    if data is None:
         return
+
+    workflow_id = data.get("id")
+    if not isinstance(workflow_id, str) or not STABLE_WORKFLOW_ID.fullmatch(workflow_id):
+        fail(errors, f"workflow requires stable top-level n8n id: {package.relative_to(ROOT)}")
+    elif workflow_id in seen_ids:
+        fail(
+            errors,
+            f"duplicate workflow id {workflow_id!r}: {seen_ids[workflow_id].relative_to(ROOT)} and {package.relative_to(ROOT)}",
+        )
+    else:
+        seen_ids[workflow_id] = package
 
     if not isinstance(data.get("nodes"), list) or not data["nodes"]:
         fail(errors, f"workflow has no nodes: {package.relative_to(ROOT)}")
@@ -49,7 +69,16 @@ def validate_workflow_json(package: Path, errors: list[str]) -> None:
     if not isinstance(data.get("connections"), dict):
         fail(errors, f"workflow has no connections object: {package.relative_to(ROOT)}")
 
+    node_ids: set[str] = set()
     for node in data.get("nodes", []):
+        node_id = node.get("id")
+        if not isinstance(node_id, str) or not node_id:
+            fail(errors, f"node missing stable id: {package.relative_to(ROOT)} node={node.get('name')!r}")
+        elif node_id in node_ids:
+            fail(errors, f"duplicate node id {node_id!r}: {package.relative_to(ROOT)}")
+        else:
+            node_ids.add(node_id)
+
         credentials = node.get("credentials")
         if credentials:
             fail(
@@ -65,7 +94,7 @@ def validate_workflow_json(package: Path, errors: list[str]) -> None:
         fail(errors, f"workflow meta.origin missing: {package.relative_to(ROOT)}")
 
 
-def validate_hardened(package: Path, errors: list[str]) -> None:
+def validate_hardened(package: Path, errors: list[str], seen_ids: dict[str, Path]) -> None:
     files = {p.name for p in package.iterdir() if p.is_file()}
     missing = REQUIRED_HARDENED - files
     if missing:
@@ -92,7 +121,7 @@ def validate_hardened(package: Path, errors: list[str]) -> None:
         except Exception as exc:
             fail(errors, f"invalid config schema JSON: {package.relative_to(ROOT)}: {exc}")
 
-    validate_workflow_json(package, errors)
+    validate_workflow_json(package, errors, seen_ids)
 
 
 def validate_tested(package: Path, errors: list[str]) -> None:
@@ -103,13 +132,14 @@ def validate_tested(package: Path, errors: list[str]) -> None:
 
 def validate() -> list[str]:
     errors: list[str] = []
+    seen_ids: dict[str, Path] = {}
 
     hardened_packages = list(candidate_dirs(HARDENED) or [])
     if not hardened_packages:
         fail(errors, "W1 has no hardened workflow candidates")
 
     for package in hardened_packages:
-        validate_hardened(package, errors)
+        validate_hardened(package, errors, seen_ids)
 
     for package in candidate_dirs(TESTED) or []:
         validate_tested(package, errors)
@@ -128,6 +158,7 @@ def main() -> int:
     count = len(list(candidate_dirs(HARDENED) or []))
     print("W1 CANDIDATE VALIDATION: PASS")
     print(f"Hardened candidates checked: {count}")
+    print("Stable top-level n8n workflow IDs: PASS")
     print("Scope: static package integrity only; runtime TESTED/APPROVED gates remain separate.")
     return 0
 
