@@ -1,24 +1,81 @@
 {
   "mappings": [
     {
-      "request": {"method": "POST", "urlPath": "/internal/execution-events"},
-      "response": {"status": 202, "jsonBody": {"accepted": true, "kind": "execution-event"}, "headers": {"Content-Type": "application/json"}}
+      "priority": 1,
+      "scenarioName": "transient-receiver",
+      "requiredScenarioState": "Started",
+      "newScenarioState": "SECOND_FAILURE",
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/internal/.*",
+        "bodyPatterns": [{"contains": "trace-transient-"}]
+      },
+      "response": {
+        "status": 500,
+        "jsonBody": {"accepted": false, "test": "transient-1"},
+        "headers": {"Content-Type": "application/json"}
+      }
     },
     {
-      "request": {"method": "POST", "urlPath": "/internal/incidents"},
-      "response": {"status": 201, "jsonBody": {"accepted": true, "kind": "incident"}, "headers": {"Content-Type": "application/json"}}
+      "priority": 1,
+      "scenarioName": "transient-receiver",
+      "requiredScenarioState": "SECOND_FAILURE",
+      "newScenarioState": "SUCCESS",
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/internal/.*",
+        "bodyPatterns": [{"contains": "trace-transient-"}]
+      },
+      "response": {
+        "status": 500,
+        "jsonBody": {"accepted": false, "test": "transient-2"},
+        "headers": {"Content-Type": "application/json"}
+      }
     },
     {
-      "request": {"method": "POST", "urlPath": "/internal/savings-events"},
-      "response": {"status": 202, "jsonBody": {"accepted": true, "kind": "savings-event"}, "headers": {"Content-Type": "application/json"}}
+      "priority": 1,
+      "scenarioName": "transient-receiver",
+      "requiredScenarioState": "SUCCESS",
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/internal/.*",
+        "bodyPatterns": [{"contains": "trace-transient-"}]
+      },
+      "response": {
+        "status": 202,
+        "jsonBody": {"accepted": true, "test": "transient-success"},
+        "headers": {"Content-Type": "application/json"}
+      }
     },
     {
-      "request": {"method": "POST", "urlPath": "/internal/approvals"},
-      "response": {"status": 201, "jsonBody": {"accepted": true, "kind": "approval"}, "headers": {"Content-Type": "application/json"}}
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/internal/.*",
+        "bodyPatterns": [{"contains": "trace-permanent-"}]
+      },
+      "response": {
+        "status": 500,
+        "jsonBody": {"accepted": false, "test": "permanent"},
+        "headers": {"Content-Type": "application/json"}
+      }
+    },
+    {
+      "priority": 20,
+      "request": {"method": "POST", "urlPathPattern": "/internal/.*"},
+      "response": {
+        "status": 202,
+        "jsonBody": {"accepted": true, "kind": "factory-control-plane"},
+        "headers": {"Content-Type": "application/json"}
+      }
     },
     {
       "request": {"method": "GET", "urlPath": "/healthz"},
-      "response": {"status": 200, "jsonBody": {"status": "ok"}, "headers": {"Content-Type": "application/json"}}
+      "response": {
+        "status": 200,
+        "jsonBody": {"status": "ok"},
+        "headers": {"Content-Type": "application/json"}
+      }
     }
   ]
 }
