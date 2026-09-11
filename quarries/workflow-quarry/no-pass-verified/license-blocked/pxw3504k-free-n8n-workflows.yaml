@@ -1,0 +1,21 @@
+source:
+  repository: https://github.com/pxw3504k-web/free-n8n-workflows
+  repository_full_name: pxw3504k-web/free-n8n-workflows
+  default_branch: main
+  observed_at: 2026-09-11
+  claimed_scale: "8000+ workflows"
+status:
+  gate_reached: DISCOVERED
+  blocked_at: LICENSE_CHECKED
+  category: license-blocked
+  keep: true
+reason:
+  - GitHub repository metadata reports no license.
+  - "Free to download" in a description is not treated as redistribution/commercial-adaptation permission.
+value_retained:
+  - Search/index corpus candidate.
+  - Self-hosted workflow browser/search implementation is useful as an internal quarry UX reference.
+action:
+  - Preserve source and workflow metadata when mined.
+  - Do not mirror raw workflow files into this public repository until rights are verified.
+  - Re-enter the gate if repository or per-file licensing/provenance evidence becomes available.
