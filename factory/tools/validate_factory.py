@@ -51,9 +51,12 @@ def main() -> int:
             "AUTOMATION_CONTROL_PLANE_URL",
             "AUTOMATION_CONTROL_PLANE_TOKEN",
             "factory-test-token",
+            "N8N_BLOCK_ENV_ACCESS_IN_NODE",
         ]:
             if token not in text:
-                errors.append(f"factory compose missing W1 harness invariant: {token}")
+                errors.append(f"factory compose missing W1/W2 harness invariant: {token}")
+        if 'N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"' not in text:
+            errors.append("managed baseline runtime must explicitly allow $env references")
 
     policy = ROOT / "factory/RUNTIME-SUPPORT-POLICY.md"
     if policy.is_file():
@@ -85,7 +88,7 @@ def main() -> int:
             if "/internal/.*" not in patterns:
                 errors.append("mock control plane missing generalized internal API route")
             raw = mapping.read_text(encoding="utf-8")
-            for token in ["trace-transient-", "SECOND_FAILURE", "SUCCESS", "trace-permanent-", '"status": 500', '"status": 202']:
+            for token in ["transient-", "SECOND_FAILURE", "SUCCESS", "permanent-", '"status": 500', '"status": 202']:
                 if token not in raw:
                     errors.append(f"mock control plane missing deterministic failure invariant: {token}")
         except Exception as exc:
@@ -135,7 +138,8 @@ def main() -> int:
 
     print("FACTORY VALIDATION: PASS")
     print("Discovery intake + immutable human gate evidence + non-destructive promotion/failure tooling: PRESENT")
-    print("W1 generalized control-plane mock + deterministic retry/failure scenarios: PRESENT")
+    print("Generalized control-plane mock + deterministic retry/failure scenarios: PRESENT")
+    print("Managed baseline $env references: EXPLICITLY ENABLED; embedded secret values remain forbidden")
     print("Certified base runtime profile: n8n-base-js-v1 / n8n 2.38.7")
     print("Scope: factory configuration/static invariants; runtime gate remains separate.")
     return 0
