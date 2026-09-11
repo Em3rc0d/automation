@@ -15,6 +15,12 @@ if [[ "$N8N_VERSION" == "latest" ]]; then
   exit 2
 fi
 
+if [[ -f "$ROOT/waves/catalog.py" ]]; then
+  echo "[waves] compile deterministic W3-W11 candidates and probes"
+  python "$ROOT/waves/tools/build_waves.py"
+  python "$ROOT/waves/tools/validate_waves.py"
+fi
+
 echo "[factory] validating compose"
 docker compose -f "$COMPOSE" config >/dev/null
 
@@ -38,7 +44,7 @@ fi
 echo "[factory] importing runtime probe"
 docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input=/workspace/factory/probes/runtime-probe.json </dev/null
 
-echo "[factory] discovering every HARDENED candidate"
+echo "[factory] discovering every committed HARDENED candidate"
 mapfile -d '' HARDENED_WORKFLOWS < <(
   find "$ROOT/quarries/workflow-quarry/30-hardened" -type f -name workflow.json -print0 | sort -z
 )
@@ -48,7 +54,6 @@ if [[ "$expected" -lt 1 ]]; then
   exit 2
 fi
 
-echo "[factory] HARDENED candidates discovered: $expected"
 count=0
 for workflow in "${HARDENED_WORKFLOWS[@]}"; do
   rel="${workflow#"$ROOT/"}"
@@ -56,18 +61,74 @@ for workflow in "${HARDENED_WORKFLOWS[@]}"; do
   docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel" </dev/null
   count=$((count + 1))
 done
-
 if [[ "$count" -ne "$expected" ]]; then
   echo "FACTORY RUNTIME REFUSED: discovered=$expected imported=$count"
   exit 2
 fi
+echo "[factory] imported committed HARDENED candidates: $count/$expected"
 
-echo "[factory] imported HARDENED candidates: $count/$expected"
+WAVE_PROBE_IDS=""
+if [[ -d "$ROOT/waves/.generated/candidates" ]]; then
+  echo "[waves] importing 99 generated W3-W11 production candidates"
+  wave_candidates=0
+  while IFS= read -r -d '' workflow; do
+    rel="${workflow#"$ROOT/"}"
+    docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel" </dev/null
+    wave_candidates=$((wave_candidates + 1))
+  done < <(find "$ROOT/waves/.generated/candidates" -type f -name workflow.json -print0 | sort -z)
+  if [[ "$wave_candidates" -ne 99 ]]; then
+    echo "WAVES RUNTIME REFUSED: expected 99 candidates, imported $wave_candidates"
+    exit 2
+  fi
+
+  echo "[waves] importing 198 executable domain probes"
+  wave_probes=0
+  while IFS= read -r -d '' probe; do
+    rel="${probe#"$ROOT/"}"
+    docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel" </dev/null
+    wave_probes=$((wave_probes + 1))
+  done < <(find "$ROOT/waves/.generated/runtime-probes" -type f -name '*.json' -print0 | sort -z)
+  if [[ "$wave_probes" -ne 198 ]]; then
+    echo "WAVES RUNTIME REFUSED: expected 198 probes, imported $wave_probes"
+    exit 2
+  fi
+  WAVE_PROBE_IDS="$(python "$ROOT/waves/tools/probe_ids.py")"
+fi
 
 echo "[factory] stop server before direct CLI execution against same database"
 docker compose -f "$COMPOSE" stop n8n
 
 echo "[factory] executing runtime probe"
 docker compose -f "$COMPOSE" run --rm --no-deps n8n execute --id=factoryRuntimeProbeV1 </dev/null
+
+if [[ -n "$WAVE_PROBE_IDS" ]]; then
+  echo "[waves] executing W3-W11 runtime/domain matrix in one isolated CLI container"
+  docker compose -f "$COMPOSE" run --rm --no-deps \
+    -e WAVE_PROBE_IDS="$WAVE_PROBE_IDS" \
+    --entrypoint /bin/sh n8n -lc '
+      set -eu
+      passed=0
+      for id in $WAVE_PROBE_IDS; do
+        if ! n8n execute --id="$id" --rawOutput > /tmp/wave-probe.out 2>&1; then
+          cat /tmp/wave-probe.out
+          echo "WAVES RUNTIME FAILED: $id"
+          exit 1
+        fi
+        if grep -Eq "Execution was NOT successful|Error executing workflow|Problem in node|DECISION_MISMATCH|CAPABILITY_MISMATCH" /tmp/wave-probe.out; then
+          cat /tmp/wave-probe.out
+          echo "WAVES DOMAIN ASSERTION FAILED: $id"
+          exit 1
+        fi
+        if ! grep -q "PASS" /tmp/wave-probe.out; then
+          cat /tmp/wave-probe.out
+          echo "WAVES PROBE MISSING PASS MARKER: $id"
+          exit 1
+        fi
+        passed=$((passed + 1))
+      done
+      test "$passed" -eq 198
+      echo "W3-W11 RUNTIME MATRIX: PASS probes=$passed"
+    '
+fi
 
 echo "FACTORY RUNTIME SMOKE: PASS"
