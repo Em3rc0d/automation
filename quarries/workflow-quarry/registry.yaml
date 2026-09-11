@@ -1,0 +1,112 @@
+version: 1
+updated_at: 2026-09-11
+
+sources:
+  - id: aslammac-n8n-templates
+    url: https://github.com/aslammac/n8n-templates
+    claimed_scale: "4300+ workflows"
+    stage: DISCOVERED
+    intended_use: search-corpus
+    license_status: UNKNOWN
+    priority: P0
+    notes:
+      - Mine patterns by service/category.
+      - Do not assume every aggregated workflow inherits a repository-level license.
+
+  - id: xuanli-awesome-n8n-templates-scrapernode
+    url: https://github.com/xuanli/awesome-n8n-templates-scrapernode
+    claimed_scale: "8697+ workflows"
+    stage: DISCOVERED
+    intended_use: search-corpus
+    license_status: UNKNOWN
+    priority: P0
+    notes:
+      - Valuable for rare connector combinations.
+      - Provenance must be resolved before adaptation.
+
+  - id: sevenandone-n8n-library
+    url: https://github.com/7and1/n8n-Library
+    claimed_scale: "thousands"
+    stage: DISCOVERED
+    intended_use: search-index-patterns
+    license_status: UNKNOWN
+    priority: P1
+    notes:
+      - Study local indexing/search pipeline.
+
+  - id: felipfr-awesome-n8n-workflows
+    url: https://github.com/felipfr/awesome-n8n-workflows
+    claimed_scale: "2000+ workflows"
+    stage: DISCOVERED
+    intended_use: search-corpus
+    license_status: "repository reports MIT; per-workflow provenance still requires review"
+    priority: P0
+    notes:
+      - Aggregates workflows from multiple Internet sources.
+
+  - id: pxw3504k-free-n8n-workflows
+    url: https://github.com/pxw3504k-web/free-n8n-workflows
+    claimed_scale: "8000+ workflows"
+    stage: DISCOVERED
+    intended_use: search-corpus-and-search-ui-patterns
+    license_status: UNKNOWN
+    priority: P1
+
+  - id: mlnjsh-n8n-workflows-mega
+    url: https://github.com/mlnjsh/n8n-workflows-mega
+    claimed_scale: "5000+ workflows"
+    stage: DISCOVERED
+    intended_use: thematic-mining
+    license_status: UNKNOWN
+    priority: P1
+
+  - id: sander2610-n8n-automation-templates-500
+    url: https://github.com/sander2610/n8n-automation-templates-500
+    claimed_scale: "5000+ workflows"
+    stage: DISCOVERED
+    intended_use: thematic-mining
+    license_status: UNKNOWN
+    priority: P1
+    notes:
+      - Prefer workflows with explicit error/retry patterns for inspection.
+
+  - id: utsav-donda-n8n-workflows
+    url: https://github.com/Utsav-Donda/N8N-Workflows
+    claimed_scale: "14 workflows"
+    stage: DISCOVERED
+    intended_use: explained-baseline-learning
+    license_status: UNKNOWN
+    priority: P0
+    notes:
+      - Small corpus but each workflow has JSON plus setup documentation.
+
+  - id: redsf-n8n-workflows
+    url: https://github.com/Redsf/n8n-workflows
+    claimed_scale: "production-style collection"
+    stage: DISCOVERED
+    intended_use: documentation-and-architecture-baseline
+    license_status: UNKNOWN
+    priority: P0
+    notes:
+      - Valuable reference for per-workflow README + architecture + JSON packaging.
+
+  - id: techpranee-n8n-workflows-repo
+    url: https://github.com/techpranee/n8n-workflows-repo
+    claimed_scale: "large collection"
+    stage: DISCOVERED
+    intended_use: local-search-index-patterns
+    license_status: UNKNOWN
+    priority: P1
+
+promotion_policy:
+  stages:
+    - DISCOVERED
+    - LICENSE_CHECKED
+    - INSPECTED
+    - HARDENED
+    - TESTED
+    - APPROVED_BASELINE
+  rejected_is_terminal: true
+  approved_destination: workflows/n8n
+  no_bulk_approval: true
+  require_per_workflow_or_provenance_cohort_evidence: true
