@@ -3,17 +3,22 @@
 
 Source evidence is never moved/deleted. Promotion copies the package into both
 50-approved-baseline and workflows/n8n after validating TEST-REPORT PASS.
+
+`AUTOMATION_FACTORY_ROOT` exists only to make destructive-safety self-tests run
+inside a temporary repository tree. Production usage omits it.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("AUTOMATION_FACTORY_ROOT", str(DEFAULT_ROOT))).resolve()
 TESTED_ROOT = ROOT / "quarries/workflow-quarry/40-tested"
 APPROVED_ROOT = ROOT / "quarries/workflow-quarry/50-approved-baseline"
 LIBRARY_ROOT = ROOT / "workflows/n8n"
