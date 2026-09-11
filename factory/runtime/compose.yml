@@ -4,6 +4,8 @@ services:
     command: ["--global-response-templating", "--verbose"]
     volumes:
       - ../mock/wiremock:/home/wiremock:ro
+    ports:
+      - "18080:8080"
     networks: [factory]
 
   n8n:
@@ -18,6 +20,7 @@ services:
       N8N_PORT: 5678
       N8N_PROTOCOL: http
       AUTOMATION_CONTROL_PLANE_URL: http://mock-control-plane:8080
+      AUTOMATION_CONTROL_PLANE_TOKEN: ${AUTOMATION_CONTROL_PLANE_TOKEN:-factory-test-token}
       TZ: UTC
     ports:
       - "5678:5678"
