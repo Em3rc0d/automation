@@ -54,6 +54,7 @@ REQUIRED_PATHS = [
     "mk1/README.md",
     "certification/COVERAGE-MATRIX.md",
     "certification/CAPABILITY-COVERAGE-MAP.md",
+    "certification/TOOLBOX-CLOSURE-PLAN.md",
     "certification/TOOLBOX-READINESS-POLICY.json",
     "certification/CRITERIA.md",
     "tools/report_toolbox_readiness.py",
@@ -198,6 +199,22 @@ def validate() -> list[str]:
                 fail(errors, "toolbox readiness claim is inconsistent with computed evidence")
         except Exception as exc:
             fail(errors, f"toolbox readiness reporter failed: {exc}")
+
+    closure_plan = ROOT / "certification/TOOLBOX-CLOSURE-PLAN.md"
+    if closure_plan.is_file():
+        text = closure_plan.read_text(encoding="utf-8")
+        for token in [
+            "Phase A — finish semantic coverage",
+            "Phase B — deepen common composition gaps",
+            "Phase C — certification conversion",
+            "Phase D — reference assembly certification",
+            "Phase E — post-ready evolution",
+            "select certified capabilities",
+            "rather than",
+            "invent new business workflow architecture",
+        ]:
+            if token not in text:
+                fail(errors, f"toolbox closure plan missing invariant: {token}")
 
     registry_path = ROOT / "quarries/workflow-quarry/registry.yaml"
     if registry_path.is_file():
