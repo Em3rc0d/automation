@@ -1,0 +1,82 @@
+{
+  "id": "executionTelemetryV1",
+  "name": "BASELINE CANDIDATE - EXECUTION_TELEMETRY@1.0",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "execution-telemetry-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst required = ['tenantId','automationInstanceId','eventType','occurredAt','traceId'];\nconst missing = required.filter((k) => input[k] === undefined || input[k] === null || input[k] === '');\nif (missing.length) {\n  throw new Error(`EXECUTION_TELEMETRY_INVALID_INPUT missing=${missing.join(',')}`);\n}\nconst num = (v) => Number.isFinite(Number(v)) ? Number(v) : 0;\nconst event = {\n  schemaVersion: '1.0',\n  tenantId: String(input.tenantId),\n  automationInstanceId: String(input.automationInstanceId),\n  eventType: String(input.eventType),\n  occurredAt: new Date(input.occurredAt).toISOString(),\n  traceId: String(input.traceId),\n  runId: input.runId ? String(input.runId) : null,\n  engine: {\n    name: input.engine?.name ? String(input.engine.name) : 'n8n',\n    executionId: input.engine?.executionId ? String(input.engine.executionId) : null\n  },\n  status: input.status ? String(input.status) : null,\n  metrics: {\n    eligibleUnits: num(input.metrics?.eligibleUnits),\n    automatedUnits: num(input.metrics?.automatedUnits),\n    exceptionMinutes: num(input.metrics?.exceptionMinutes),\n    oversightMinutes: num(input.metrics?.oversightMinutes),\n    variableCost: num(input.metrics?.variableCost)\n  },\n  metadata: input.metadata && typeof input.metadata === 'object' ? input.metadata : {}\n};\nevent.idempotencyKey = input.idempotencyKey\n  ? String(input.idempotencyKey)\n  : `${event.tenantId}:${event.automationInstanceId}:${event.traceId}:${event.eventType}`;\nreturn [{ json: event }];"
+      },
+      "id": "normalize-execution-event",
+      "name": "Normalize and Validate Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AUTOMATION_CONTROL_PLANE_URL + '/internal/execution-events' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.idempotencyKey }}"
+            },
+            {
+              "name": "X-Automation-Schema-Version",
+              "value": "1.0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "post-execution-event",
+      "name": "Post to Control Plane",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "notes": "Attach a tenant-safe internal HTTP Header Auth credential. No secret belongs in workflow.json."
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [[{"node":"Normalize and Validate Event","type":"main","index":0}]]
+    },
+    "Normalize and Validate Event": {
+      "main": [[{"node":"Post to Control Plane","type":"main","index":0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "candidateKey": "EXECUTION_TELEMETRY",
+    "candidateVersion": "1.0.0",
+    "stage": "HARDENED",
+    "origin": "ORIGINAL_SYNTHESIS"
+  },
+  "tags": [
+    {"name":"baseline-candidate"},
+    {"name":"platform"},
+    {"name":"telemetry"}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "automationInstanceId": "automation_fixture",
+  "eventType": "FAILED",
+  "occurredAt": "2026-09-11T17:00:00.000Z",
+  "traceId": "trace_fixture_invalid_001",
+  "status": "failed"
+}

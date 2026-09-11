@@ -1,0 +1,90 @@
+key: EXECUTION_TELEMETRY
+version: 1.0.0
+family: platform
+stage: HARDENED
+origin: ORIGINAL_SYNTHESIS
+runtime:
+  engine: n8n
+  profile: n8n-base-js-v1
+  tested_version: "2.38.7"
+
+purpose: >-
+  Normalize and forward one tenant-scoped execution event from a calling workflow
+  into the Automation control-plane ingestion endpoint.
+
+non_goals:
+  - persist business ProcessRecord data
+  - calculate savings
+  - create incidents
+  - expose client UI
+
+input_contract:
+  required:
+    - tenantId
+    - automationInstanceId
+    - eventType
+    - occurredAt
+    - traceId
+  optional:
+    - runId
+    - engine
+    - status
+    - metrics
+    - metadata
+    - idempotencyKey
+
+output_contract:
+  description: control-plane acknowledgement returned by the HTTP endpoint
+
+side_effects:
+  - type: HTTP_POST
+    capability: control_plane.execution_event.write
+    endpoint: /internal/execution-events
+
+idempotency:
+  strategy: >-
+    Caller-supplied idempotencyKey when available; otherwise deterministic
+    tenantId:automationInstanceId:traceId:eventType.
+  enforcement_boundary: control-plane API
+
+retry_policy:
+  max_tries: 3
+  wait_between_tries_ms: 1000
+  safety_condition: retries are safe only because the POST carries the same Idempotency-Key
+
+failure_policy:
+  current: fail calling workflow after retry exhaustion
+  follow_up: ERROR_TO_INCIDENT@1.0 handles incident projection at orchestration boundary
+
+configuration:
+  environment:
+    - AUTOMATION_CONTROL_PLANE_URL
+  credentials:
+    - n8n HTTP Header Auth credential bound to the internal control-plane service
+
+security:
+  embedded_secrets: false
+  client_specific_ids: false
+  pii_logging: prohibited
+  tenant_id_required: true
+
+telemetry:
+  trace_id_required: true
+  schema_version: "1.0"
+
+provenance:
+  external_code_copied: false
+  notes:
+    - Repository-native synthesis based on K0 domain contracts and hardened workflow rules.
+    - External mining informed failure/idempotency patterns but no external workflow code is redistributed here.
+
+promotion:
+  next_stage: TESTED
+  requires:
+    - clean import into pinned n8n runtime
+    - successful valid fixture execution against mock/control-plane test endpoint
+    - invalid fixture rejection
+    - duplicate idempotency test
+    - retry/provider-failure test
+    - secret scan
+    - TEST-REPORT.md

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/EXECUTION_TELEMETRY-1.0.0.json",
+  "title": "EXECUTION_TELEMETRY@1.0.0 configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["AUTOMATION_CONTROL_PLANE_URL"],
+  "properties": {
+    "AUTOMATION_CONTROL_PLANE_URL": {
+      "type": "string",
+      "format": "uri",
+      "description": "Base URL of the Automation internal control-plane API."
+    },
+    "credentialBinding": {
+      "type": "string",
+      "description": "Operator-managed n8n HTTP Header Auth credential name/reference. Secrets are never stored in this config file."
+    }
+  }
+}

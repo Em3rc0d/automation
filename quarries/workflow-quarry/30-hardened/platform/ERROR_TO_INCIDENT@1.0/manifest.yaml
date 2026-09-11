@@ -1,0 +1,93 @@
+key: ERROR_TO_INCIDENT
+version: 1.0.0
+family: platform
+stage: HARDENED
+origin: ORIGINAL_SYNTHESIS
+runtime:
+  engine: n8n
+  profile: n8n-base-js-v1
+  tested_version: "2.38.7"
+
+purpose: >-
+  Convert one tenant-scoped workflow/runtime failure into a normalized Incident payload,
+  redact obvious secret patterns and forward it to the control plane.
+
+non_goals:
+  - decide whether business execution should be retried
+  - page humans directly
+  - expose raw provider errors to clients
+  - close incidents automatically
+
+input_contract:
+  required:
+    - tenantId
+    - automationInstanceId
+    - traceId
+    - occurredAt
+  optional:
+    - runId
+    - severity
+    - source
+    - provider
+    - nodeName
+    - code
+    - message
+    - retryable
+    - category
+    - error
+    - metadata
+    - idempotencyKey
+
+side_effects:
+  - type: HTTP_POST
+    capability: control_plane.incident.write
+    endpoint: /internal/incidents
+
+idempotency:
+  strategy: >-
+    Caller-supplied key when available; otherwise a deterministic fingerprint over
+    tenant, automation instance, trace and normalized error/source fields.
+  enforcement_boundary: control-plane API
+
+retry_policy:
+  max_tries: 3
+  wait_between_tries_ms: 1000
+  safety_condition: stable Idempotency-Key across retries
+
+redaction:
+  controls:
+    - redact Bearer-token-shaped substrings
+    - redact common api-key/token/password/secret assignments
+    - cap individual text fields before transport
+  limitation: >-
+    Pattern redaction is defense-in-depth, not permission to send arbitrary raw payloads.
+    Parent workflows must still follow the PII/logging policy.
+
+configuration:
+  environment:
+    - AUTOMATION_CONTROL_PLANE_URL
+  credentials:
+    - n8n HTTP Header Auth credential bound to the internal control-plane service
+
+security:
+  embedded_secrets: false
+  client_specific_ids: false
+  raw_error_dump: prohibited
+  tenant_id_required: true
+
+provenance:
+  external_code_copied: false
+  notes:
+    - Repository-native synthesis from K0 Incident and security contracts.
+
+promotion:
+  next_stage: TESTED
+  requires:
+    - pinned n8n import evidence
+    - valid incident fixture
+    - redaction fixture
+    - duplicate idempotency fixture
+    - retry/failure fixture
+    - missing-tenant rejection
+    - secret scan
+    - TEST-REPORT.md

@@ -1,0 +1,79 @@
+name: Baseline Factory Validation
+
+on:
+  push:
+    branches:
+      - w1/baseline-library
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  factory-operational:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Record evidence identity
+        run: |
+          echo "FACTORY_EVIDENCE_SHA=${GITHUB_SHA}" | tee factory-evidence.txt
+          echo "N8N_VERSION=2.38.7" | tee -a factory-evidence.txt
+
+      - name: Validate K0 invariants
+        run: python tools/validate_repository.py
+
+      - name: Validate W1 candidates
+        run: python tools/validate_w1_candidates.py
+
+      - name: Validate factory invariants
+        run: python factory/tools/validate_factory.py
+
+      - name: Prove non-destructive promotion and failure preservation
+        run: python factory/tools/self_test.py
+
+      - name: Validate Compose configuration
+        run: docker compose -f factory/runtime/compose.yml config >/dev/null
+
+      - name: Run pinned n8n runtime factory smoke
+        env:
+          N8N_VERSION: '2.38.7'
+        run: |
+          set -o pipefail
+          bash factory/tools/runtime_smoke.sh 2>&1 | tee factory-runtime.log
+
+      - name: Capture runtime logs on failure
+        if: failure()
+        run: |
+          docker compose -f factory/runtime/compose.yml ps -a > factory-compose-ps.txt 2>&1 || true
+          docker compose -f factory/runtime/compose.yml logs --no-color > factory-compose.log 2>&1 || true
+
+      - name: Ensure external raw cache and local secrets are not tracked
+        run: |
+          if git ls-files | grep -q '^quarries/workflow-quarry/.external-cache/'; then
+            echo 'External raw cache must not be committed.'
+            exit 1
+          fi
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'; then
+            echo 'Tracked environment secret file detected.'
+            exit 1
+          fi
+
+      - name: Upload factory evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factory-validation-${{ github.sha }}
+          if-no-files-found: ignore
+          path: |
+            factory-evidence.txt
+            factory-runtime.log
+            factory-compose-ps.txt
+            factory-compose.log

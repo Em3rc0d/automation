@@ -1,0 +1,82 @@
+{
+  "id": "errorToIncidentV1",
+  "name": "BASELINE CANDIDATE - ERROR_TO_INCIDENT@1.0",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-incident-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst required = ['tenantId','automationInstanceId','traceId','occurredAt'];\nconst missing = required.filter((k) => input[k] === undefined || input[k] === null || input[k] === '');\nif (missing.length) {\n  throw new Error(`ERROR_TO_INCIDENT_INVALID_INPUT missing=${missing.join(',')}`);\n}\nconst redact = (value) => {\n  if (value === undefined || value === null) return null;\n  let s = String(value).slice(0, 4000);\n  s = s.replace(/Bearer\\s+[A-Za-z0-9._~+\\/-]+=*/gi, 'Bearer [REDACTED]');\n  s = s.replace(/(api[_-]?key|token|password|secret)\\s*[:=]\\s*[^\\s,;]+/gi, '$1=[REDACTED]');\n  return s;\n};\nconst code = input.error?.code || input.code || 'AUTOMATION_FAILURE';\nconst source = input.source || input.nodeName || input.error?.source || 'unknown';\nconst incident = {\n  schemaVersion: '1.0',\n  tenantId: String(input.tenantId),\n  automationInstanceId: String(input.automationInstanceId),\n  traceId: String(input.traceId),\n  runId: input.runId ? String(input.runId) : null,\n  occurredAt: new Date(input.occurredAt).toISOString(),\n  severity: String(input.severity || 'error'),\n  status: 'open',\n  source: redact(source),\n  provider: redact(input.provider),\n  nodeName: redact(input.nodeName),\n  error: {\n    code: redact(code),\n    message: redact(input.error?.message || input.message || 'Automation failed'),\n    retryable: Boolean(input.error?.retryable ?? input.retryable ?? false),\n    category: redact(input.error?.category || input.category || 'runtime')\n  },\n  metadata: input.metadata && typeof input.metadata === 'object' ? input.metadata : {}\n};\nconst fingerprintSource = `${incident.error.code}:${incident.source}:${incident.nodeName || ''}`;\nincident.idempotencyKey = input.idempotencyKey\n  ? String(input.idempotencyKey)\n  : `incident:${incident.tenantId}:${incident.automationInstanceId}:${incident.traceId}:${fingerprintSource}`;\nreturn [{ json: incident }];"
+      },
+      "id": "normalize-incident",
+      "name": "Normalize Redact and Validate Incident",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AUTOMATION_CONTROL_PLANE_URL + '/internal/incidents' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.idempotencyKey }}"
+            },
+            {
+              "name": "X-Automation-Schema-Version",
+              "value": "1.0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "post-incident",
+      "name": "Post Incident to Control Plane",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "notes": "Bind internal HTTP Header Auth. Error text is redacted before this side effect."
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [[{"node":"Normalize Redact and Validate Incident","type":"main","index":0}]]
+    },
+    "Normalize Redact and Validate Incident": {
+      "main": [[{"node":"Post Incident to Control Plane","type":"main","index":0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "candidateKey": "ERROR_TO_INCIDENT",
+    "candidateVersion": "1.0.0",
+    "stage": "HARDENED",
+    "origin": "ORIGINAL_SYNTHESIS"
+  },
+  "tags": [
+    {"name":"baseline-candidate"},
+    {"name":"platform"},
+    {"name":"incident"}
+  ]
+}
