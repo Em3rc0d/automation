@@ -20,6 +20,34 @@ if [[ -f "$ROOT/waves/catalog.py" ]]; then
   python "$ROOT/waves/tools/build_waves.py"
   python "$ROOT/waves/tools/normalize_probe_fixtures.py"
   python "$ROOT/waves/tools/validate_waves.py"
+
+  echo "[waves] stage flat bulk-import directories"
+  python - "$ROOT" <<'PY'
+from __future__ import annotations
+import json, shutil, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+generated = root / "waves/.generated"
+for name in ("bulk-candidates", "bulk-probes"):
+    target = generated / name
+    if target.exists():
+        shutil.rmtree(target)
+    target.mkdir(parents=True)
+
+candidates = list((generated / "candidates").rglob("workflow.json"))
+probes = list((generated / "runtime-probes").rglob("*.json"))
+if len(candidates) != 99:
+    raise SystemExit(f"WAVES BULK STAGE REFUSED: candidates={len(candidates)} expected=99")
+if len(probes) != 198:
+    raise SystemExit(f"WAVES BULK STAGE REFUSED: probes={len(probes)} expected=198")
+for src in candidates:
+    data = json.loads(src.read_text())
+    (generated / "bulk-candidates" / f"{data['id']}.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
+for src in probes:
+    data = json.loads(src.read_text())
+    (generated / "bulk-probes" / f"{data['id']}.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
+print("WAVES BULK STAGE: PASS candidates=99 probes=198")
+PY
 fi
 
 echo "[factory] validating compose"
@@ -69,31 +97,26 @@ fi
 echo "[factory] imported committed HARDENED candidates: $count/$expected"
 
 WAVE_PROBE_IDS=""
-if [[ -d "$ROOT/waves/.generated/candidates" ]]; then
-  echo "[waves] importing 99 generated W3-W11 production candidates"
-  wave_candidates=0
-  while IFS= read -r -d '' workflow; do
-    rel="${workflow#"$ROOT/"}"
-    docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel" </dev/null
-    wave_candidates=$((wave_candidates + 1))
-  done < <(find "$ROOT/waves/.generated/candidates" -type f -name workflow.json -print0 | sort -z)
-  if [[ "$wave_candidates" -ne 99 ]]; then
-    echo "WAVES RUNTIME REFUSED: expected 99 candidates, imported $wave_candidates"
-    exit 2
-  fi
+if [[ -d "$ROOT/waves/.generated/bulk-candidates" ]]; then
+  echo "[waves] bulk import 99 generated W3-W11 production candidates"
+  docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --separate --input=/workspace/waves/.generated/bulk-candidates </dev/null
 
-  echo "[waves] importing 198 executable domain probes"
-  wave_probes=0
-  while IFS= read -r -d '' probe; do
-    rel="${probe#"$ROOT/"}"
-    docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input="/workspace/$rel" </dev/null
-    wave_probes=$((wave_probes + 1))
-  done < <(find "$ROOT/waves/.generated/runtime-probes" -type f -name '*.json' -print0 | sort -z)
-  if [[ "$wave_probes" -ne 198 ]]; then
-    echo "WAVES RUNTIME REFUSED: expected 198 probes, imported $wave_probes"
-    exit 2
-  fi
+  echo "[waves] bulk import 198 executable domain probes"
+  docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --separate --input=/workspace/waves/.generated/bulk-probes </dev/null
+
   WAVE_PROBE_IDS="$(python "$ROOT/waves/tools/probe_ids.py")"
+
+  echo "[waves] verify imported topology from n8n database"
+  docker compose -f "$COMPOSE" exec -T n8n n8n export:workflow --all --output=/tmp/factory-all-workflows.json </dev/null
+  docker compose -f "$COMPOSE" exec -T n8n node - <<'NODE'
+const fs = require('fs');
+const all = JSON.parse(fs.readFileSync('/tmp/factory-all-workflows.json', 'utf8'));
+const candidateCount = all.filter(w => /^wave(?:3|4|5|6|7|8|9|10|11)/.test(String(w.id))).length;
+const probeCount = all.filter(w => /^probe/.test(String(w.id))).length;
+if (candidateCount !== 99) throw new Error(`WAVES_IMPORT_CANDIDATES expected=99 actual=${candidateCount}`);
+if (probeCount !== 198) throw new Error(`WAVES_IMPORT_PROBES expected=198 actual=${probeCount}`);
+console.log(`WAVES IMPORT TOPOLOGY: PASS candidates=${candidateCount} probes=${probeCount}`);
+NODE
 fi
 
 echo "[factory] stop server before direct CLI execution against same database"
