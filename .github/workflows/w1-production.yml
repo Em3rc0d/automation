@@ -7,6 +7,7 @@ on:
     paths:
       - 'w1/tools/produce_w1.py'
       - 'w1/tools/certify_w1.py'
+      - 'w1/tools/certify_w1_runtime.py'
       - 'w1/tools/validate_release.py'
       - '.github/workflows/w1-production.yml'
       - 'factory/runtime/compose.yml'
@@ -43,7 +44,7 @@ jobs:
         env:
           N8N_VERSION: '2.38.7'
           AUTOMATION_CONTROL_PLANE_TOKEN: factory-test-token
-        run: python w1/tools/certify_w1.py
+        run: python w1/tools/certify_w1_runtime.py
 
       - name: Release topology gate
         run: python w1/tools/validate_release.py
