@@ -1,0 +1,30 @@
+name: W1 Release Validation
+
+on:
+  push:
+    branches:
+      - w1/baseline-library
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  w1-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate W1 materialized release when present
+        run: |
+          if find quarries/workflow-quarry/50-approved-baseline -type f -name workflow.json | grep -q .; then
+            python w1/tools/validate_release.py
+          else
+            echo "W1 release not materialized yet; certification remains impossible."
+          fi
