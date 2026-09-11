@@ -54,6 +54,17 @@ def main() -> None:
         key = meta.get("candidateKey")
         if meta.get("wave") != "W2" or key not in EXPECTED:
             continue
+
+        # n8n 2.x validates Execute Workflow Trigger inputs. Passthrough is the
+        # provider-agnostic envelope contract for baseline composition: callers
+        # pass the complete tenant-scoped JSON item without duplicating schemas in
+        # the n8n trigger UI. Domain schemas remain in package/config contracts.
+        triggers = [n for n in data.get("nodes", []) if n.get("type") == "n8n-nodes-base.executeWorkflowTrigger"]
+        if len(triggers) != 1:
+            raise SystemExit(f"{key}: expected exactly one Execute Workflow Trigger, got {len(triggers)}")
+        triggers[0]["parameters"] = {"inputSource": "passthrough"}
+        triggers[0]["typeVersion"] = 1.1
+
         logic_nodes = [n for n in data.get("nodes", []) if n.get("type") == "n8n-nodes-base.code"]
         if len(logic_nodes) != 1:
             raise SystemExit(f"{key}: expected exactly one business-logic Code node, got {len(logic_nodes)}")
@@ -62,10 +73,10 @@ def main() -> None:
         logic_nodes[0]["parameters"]["jsCode"] = new
         wf.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         seen.add(key)
-        print(f"W2 LOGIC ISOLATED: {key} {len(old)} -> {len(new)} chars")
+        print(f"W2 LOGIC ISOLATED: {key} {len(old)} -> {len(new)} chars; passthrough input contract=PASS")
     if seen != EXPECTED:
         raise SystemExit(f"W2 compaction set mismatch missing={sorted(EXPECTED-seen)} extra={sorted(seen-EXPECTED)}")
-    print("W2 COMPONENT ISOLATION: PASS 11/11")
+    print("W2 COMPONENT ISOLATION + INPUT CONTRACT: PASS 11/11")
 
 
 if __name__ == "__main__":
