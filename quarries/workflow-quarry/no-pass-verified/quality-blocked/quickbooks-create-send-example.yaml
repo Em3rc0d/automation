@@ -1,0 +1,22 @@
+candidate:
+  source_repository: https://github.com/felipfr/awesome-n8n-workflows
+  source_tree: 8aa4a25a373b812aafe44454e68554a4d568c873
+  source_path: finance/Quickbooks_Automate.json
+  source_blob_sha: c23e277e9c01b0972f81d81879db942eaea983e4
+  target_family: QUOTE2CASH/ACCOUNTING_SYNC
+status:
+  gate_reached: INSPECTED
+  failed_gate: HARDENED
+  classification: quality-blocked
+  preserve: true
+blocking_reasons:
+  - No trigger/input contract.
+  - Hardcoded customer identity, amount and item ID.
+  - Immediate send side effect with no approval policy.
+  - No idempotency, duplicate detection, validation or partial-failure handling.
+value_retained:
+  - QuickBooks node sequence: customer create → invoice create → invoice send.
+reentry_conditions:
+  - Rebuild around typed Quote/Invoice inputs.
+  - Add idempotent external-object mapping and configurable approval/send policy.
+  - Add platform telemetry and process state.
