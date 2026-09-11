@@ -32,10 +32,12 @@ jobs:
           python-version: '3.12'
 
       - name: Generate sophisticated W2 HARDENED wave
-        run: python w2/tools/produce_w2.py --clean-generated
+        run: |
+          python w2/tools/produce_w2.py --clean-generated
+          python w2/tools/compact_w2_generated.py
 
-      - name: Static sophistication gate
-        run: python w2/tools/validate_w2_candidates.py
+      - name: Static modular sophistication gate
+        run: python w2/tools/validate_w2_modularity.py
 
       - name: Runtime and domain certify all W2 components
         env:
@@ -68,8 +70,9 @@ jobs:
           W2 CERTIFIED         PENDING FINAL SAME-SHA SEAL
           \`\`\`
 
-          W2 optimizes for capability density rather than raw workflow count. Each component passed
-          static complexity gates, runtime failure/idempotency gates and a capability-specific domain decision test.
+          W2 optimizes for capability density rather than raw workflow count. Each component contains only
+          its own semantic business logic (no dead branches borrowed from sibling capabilities), and passed
+          domain-invariant, runtime failure/idempotency and capability-specific decision tests.
           Source HARDENED and TESTED packages remain preserved; promotion is copy-only.
 
           ## Next gate
