@@ -1,0 +1,11 @@
+{
+  "tenantId": "tenant_fixture",
+  "automationInstanceId": "automation_fixture",
+  "traceId": "trace_incident_redact_001",
+  "occurredAt": "2026-09-11T17:00:00.000Z",
+  "provider": "provider_fixture",
+  "nodeName": "HTTP Request",
+  "message": "Request failed Authorization: Bearer abc.def.ghi token=super-secret-value password=hunter2",
+  "code": "HTTP_401",
+  "retryable": false
+}
