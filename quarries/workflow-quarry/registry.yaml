@@ -1,4 +1,4 @@
-version: 1
+version: 2
 updated_at: 2026-09-11
 
 sources:
@@ -9,9 +9,10 @@ sources:
     intended_use: search-corpus
     license_status: UNKNOWN
     priority: P0
+    preserve_if_blocked: true
     notes:
-      - Mine patterns by service/category.
-      - Do not assume every aggregated workflow inherits a repository-level license.
+      - GitHub repository metadata currently reports no license.
+      - Mine metadata/patterns; raw redistribution remains blocked.
 
   - id: xuanli-awesome-n8n-templates-scrapernode
     url: https://github.com/xuanli/awesome-n8n-templates-scrapernode
@@ -20,9 +21,10 @@ sources:
     intended_use: search-corpus
     license_status: UNKNOWN
     priority: P0
+    preserve_if_blocked: true
     notes:
       - Valuable for rare connector combinations.
-      - Provenance must be resolved before adaptation.
+      - Provenance must be resolved before adaptation/redistribution.
 
   - id: sevenandone-n8n-library
     url: https://github.com/7and1/n8n-Library
@@ -31,18 +33,20 @@ sources:
     intended_use: search-index-patterns
     license_status: UNKNOWN
     priority: P1
-    notes:
-      - Study local indexing/search pipeline.
+    preserve_if_blocked: true
 
   - id: felipfr-awesome-n8n-workflows
     url: https://github.com/felipfr/awesome-n8n-workflows
     claimed_scale: "2000+ workflows"
-    stage: DISCOVERED
+    observed_tree: 8aa4a25a373b812aafe44454e68554a4d568c873
+    stage: LICENSE_CHECKED
     intended_use: search-corpus
-    license_status: "repository reports MIT; per-workflow provenance still requires review"
+    license_status: "repository MIT; per-workflow provenance/redistribution reviewed separately"
     priority: P0
+    preserve_if_blocked: true
     notes:
-      - Aggregates workflows from multiple Internet sources.
+      - Aggregation corpus; repository license is not treated as sufficient proof of origin for every imported workflow.
+      - Multiple P0 LeadFlow/Quote2Cash/OpsFlow candidates are now INSPECTED in mining batches.
 
   - id: pxw3504k-free-n8n-workflows
     url: https://github.com/pxw3504k-web/free-n8n-workflows
@@ -51,6 +55,7 @@ sources:
     intended_use: search-corpus-and-search-ui-patterns
     license_status: UNKNOWN
     priority: P1
+    preserve_if_blocked: true
 
   - id: mlnjsh-n8n-workflows-mega
     url: https://github.com/mlnjsh/n8n-workflows-mega
@@ -59,6 +64,7 @@ sources:
     intended_use: thematic-mining
     license_status: UNKNOWN
     priority: P1
+    preserve_if_blocked: true
 
   - id: sander2610-n8n-automation-templates-500
     url: https://github.com/sander2610/n8n-automation-templates-500
@@ -67,18 +73,22 @@ sources:
     intended_use: thematic-mining
     license_status: UNKNOWN
     priority: P1
+    preserve_if_blocked: true
     notes:
       - Prefer workflows with explicit error/retry patterns for inspection.
 
   - id: utsav-donda-n8n-workflows
     url: https://github.com/Utsav-Donda/N8N-Workflows
     claimed_scale: "14 workflows"
-    stage: DISCOVERED
+    observed_tree: 65fe4656b9590128f96bea844f6f74ce24d9e4e9
+    stage: LICENSE_CHECKED
     intended_use: explained-baseline-learning
-    license_status: UNKNOWN
+    license_status: MIT
     priority: P0
+    preserve_if_blocked: true
     notes:
-      - Small corpus but each workflow has JSON plus setup documentation.
+      - JSON + per-workflow setup README.
+      - Invoice, KPI, support, email-triage and lead-qualification candidates inspected in batch 001.
 
   - id: redsf-n8n-workflows
     url: https://github.com/Redsf/n8n-workflows
@@ -87,8 +97,7 @@ sources:
     intended_use: documentation-and-architecture-baseline
     license_status: UNKNOWN
     priority: P0
-    notes:
-      - Valuable reference for per-workflow README + architecture + JSON packaging.
+    preserve_if_blocked: true
 
   - id: techpranee-n8n-workflows-repo
     url: https://github.com/techpranee/n8n-workflows-repo
@@ -97,6 +106,7 @@ sources:
     intended_use: local-search-index-patterns
     license_status: UNKNOWN
     priority: P1
+    preserve_if_blocked: true
 
 promotion_policy:
   stages:
@@ -106,7 +116,11 @@ promotion_policy:
     - HARDENED
     - TESTED
     - APPROVED_BASELINE
-  rejected_is_terminal: true
+  failed_gate_is_terminal: false
+  failed_gate_destination: quarries/workflow-quarry/no-pass-verified
+  allow_reentry_after_remediation: true
   approved_destination: workflows/n8n
   no_bulk_approval: true
   require_per_workflow_or_provenance_cohort_evidence: true
+  retain_all_candidate_metadata: true
+  raw_external_code_policy: "Do not mirror raw external workflow code into the public repo unless redistribution/provenance is adequate. Preserve metadata, path, source commit/blob hash and findings regardless."
