@@ -6,37 +6,67 @@ Updated: 2026-09-11
 
 ```text
 K0 FOUNDATION                 CERTIFIED / ARCHIVED
-F1 FACTORY_OPERATIONAL        IN VALIDATION
+F1 FACTORY_OPERATIONAL        CERTIFIED
 W1 BASELINE LIBRARY           IN PROGRESS
 P1 PILOT PRODUCT              NOT OPEN
 ```
 
-## Runtime
+## F1 authority
 
+- evidence branch: `w1/baseline-library`
+- evidence SHA: `283a8867bfb7176ced5d27cfa1b90e22a022e181`
+- evidence tree: `21c20e358a17bd25a01f9f23b76d887c3e2fbcb0`
+- exact push run: `34632134059`
+- factory job: `103371255901`
+- conclusion: **SUCCESS**
+- evidence artifact: `10276089734`
+- artifact digest: `sha256:b30bebcbbee898f2ad728f9360c3f45d2246ab00bd0e62db4c2801fa687195bc`
+
+Certificate: `certification/F1-FACTORY-CERTIFICATE.md`.
+
+## Certified runtime profile
+
+- profile: `n8n-base-js-v1`
 - engine: n8n
-- pinned version: `2.38.7`
-- runtime definition: `factory/runtime/compose.yml`
+- pinned runtime: `2.38.7`
+- runtime: Docker Compose
 - mock control plane: WireMock `3.9.1`
-- probe: `factory/probes/runtime-probe.json`
+- supported base nodes: built-in `n8n-nodes-base.*`
+- Code node language in this profile: JavaScript
 
-## Factory machinery
+Python Code, arbitrary community nodes, undeclared binaries/custom images and live third-party credentials are outside this F1 profile until separately implemented and certified.
 
-- quarry stage model: PRESENT
-- `no-pass-verified`: PRESENT
-- static K0 validator: PRESENT
-- static W1 validator: PRESENT
-- factory static validator: PRESENT
-- non-destructive promotion: PRESENT
-- failure preservation: PRESENT
-- isolated self-test: PRESENT
-- runtime import harness: PRESENT
-- runtime execution probe: PRESENT
-- factory CI: PENDING FIRST GREEN RUN
+## Factory capabilities proven by F1
 
-## Current rule
+- bulk discovery/indexing without deletion or implicit approval;
+- exact SHA/provenance + semantic fingerprint inventory;
+- immutable human gate records for discovery/license/inspection/testing/approval decisions;
+- HARDENED package contract validation;
+- stable unique n8n workflow IDs;
+- no bound repository credential references;
+- non-destructive failure preservation under `no-pass-verified`;
+- non-destructive TESTED -> APPROVED/library promotion with overwrite refusal;
+- pinned n8n startup/health/version verification;
+- mock control-plane reachability from runtime network;
+- runtime probe import and execution;
+- all current HARDENED workflows import into the certified runtime: **2/2** at the evidence SHA;
+- raw cache/environment-secret tracking guard;
+- uploaded CI evidence artifact.
 
-No candidate may be promoted to `40-tested` merely because it imports. Individual runtime/business test plans remain mandatory.
+## Preservation
 
-No component may enter `workflows/n8n/` without TESTED evidence and explicit promotion.
+F1 was built additively over sealed K0. Comparison from K0 final SHA `8cb866805d895dc185dfaa232eddecaa346ab478` to the F1 evidence SHA was ahead-only (`48` commits, `0` behind) and the compared changes were additions; K0 remains archived separately.
 
-No source candidate is deleted during failure, supersession or promotion.
+## Important boundary
+
+`F1 FACTORY_OPERATIONAL` certifies the machinery used to manufacture, test, preserve and promote workflow baselines within the declared runtime profile. It does **not** convert HARDENED candidates into TESTED/APPROVED baselines automatically.
+
+Current W1 inventory remains:
+
+```text
+HARDENED                 2
+TESTED                    0
+APPROVED_BASELINE         0
+```
+
+Individual component certification resumes only after this factory seal.
