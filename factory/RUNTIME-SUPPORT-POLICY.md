@@ -14,6 +14,23 @@ The Baseline Factory does not claim universal compatibility with every optional 
 - workflow execution probe through the n8n CLI
 - deterministic mock HTTP services reachable over the factory network
 - credentials must remain unbound in repository artifacts
+- operator-managed runtime configuration may be referenced through `$env` expressions
+- `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` is explicit in the certified managed runtime profile
+
+### Managed `$env` boundary
+
+Environment-variable access is enabled because approved baselines must obtain control-plane URLs, internal authentication material and other deployment configuration **without embedding those values in `workflow.json`**.
+
+This permission is valid only under the managed-engine boundary:
+
+1. customers do not receive direct n8n editor access as part of the product;
+2. baseline source is controlled and certified by the platform operator;
+3. repository gates reject embedded secret-like values and bound credential references;
+4. production secrets are injected by deployment/runtime secret management, never committed;
+5. logs and evidence must not disclose injected values;
+6. a future customer-editable workflow runtime requires a distinct security review/runtime profile rather than inheriting this permission automatically.
+
+Thus `$env` access is a deliberate configuration/secret-reference mechanism, not permission to store secrets in workflows.
 
 ## Explicitly outside this F1 profile
 
@@ -49,8 +66,8 @@ runtime:
   tested_version: "2.38.7"
 ```
 
-The W1 static validator rejects Python Code configuration and undeclared/non-base node packages under this profile.
+The W1/W2 static validators reject Python Code configuration and undeclared/non-base node packages under this profile.
 
 ## Upgrade rule
 
-Changing the n8n pinned version or adding another runtime profile invalidates the relevant F1 runtime evidence and requires re-running the full factory certification gate.
+Changing the n8n pinned version, changing the managed `$env` boundary, or adding another runtime profile invalidates the relevant F1 runtime evidence and requires re-running the full factory certification gate.
