@@ -1,0 +1,23 @@
+# External workflow quarry cache
+quarries/workflow-quarry/.external-cache/
+
+# Local workflow execution/test evidence that may contain transient data
+quarries/workflow-quarry/**/tmp/
+quarries/workflow-quarry/**/.tmp/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.next/
+dist/
+coverage/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
