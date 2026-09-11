@@ -1,0 +1,19 @@
+source:
+  repository: https://github.com/aslammac/n8n-templates
+  repository_full_name: aslammac/n8n-templates
+  default_branch: main
+  observed_at: 2026-09-11
+  observed_repo_size_kb: 10266
+status:
+  gate_reached: DISCOVERED
+  blocked_at: LICENSE_CHECKED
+  category: license-blocked
+  keep: true
+reason:
+  - GitHub repository metadata reports no license.
+  - Public availability is not equivalent to permission to redistribute or commercially adapt the workflow files.
+action:
+  - Keep source indexed for search/mining.
+  - Preserve workflow paths/hashes when discovered.
+  - Do not copy raw workflow code into this public repository until rights are verified.
+  - Re-enter LICENSE_CHECKED if a license or per-file provenance is established.
