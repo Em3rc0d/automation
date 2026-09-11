@@ -103,32 +103,31 @@ echo "[factory] executing runtime probe"
 docker compose -f "$COMPOSE" run --rm --no-deps n8n execute --id=factoryRuntimeProbeV1 </dev/null
 
 if [[ -n "$WAVE_PROBE_IDS" ]]; then
-  echo "[waves] executing W3-W11 runtime/domain matrix in one isolated CLI container"
+  echo "[waves] executing W3-W11 runtime/domain matrix with n8n execute-batch"
   docker compose -f "$COMPOSE" run --rm --no-deps \
     -e WAVE_PROBE_IDS="$WAVE_PROBE_IDS" \
     --entrypoint /bin/sh n8n -lc '
       set -eu
-      passed=0
-      for id in $WAVE_PROBE_IDS; do
-        if ! n8n execute --id="$id" --rawOutput > /tmp/wave-probe.out 2>&1; then
-          cat /tmp/wave-probe.out
-          echo "WAVES RUNTIME FAILED: $id"
-          exit 1
-        fi
-        if grep -Eq "Execution was NOT successful|Error executing workflow|Problem in node|DECISION_MISMATCH|CAPABILITY_MISMATCH" /tmp/wave-probe.out; then
-          cat /tmp/wave-probe.out
-          echo "WAVES DOMAIN ASSERTION FAILED: $id"
-          exit 1
-        fi
-        if ! grep -q "PASS" /tmp/wave-probe.out; then
-          cat /tmp/wave-probe.out
-          echo "WAVES PROBE MISSING PASS MARKER: $id"
-          exit 1
-        fi
-        passed=$((passed + 1))
-      done
-      test "$passed" -eq 198
-      echo "W3-W11 RUNTIME MATRIX: PASS probes=$passed"
+      printf "%s" "$WAVE_PROBE_IDS" | tr " " "," > /tmp/wave-probe-ids.csv
+      n8n execute-batch \
+        --ids=/tmp/wave-probe-ids.csv \
+        --concurrency=4 \
+        --retries=0 \
+        --output=/tmp/wave-batch-results.json
+      node - <<"NODE"
+const fs = require("fs");
+const p = "/tmp/wave-batch-results.json";
+if (!fs.existsSync(p)) throw new Error("WAVES_BATCH_RESULT_MISSING");
+const r = JSON.parse(fs.readFileSync(p, "utf8"));
+const s = r.summary || {};
+if (r.totalWorkflows !== 198) throw new Error(`WAVES_BATCH_COUNT expected=198 actual=${r.totalWorkflows}`);
+if (s.successfulExecutions !== 198) throw new Error(`WAVES_BATCH_SUCCESS expected=198 actual=${s.successfulExecutions}`);
+if ((s.failedExecutions || 0) !== 0) throw new Error(`WAVES_BATCH_FAILURES actual=${s.failedExecutions}`);
+if ((s.warningExecutions || 0) !== 0) throw new Error(`WAVES_BATCH_WARNINGS actual=${s.warningExecutions}`);
+const assertCovered = (r.coveredNodes || {})["Assert Domain Decision"] || 0;
+if (assertCovered < 198) throw new Error(`WAVES_ASSERT_COVERAGE expected>=198 actual=${assertCovered}`);
+console.log(`W3-W11 RUNTIME MATRIX: PASS probes=${s.successfulExecutions} assertions=${assertCovered}`);
+NODE
     '
 fi
 
