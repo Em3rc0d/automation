@@ -25,9 +25,12 @@ No estamos construyendo un “Zapier peruano”, otro n8n ni un workflow builder
 - `quarries/` — extracción temática: OSS, n8n templates, AI/OCR, conectores, seguridad y mercado.
 - `quarries/workflow-quarry/` — línea de producción de workflows externos/internos: discovery, licencia, inspección, hardening, pruebas y aprobación.
 - `security/` — tenancy, secretos, threat model y production readiness.
-- `commercial/` — catálogo, ICP, pricing hipótesis y discovery comercial.
-- `workflows/` — taxonomía de automatizaciones reutilizables.
-- `workflows/n8n/` — biblioteca reservada para baselines n8n que ya pasaron todo el quarry y pueden servir como punto de partida para clientes.
+- `licensing/` — matriz de reutilización comercial y restricciones.
+- `commercial/` — catálogo, ICP, discovery y pricing hipótesis.
+- `docs/` — onboarding, testing y readiness operativo.
+- `workflows/` — biblioteca semántica de capacidades y adaptadores.
+- `workflows/n8n/` — biblioteca reservada para baselines n8n que ya pasaron todo el quarry.
+- `certification/` — criterios, cobertura y certificados por snapshot.
 - `mk0/` — cierre documental y arquitectónico antes de build.
 - `mk1/` — primer producto operable con un cliente piloto.
 
@@ -46,19 +49,29 @@ DISCOVERED
 → APPROVED_BASELINE
 ```
 
+Nada descubierto se elimina por fallar un gate: se conserva con provenance y motivo bajo `no-pass-verified/`. Los duplicados conservan todas sus fuentes; el fingerprint semántico solo evita revisar técnicamente el mismo flujo muchas veces.
+
 El raw corpus masivo puede descargarse a `quarries/workflow-quarry/.external-cache/` para minería local. Esa carpeta está fuera de Git por defecto. El repo conserva provenance, hashes, licencia, findings, hardening, tests y únicamente redistribuye/adapta artifacts cuando los derechos lo permiten.
 
 Los baselines aprobados se promueven a `workflows/n8n/` y siguen necesitando configuración + acceptance test por cliente.
+
+## Biblioteca de capacidades PyME
+
+`workflows/SMB-CAPABILITY-LIBRARY.md` cubre actualmente 20 familias comunes: ventas/CRM, citas, quote-to-cash, AR/cobranzas, AP/documentos, gastos, procurement, inventario/ecommerce, soporte/SLA, onboarding de clientes, HR, inbox/mensajería, documentos/knowledge, feedback/retención, reporting/KPI/savings, approvals/HITL, sync/master data, IT/access, work orders/service ops y marketing/admin.
+
+La biblioteca expresa capacidades reutilizables; `workflows/CONNECTOR-MATRIX.md` desacopla esas capacidades de proveedores concretos.
 
 ## Principio de ejecución
 
 Cada MK tiene Definition of Done. No se abre el siguiente mientras existan decisiones críticas sin cerrar.
 
-### MK0
+### MK0 — CLOSED
 
-Debe cerrar producto, non-goals, tenancy, modelo de datos, contratos de ejecución/eventos, secrets, Savings Engine, roles/permisos, arquitectura, seguridad mínima, licencias y DoD de MK1.
+Producto, non-goals, tenancy, modelo de dominio, contratos, secrets/OAuth, Savings Engine, roles/permisos, arquitectura, seguridad, licencias, workflow quarry y DoD de MK1 están cerrados a nivel conocimiento/diseño.
 
-### MK1
+Evidencia: `mk0/CLOSURE-LEDGER.md`.
+
+### MK1 — NOT CERTIFIED / implementation stage
 
 Termina cuando podemos:
 
@@ -91,17 +104,36 @@ Termina cuando podemos:
 - Next.js
 - PostgreSQL / Supabase
 - Supabase Auth + RLS
-- n8n self-hosted como motor inicial
+- n8n como motor inicial **solo bajo un modelo comercial/licenciamiento compatible**
 - Node.js workers para lógica no apropiada para n8n
 - OpenAI API solo donde aporte
 - Vercel + Railway/VPS administrado
 - Zod/OpenAPI para contratos
 - Vitest + Playwright
 
-> n8n es un candidato, no la fuente de verdad del producto. Su Sustainable Use License se mantiene como gate comercial y legal.
+> n8n es un candidato, no la fuente de verdad del producto. Su licencia/commercial deployment permanece como gate explícito en `licensing/LICENSE-MATRIX.md`.
+
+## Certificación
+
+La certificación es por snapshot y separa tres niveles:
+
+```text
+K0 — KNOWLEDGE_ARCHITECTURE_CERTIFIED
+W1 — BASELINE_LIBRARY_CERTIFIED
+P1 — PILOT_PRODUCT_CERTIFIED
+```
+
+`K0 != W1 != P1`.
+
+El repositorio tiene CI en `.github/workflows/repository-certification.yml` para validar invariantes estructurales/documentales. Los criterios exactos están en `certification/CRITERIA.md`.
 
 ## Estado
 
-`RESEARCH → WORKFLOW QUARRY → MK0`
+```text
+K0 KNOWLEDGE / ARCHITECTURE     CLOSED
+WORKFLOW QUARRY                 CONTINUOUS
+W1 APPROVED BASELINE LIBRARY    NOT YET CERTIFIED
+P1 PILOT PRODUCT                NOT YET CERTIFIED
+```
 
-La investigación inicial de OSS, n8n templates, AI/OCR, conectores, seguridad, tenancy y Savings Engine está materializada en `mining-site/` y `quarries/`. El siguiente objetivo técnico del quarry es convertir el corpus descubierto en una biblioteca pequeña de baselines saneados, testeados y aprobados para reutilización comercial.
+No se presenta W1/P1 como terminado hasta existir evidencia real de workflow tests, conectores, tenant isolation, runtime, restore/rollback e incident drill.
