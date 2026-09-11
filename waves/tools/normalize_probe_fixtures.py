@@ -6,11 +6,15 @@ different units for similarly named fields; this pass makes those units explicit
 without contaminating the capability engine with test-only branches.
 """
 from __future__ import annotations
-import json
+import json, sys
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT))
+from waves.catalog import iter_capabilities
+
 probe_root=ROOT/'waves/.generated/runtime-probes'
+expected=sum(1 for cap in iter_capabilities() if cap['pattern']=='MONITOR')
 changed=0
 for path in sorted(probe_root.rglob('*.json')):
     data=json.loads(path.read_text())
@@ -31,6 +35,6 @@ for path in sorted(probe_root.rglob('*.json')):
     fixture['parameters']['jsCode']=js.replace(old,'"threshold":100',1)
     path.write_text(json.dumps(data,indent=2,sort_keys=True)+'\n')
     changed+=1
-if changed!=7:
-    raise SystemExit(f'expected 7 MONITOR valid probes to normalize, got {changed}')
+if changed!=expected:
+    raise SystemExit(f'expected {expected} MONITOR valid probes to normalize, got {changed}')
 print(f'WAVES FIXTURE NORMALIZATION: PASS monitor_valid={changed}')
