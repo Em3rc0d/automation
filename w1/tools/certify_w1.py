@@ -94,15 +94,20 @@ def idempotency_headers(trace):
     for item in data.get("requests",[]):
         req=item.get("request",item)
         if trace not in req.get("body",""): continue
-        hs=req.get("headers",{}).get("Idempotency-Key",[])
-        if hs: vals.append(hs[0])
+        raw=req.get("headers",{}).get("Idempotency-Key",[])
+        if isinstance(raw,str): vals.append(raw)
+        elif raw: vals.append(raw[0])
     return vals
+
+def import_workflow(path:Path):
+    rel=path.relative_to(ROOT)
+    return compose("run","--rm","--no-deps","-T","n8n","n8n","import:workflow",f"--input=/workspace/{rel}",check=False)
 
 def execute_wrapper(wid,extra_env=None):
     args=["run","--rm","--no-deps","-T"]
     if extra_env:
         for k,v in extra_env.items(): args += ["-e",f"{k}={v}"]
-    args += ["n8n","execute",f"--id={wid}","--rawOutput"]
+    args += ["n8n","n8n","execute",f"--id={wid}","--rawOutput"]
     return compose(*args,check=False)
 
 def failed(rc,out,marker=None):
@@ -128,7 +133,7 @@ def write_report(res,evidence_sha,run_id):
         if json.loads((dest/"workflow.json").read_text())!=json.loads((res.package/"workflow.json").read_text()): raise RuntimeError(f"TESTED destination conflict: {dest}")
     else:
         dest.parent.mkdir(parents=True,exist_ok=True); shutil.copytree(res.package,dest)
-    lines=[f"# {res.key}@1.0 — W1 Runtime Test Report","","VERDICT: PASS","",f"- evidence SHA: `{evidence_sha}`",f"- GitHub run: `{run_id}`",f"- n8n: `{N8N_VERSION}`","- execution mode: CLI wrapper → Execute Sub-workflow","- mock: WireMock 3.9.1",f"- side effect: `{str(res.side_effect).lower()}`","","## Results",""]
+    lines=[f"# {res.key}@1.0 — W1 Runtime Test Report","","VERDICT: PASS","",f"- evidence SHA: `{evidence_sha}`",f"- GitHub run: `{run_id}`",f"- n8n: `{N8N_VERSION}`","- execution mode: isolated CLI wrapper → Execute Sub-workflow","- database ownership: n8n server stopped during CLI import/execute","- mock: WireMock 3.9.1",f"- side effect: `{str(res.side_effect).lower()}`","","## Results",""]
     for tid,status,detail in res.tests: lines.append(f"- **{tid}** — {status}: {detail}")
     lines += ["","All applicable gates passed. Source HARDENED package remains preserved.",""]
     (dest/"evidence/TEST-REPORT.md").write_text("\n".join(lines))
@@ -151,20 +156,23 @@ def main():
     compose("down","-v",check=False); compose("up","-d","--wait")
     results=[]; runtime_log=[]
     try:
+        # n8n was booted once above to prove the pinned runtime/DB can initialize.
+        # Stop the long-running server before any CLI import or execution so SQLite
+        # has exactly one owner at a time; this prevents hidden SQLITE_BUSY races.
+        compose("stop","n8n")
         for key,family,pkg,data in packages():
-            rc,out=compose("exec","-T","n8n","n8n","import:workflow",f"--input=/workspace/{(pkg/'workflow.json').relative_to(ROOT)}",check=False)
+            rc,out=import_workflow(pkg/"workflow.json")
             if rc!=0: raise RuntimeError(f"T01 import failed {key}\n{out}")
         wrappers={}
         for key,family,pkg,data in packages():
             for suffix,name in [("valid","valid.json"),("invalidtenant","invalid-missing-tenant.json"),("duplicate","duplicate.json"),("invalidtime","invalid-timestamp.json"),("transient","transient.json"),("permanent","permanent.json")]:
                 fixture=json.loads((pkg/"fixtures"/name).read_text()); wid,w=wrapper(key,data["id"],fixture,suffix)
                 path=GEN/f"{wid}.json"; path.write_text(json.dumps(w,indent=2)+"\n")
-                rc,out=compose("exec","-T","n8n","n8n","import:workflow",f"--input=/workspace/{path.relative_to(ROOT)}",check=False)
+                rc,out=import_workflow(path)
                 if rc!=0: raise RuntimeError(f"wrapper import failed {key}/{suffix}\n{out}")
                 wrappers[(key,suffix)]=wid
-        compose("stop","n8n")
         for key,family,pkg,data in packages():
-            se=side_effect(data); tests=[("T01","PASS","candidate and wrappers imported cleanly")]
+            se=side_effect(data); tests=[("T01","PASS","candidate and wrappers imported cleanly with exclusive SQLite ownership")]
             reset_mock(); rc,out=execute_wrapper(wrappers[(key,"valid")]); runtime_log.append(out)
             if rc!=0 or failed(rc,out): raise RuntimeError(f"T02 valid execution failed {key}\n{out}")
             tests.append(("T02","PASS","valid fixture executed successfully"))
