@@ -22,12 +22,33 @@ No estamos construyendo un “Zapier peruano”, otro n8n ni un workflow builder
 - `architecture/` — arquitectura, contratos, datos, conectores y runtime.
 - `decisions/` — ADRs y decisiones congeladas.
 - `mining-site/` — índice general de investigación, fuentes y provenance.
-- `quarries/` — extracción temática: OSS, n8n templates, AI/OCR, conectores, seguridad, mercado.
+- `quarries/` — extracción temática: OSS, n8n templates, AI/OCR, conectores, seguridad y mercado.
+- `quarries/workflow-quarry/` — línea de producción de workflows externos/internos: discovery, licencia, inspección, hardening, pruebas y aprobación.
 - `security/` — tenancy, secretos, threat model y production readiness.
 - `commercial/` — catálogo, ICP, pricing hipótesis y discovery comercial.
-- `workflows/` — taxonomía y especificaciones de automatizaciones reutilizables.
+- `workflows/` — taxonomía de automatizaciones reutilizables.
+- `workflows/n8n/` — biblioteca reservada para baselines n8n que ya pasaron todo el quarry y pueden servir como punto de partida para clientes.
 - `mk0/` — cierre documental y arquitectónico antes de build.
 - `mk1/` — primer producto operable con un cliente piloto.
+
+## Workflow Quarry
+
+Miles de workflows externos pueden usarse como corpus de búsqueda, pero no se consideran confiables automáticamente.
+
+Pipeline obligatorio:
+
+```text
+DISCOVERED
+→ LICENSE_CHECKED
+→ INSPECTED
+→ HARDENED
+→ TESTED
+→ APPROVED_BASELINE
+```
+
+El raw corpus masivo puede descargarse a `quarries/workflow-quarry/.external-cache/` para minería local. Esa carpeta está fuera de Git por defecto. El repo conserva provenance, hashes, licencia, findings, hardening, tests y únicamente redistribuye/adapta artifacts cuando los derechos lo permiten.
+
+Los baselines aprobados se promueven a `workflows/n8n/` y siguen necesitando configuración + acceptance test por cliente.
 
 ## Principio de ejecución
 
@@ -81,6 +102,6 @@ Termina cuando podemos:
 
 ## Estado
 
-`RESEARCH → MK0`
+`RESEARCH → WORKFLOW QUARRY → MK0`
 
-La investigación inicial de OSS, n8n templates, AI/OCR, conectores, seguridad, tenancy y Savings Engine está siendo materializada en `mining-site/` y `quarries/` con fuentes y restricciones de licencia.
+La investigación inicial de OSS, n8n templates, AI/OCR, conectores, seguridad, tenancy y Savings Engine está materializada en `mining-site/` y `quarries/`. El siguiente objetivo técnico del quarry es convertir el corpus descubierto en una biblioteca pequeña de baselines saneados, testeados y aprobados para reutilización comercial.
