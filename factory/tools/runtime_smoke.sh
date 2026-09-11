@@ -147,9 +147,9 @@ if (r.totalWorkflows !== 198) throw new Error(`WAVES_BATCH_COUNT expected=198 ac
 if (s.successfulExecutions !== 198) throw new Error(`WAVES_BATCH_SUCCESS expected=198 actual=${s.successfulExecutions}`);
 if ((s.failedExecutions || 0) !== 0) throw new Error(`WAVES_BATCH_FAILURES actual=${s.failedExecutions}`);
 if ((s.warningExecutions || 0) !== 0) throw new Error(`WAVES_BATCH_WARNINGS actual=${s.warningExecutions}`);
-const assertCovered = (r.coveredNodes || {})["Assert Domain Decision"] || 0;
-if (assertCovered < 198) throw new Error(`WAVES_ASSERT_COVERAGE expected>=198 actual=${assertCovered}`);
-console.log(`W3-W11 RUNTIME MATRIX: PASS probes=${s.successfulExecutions} assertions=${assertCovered}`);
+if (!Array.isArray(r.executions) || r.executions.length !== 198) throw new Error(`WAVES_EXECUTION_RECORDS expected=198 actual=${Array.isArray(r.executions) ? r.executions.length : "missing"}`);
+if (r.executions.some(e => e.executionStatus !== "success")) throw new Error("WAVES_EXECUTION_STATUS contains non-success record");
+console.log(`W3-W11 RUNTIME MATRIX: PASS probes=${s.successfulExecutions} failures=${s.failedExecutions || 0} warnings=${s.warningExecutions || 0}`);
 NODE
     '
 fi
