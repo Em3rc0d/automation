@@ -1,0 +1,96 @@
+name: W1 Factory Production
+
+on:
+  push:
+    branches:
+      - w1/baseline-library
+    paths:
+      - 'w1/tools/produce_w1.py'
+      - 'w1/tools/certify_w1.py'
+      - 'w1/tools/validate_release.py'
+      - '.github/workflows/w1-production.yml'
+      - 'factory/runtime/compose.yml'
+      - 'factory/mock/wiremock/mappings/control-plane.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: w1-factory-production
+  cancel-in-progress: false
+
+jobs:
+  manufacture-w1:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[w1-generated]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate complete W1 HARDENED wave
+        run: python w1/tools/produce_w1.py --clean-generated
+
+      - name: Static candidate gate
+        run: python tools/validate_w1_candidates.py
+
+      - name: Runtime certify and promote every W1 component
+        env:
+          N8N_VERSION: '2.38.7'
+          AUTOMATION_CONTROL_PLANE_TOKEN: factory-test-token
+        run: python w1/tools/certify_w1.py
+
+      - name: Release topology gate
+        run: python w1/tools/validate_release.py
+
+      - name: Write W1 production ledger
+        run: |
+          cat > w1/STATUS.md <<EOF
+          # W1 Status Ledger
+
+          Updated: 2026-09-11
+
+          ## Evidence
+          - production source SHA: \`${GITHUB_SHA}\`
+          - production run: \`${GITHUB_RUN_ID}\`
+          - runtime: n8n \`2.38.7\`
+          - factory profile: \`n8n-base-js-v1\`
+
+          ## Materialized wave
+          \`\`\`text
+          HARDENED             11
+          TESTED               11
+          APPROVED_BASELINE    11
+          workflows/n8n        11
+          W1 CERTIFIED         PENDING FINAL SAME-SHA SEAL
+          \`\`\`
+
+          All 11 first-wave components passed their applicable runtime/static test matrix before promotion.
+          Source HARDENED and TESTED packages were preserved. Promotion was copy-only.
+          Failed gates stop this workflow before any generated commit is pushed.
+
+          ## Next gate
+          The generated commit must independently pass repository certification, W1 candidate validation,
+          F1 factory validation and W1 release validation before W1 certification can be sealed.
+          EOF
+
+      - name: Commit manufactured library
+        run: |
+          git config user.name "W1 Baseline Factory"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            quarries/workflow-quarry/30-hardened \
+            quarries/workflow-quarry/40-tested \
+            quarries/workflow-quarry/50-approved-baseline \
+            workflows/n8n \
+            w1/STATUS.md
+          if git diff --cached --quiet; then
+            echo "No W1 production changes to commit."
+            exit 0
+          fi
+          git commit -m "w1: manufacture complete baseline wave [w1-generated]"
+          git push origin HEAD:w1/baseline-library
