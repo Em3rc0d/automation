@@ -134,7 +134,7 @@ The repository may claim **BROAD_TOOLBOX_READY** only when:
 2. no Priority-A family remains `GAP` or merely undocumented;
 3. at least 10/12 reference archetypes are assemblable without new business-semantic code;
 4. all components used by those 10 archetypes are `APPROVED_BASELINE` or explicitly identified adapters/configuration;
-5. provider-specific variants are not counted as new capabilities;
+5. Provider-specific variants are not counted as new capabilities;
 6. the certification validator reports no semantic duplicate/admission-policy violations;
 7. mining remains open for new evidence and better versions.
 
