@@ -1,0 +1,17 @@
+{
+  "tenantId": "tenant_fixture",
+  "automationInstanceId": "automation_fixture",
+  "traceId": "trace_incident_001",
+  "runId": "run_incident_001",
+  "occurredAt": "2026-09-11T17:00:00.000Z",
+  "idempotencyKey": "incident:tenant_fixture:automation_fixture:trace_incident_001:PROVIDER_401:Fetch Message:Fetch Message",
+  "severity": "error",
+  "provider": "gmail",
+  "nodeName": "Fetch Message",
+  "error": {
+    "code": "PROVIDER_401",
+    "message": "Credential expired",
+    "retryable": false,
+    "category": "auth"
+  }
+}
