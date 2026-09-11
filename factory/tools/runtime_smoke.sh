@@ -18,6 +18,7 @@ fi
 if [[ -f "$ROOT/waves/catalog.py" ]]; then
   echo "[waves] compile deterministic W3-W11 candidates and probes"
   python "$ROOT/waves/tools/build_waves.py"
+  python "$ROOT/waves/tools/normalize_probe_fixtures.py"
   python "$ROOT/waves/tools/validate_waves.py"
 fi
 
