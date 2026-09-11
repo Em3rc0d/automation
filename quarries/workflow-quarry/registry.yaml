@@ -1,4 +1,4 @@
-version: 3
+version: 4
 updated_at: 2026-09-11
 
 sources:
@@ -15,19 +15,34 @@ sources:
       - GitHub repository metadata currently reports no license.
       - Mine metadata/patterns; raw redistribution remains blocked.
 
+  - id: scrapernode-awesome-n8n-templates
+    url: https://github.com/ScraperNode/awesome-n8n-templates
+    claimed_scale: "8697+ workflows"
+    observed_ref: d50bcb23f189aedb10315a3f119a40c3f61194f4
+    observed_json_code_search_count: 8224
+    stage: LICENSE_CHECKED
+    intended_use: primary-bulk-code-corpus
+    license_status: "repository reports MIT; per-template provenance remains gated"
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Largest verified real JSON corpus found so far.
+      - GitHub code-search matches at observed ref: lead=1102, invoice=284, appointment=147.
+      - B2B voice lead qualification, AI invoice agent and appointment qualification candidates inspected in batch 004.
+      - Semantic deduplication is required because variants also occur in other aggregation corpora.
+
   - id: xuanli-awesome-n8n-templates-scrapernode
     url: https://github.com/xuanli/awesome-n8n-templates-scrapernode
     upstream_url: https://github.com/ScraperNode/awesome-n8n-templates
     claimed_scale: "8697+ workflows"
     stage: LICENSE_CHECKED
-    intended_use: search-corpus
+    intended_use: fork-mirror-provenance
     license_status: "repository/fork reports MIT; per-template provenance remains gated"
-    priority: P0
+    priority: P2
     preserve_if_blocked: true
     notes:
       - GitHub identifies this as a fork of ScraperNode/awesome-n8n-templates.
-      - Broad corpus: 25 categories, 236 integrations, 11 use cases claimed.
-      - Run bulk index before any candidate promotion.
+      - Preserve fork provenance but prefer upstream ScraperNode for mining.
 
   - id: sevenandone-n8n-library
     url: https://github.com/7and1/n8n-Library
@@ -68,13 +83,16 @@ sources:
     url: https://github.com/mlnjsh/n8n-workflows-mega
     claimed_scale: "5000+ workflows"
     stage: LICENSE_CHECKED
-    intended_use: thematic-mining
-    license_status: "repository reports MIT; per-workflow provenance still reviewed"
+    intended_use: knowledge-use-case-catalog
+    license_status: MIT
     priority: P1
     preserve_if_blocked: true
+    blocking_bucket: no-pass-verified/knowledge-only
+    observed_json_code_search_count: 0
     notes:
-      - Top-level domain folders include finance-accounting, customer-support, HR/recruiting, ecommerce, communication, data-analytics and more.
-      - Run bulk indexer before selecting P0 candidates.
+      - Verification found rich domain READMEs/specifications but no JSON code in GitHub code search.
+      - Do not count advertised scale as importable workflows.
+      - Preserve as commercial/use-case/test-scenario knowledge quarry.
 
   - id: sander2610-n8n-automation-templates-500
     url: https://github.com/sander2610/n8n-automation-templates-500
@@ -139,4 +157,6 @@ promotion_policy:
   no_bulk_approval: true
   require_per_workflow_or_provenance_cohort_evidence: true
   retain_all_candidate_metadata: true
+  retain_duplicate_provenance: true
+  semantic_deduplication_for_review: true
   raw_external_code_policy: "Do not mirror raw external workflow code into the public repo unless redistribution/provenance is adequate. Preserve metadata, path, source commit/blob hash and findings regardless."
