@@ -6,6 +6,7 @@ on:
       - w1/baseline-library
     paths:
       - 'w1/tools/produce_w1.py'
+      - 'w1/tools/normalize_runtime_contracts.py'
       - 'w1/tools/certify_w1.py'
       - 'w1/tools/certify_w1_runtime.py'
       - 'w1/tools/validate_release.py'
@@ -35,7 +36,9 @@ jobs:
           python-version: '3.12'
 
       - name: Generate complete W1 HARDENED wave
-        run: python w1/tools/produce_w1.py --clean-generated
+        run: |
+          python w1/tools/produce_w1.py --clean-generated
+          python w1/tools/normalize_runtime_contracts.py
 
       - name: Static candidate gate
         run: python tools/validate_w1_candidates.py
@@ -61,6 +64,7 @@ jobs:
           - production run: \`${GITHUB_RUN_ID}\`
           - runtime: n8n \`2.38.7\`
           - factory profile: \`n8n-base-js-v1\`
+          - subworkflow input contract: \`inputSource=passthrough\`
 
           ## Materialized wave
           \`\`\`text
