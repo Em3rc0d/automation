@@ -1,0 +1,21 @@
+{
+  "tenantId": "tenant_fixture",
+  "automationInstanceId": "automation_fixture",
+  "eventType": "COMPLETED",
+  "occurredAt": "2026-09-11T17:00:00.000Z",
+  "traceId": "trace_fixture_001",
+  "runId": "run_fixture_001",
+  "idempotencyKey": "tenant_fixture:automation_fixture:trace_fixture_001:COMPLETED",
+  "status": "completed",
+  "metrics": {
+    "eligibleUnits": 1,
+    "automatedUnits": 1,
+    "exceptionMinutes": 0,
+    "oversightMinutes": 0.5,
+    "variableCost": 0.01
+  },
+  "metadata": {
+    "fixture": true,
+    "duplicateReplay": true
+  }
+}
