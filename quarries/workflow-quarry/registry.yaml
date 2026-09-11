@@ -1,4 +1,4 @@
-version: 4
+version: 5
 updated_at: 2026-09-11
 
 sources:
@@ -142,6 +142,123 @@ sources:
     priority: P1
     preserve_if_blocked: true
 
+  - id: ivansiyanko-n8n-invoice-ai
+    url: https://github.com/ivansiyanko/n8n-invoice-ai
+    observed_workflow_blob: 6ddd8e9e981d7d526d671b716f052303e741cac7
+    stage: INSPECTED
+    intended_use: invoice-document-hardening-candidate
+    license_status: MIT
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Actual importable workflow.json inspected in batch 005.
+      - Webhook/IMAP -> document extraction -> validation -> review/accounting branch.
+      - Needs stronger webhook auth, arithmetic validation, idempotency, tenant contracts and provider-neutral accounting adapter.
+
+  - id: n8n-whatsapp-receipt-ocr-template
+    url: https://n8n.io/workflows/11332-whatsapp-receipt-ocr-and-ai-data-extraction-with-twilio-llamaparse-and-gemini/
+    stage: DISCOVERED
+    intended_use: whatsapp-receipt-pattern
+    license_status: "template usage terms/provenance to verify before raw redistribution"
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Twilio WhatsApp -> LlamaParse -> multi-model extraction -> structured storage.
+      - Extremely close to target PyME receipt/boleta intake pattern.
+
+  - id: n8n-whatsapp-invoice-ocr-template
+    url: https://n8n.io/workflows/10462-automate-whatsapp-invoice-processing-with-ocr-gpt-4-mini-and-google-services/
+    stage: DISCOVERED
+    intended_use: whatsapp-invoice-pattern
+    license_status: "template usage terms/provenance to verify before raw redistribution"
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - WhatsApp Cloud API -> OCR -> AI -> Sheets/Drive -> WhatsApp reply.
+
+  - id: n8n-invoice-validation-template-family
+    url: https://n8n.io/workflows/categories/invoice-processing/
+    stage: DISCOVERED
+    intended_use: invoice-validation-pattern-family
+    license_status: "per-template terms/provenance required"
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Batch 005 records strict JSON, arithmetic validation, duplicate detection, review queues and collections patterns across multiple templates.
+
+  - id: invoice-x-invoice2data
+    url: https://github.com/invoice-x/invoice2data
+    stage: LICENSE_CHECKED
+    intended_use: deterministic-invoice-extraction-worker
+    license_status: MIT
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Template-driven deterministic extraction with multiple OCR/text backends.
+      - Strong candidate for known-supplier first-pass before LLM fallback.
+
+  - id: paperflow
+    url: https://github.com/lordbasilaiassistant-sudo/paperflow
+    stage: LICENSE_CHECKED
+    intended_use: document-evaluation-and-confidence-architecture
+    license_status: MIT
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Per-field confidence, arithmetic/source-text checks, human review and eval harness over difficult synthetic documents.
+
+  - id: docling-project-docling
+    url: https://github.com/docling-project/docling
+    stage: LICENSE_CHECKED
+    intended_use: document-preprocessing-and-ocr
+    license_status: "MIT codebase; individual model licenses must be verified"
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Unified document model, OCR modes, table/layout extraction, local/server conversion.
+
+  - id: mindee-doctr
+    url: https://github.com/mindee/doctr
+    stage: LICENSE_CHECKED
+    intended_use: local-ocr-backend
+    license_status: Apache-2.0
+    priority: P1
+    preserve_if_blocked: true
+
+  - id: activepieces-activepieces
+    url: https://github.com/activepieces/activepieces
+    stage: LICENSE_CHECKED
+    intended_use: connector-framework-and-automation-architecture-quarry
+    license_status: "MIT outside EE/commercial directories; EE and third-party components have separate licenses"
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Typed TypeScript piece framework, versioned flows, retries, HITL and self-hosting.
+      - Repository guidance exposes useful multi-tenant scoping and side-effect separation patterns.
+      - Mine connector implementations independently from decision to use n8n as initial engine.
+
+  - id: jeffersonqiu-llm-ocr
+    url: https://github.com/jeffersonqiu/llm_ocr
+    stage: DISCOVERED
+    intended_use: local-receipt-ocr-pattern
+    license_status: UNKNOWN
+    priority: P1
+    preserve_if_blocked: true
+    notes:
+      - PaddleOCR + local LLM/Ollama + preprocessing + FastAPI/React pattern.
+      - Verify license before code reuse.
+
+  - id: sunat-cpe-boleta
+    url: https://cpe.sunat.gob.pe/tipos_de_comprobantes/boleta
+    stage: DISCOVERED
+    intended_use: peru-cpe-authoritative-knowledge
+    license_status: N/A
+    priority: P0
+    preserve_if_blocked: true
+    notes:
+      - Authoritative regional knowledge for electronic boleta/factura consultation and retention semantics.
+      - OCR extraction must remain separate from tax/accounting compliance claims.
+
 promotion_policy:
   stages:
     - DISCOVERED
@@ -159,4 +276,5 @@ promotion_policy:
   retain_all_candidate_metadata: true
   retain_duplicate_provenance: true
   semantic_deduplication_for_review: true
+  mining_never_stops_when_baseline_work_starts: true
   raw_external_code_policy: "Do not mirror raw external workflow code into the public repo unless redistribution/provenance is adequate. Preserve metadata, path, source commit/blob hash and findings regardless."
