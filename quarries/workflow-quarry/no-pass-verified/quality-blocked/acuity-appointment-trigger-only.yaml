@@ -1,0 +1,18 @@
+candidate:
+  source_repository: https://github.com/felipfr/awesome-n8n-workflows
+  source_tree: 8aa4a25a373b812aafe44454e68554a4d568c873
+  source_path: productivity/Acuityscheduling_Automate_Triggered.json
+  source_blob_sha: 369877e2c310d25fcb774dabea0ec460a30ac249
+  target_family: APPOINTMENT/EVENT_INTAKE
+status:
+  gate_reached: INSPECTED
+  failed_gate: HARDENED
+  classification: quality-blocked
+  preserve: true
+blocking_reasons:
+  - Workflow contains only an Acuity appointment.scheduled trigger.
+  - No state sync, confirmation, reminder, idempotency, telemetry or customer-visible outcome.
+value_retained:
+  - Confirms Acuity Scheduling trigger/event capability for future connector composition.
+reentry_conditions:
+  - Compose into a complete AppointmentFlow template with typed event normalization, ProcessRecord, idempotency and lifecycle actions.
