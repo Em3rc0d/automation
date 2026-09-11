@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/ERROR_TO_INCIDENT-1.0.0.json",
+  "title": "ERROR_TO_INCIDENT@1.0.0 configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["AUTOMATION_CONTROL_PLANE_URL"],
+  "properties": {
+    "AUTOMATION_CONTROL_PLANE_URL": {
+      "type": "string",
+      "format": "uri"
+    },
+    "credentialBinding": {
+      "type": "string",
+      "description": "Operator-managed n8n HTTP Header Auth credential reference."
+    }
+  }
+}
