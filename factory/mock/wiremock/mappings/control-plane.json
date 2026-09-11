@@ -8,7 +8,7 @@
       "request": {
         "method": "POST",
         "urlPathPattern": "/internal/.*",
-        "bodyPatterns": [{"contains": "trace-transient-"}]
+        "bodyPatterns": [{"contains": "transient-"}]
       },
       "response": {
         "status": 500,
@@ -24,7 +24,7 @@
       "request": {
         "method": "POST",
         "urlPathPattern": "/internal/.*",
-        "bodyPatterns": [{"contains": "trace-transient-"}]
+        "bodyPatterns": [{"contains": "transient-"}]
       },
       "response": {
         "status": 500,
@@ -39,7 +39,7 @@
       "request": {
         "method": "POST",
         "urlPathPattern": "/internal/.*",
-        "bodyPatterns": [{"contains": "trace-transient-"}]
+        "bodyPatterns": [{"contains": "transient-"}]
       },
       "response": {
         "status": 202,
@@ -52,7 +52,7 @@
       "request": {
         "method": "POST",
         "urlPathPattern": "/internal/.*",
-        "bodyPatterns": [{"contains": "trace-permanent-"}]
+        "bodyPatterns": [{"contains": "permanent-"}]
       },
       "response": {
         "status": 500,
