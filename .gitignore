@@ -1,6 +1,9 @@
 # External workflow quarry cache
 quarries/workflow-quarry/.external-cache/
 
+# Deterministic W3-W11 compiler output; rebuilt and certified from waves/catalog.py
+waves/.generated/
+
 # Local workflow execution/test evidence that may contain transient data
 quarries/workflow-quarry/**/tmp/
 quarries/workflow-quarry/**/.tmp/

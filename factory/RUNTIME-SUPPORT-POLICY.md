@@ -66,7 +66,7 @@ runtime:
   tested_version: "2.38.7"
 ```
 
-The W1 static validator rejects Python Code configuration and undeclared/non-base node packages under this profile.
+The W1/W2 static validators reject Python Code configuration and undeclared/non-base node packages under this profile.
 
 ## Upgrade rule
 
