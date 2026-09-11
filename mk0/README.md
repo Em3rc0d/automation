@@ -1,5 +1,9 @@
 # MK0 — Closure Before Build
 
+Status: **CLOSED — K0 knowledge/architecture scope**
+Closed: 2026-09-11
+Evidence: `mk0/CLOSURE-LEDGER.md`
+
 MK0 exists to prevent the project from becoming infinite.
 
 ## Objective
@@ -41,7 +45,7 @@ Close every decision that would otherwise cause architectural churn during imple
 - shared tables + tenant_id
 - RLS policies
 - operator privileged path
-- negative isolation tests
+- negative isolation tests specified for MK1
 
 ### Secrets/connectors
 - SecretStore contract
@@ -72,35 +76,35 @@ Close every decision that would otherwise cause architectural churn during imple
 - access controls
 
 ### Licensing
-- n8n commercial use decision
-- exact dependency license matrix
-- repository license/private strategy
+- n8n commercial use decision/gate
+- dependency license matrix
+- source/provenance strategy
 
 ## Mandatory ADRs before MK1
 
-- ADR-0001: platform scope and control-plane principle
-- ADR-0002: n8n as initial engine + exit strategy
-- ADR-0003: shared-table tenancy + RLS
-- ADR-0004: secrets strategy
-- ADR-0005: Savings Engine methodology
-- ADR-0006: monolith-first deployment
+- ADR-0001: platform scope and control-plane principle — ACCEPTED
+- ADR-0002: n8n as initial engine + exit strategy — ACCEPTED / commercial-license conditional
+- ADR-0003: shared-table tenancy + RLS — ACCEPTED
+- ADR-0004: secrets strategy — ACCEPTED
+- ADR-0005: Savings Engine methodology — ACCEPTED
+- ADR-0006: monolith-first deployment — ACCEPTED
 
 ## Definition of Done
 
 ```text
-[ ] what we build is frozen for MK1
-[ ] what we do NOT build is frozen
-[ ] data/domain contracts v1 accepted
-[ ] tenancy proven with tests/design
-[ ] secrets strategy accepted
-[ ] execution/event contract v1 accepted
-[ ] ProcessRecord semantics accepted
-[ ] Savings Engine v1 accepted
-[ ] security threat pass complete
-[ ] n8n licensing decision documented
-[ ] source/license registry exists
-[ ] MK1 backlog and DoD accepted
-[ ] no critical OPEN decision remains
+[x] what we build is frozen for MK1
+[x] what we do NOT build is frozen
+[x] data/domain contracts v1 accepted
+[x] tenancy design closed; runtime isolation tests specified for MK1
+[x] secrets strategy accepted
+[x] execution/event contract v1 accepted
+[x] ProcessRecord semantics accepted
+[x] Savings Engine v1 accepted
+[x] security design threat pass complete
+[x] n8n licensing gate documented
+[x] source/license registry exists
+[x] MK1 backlog and DoD accepted
+[x] no critical OPEN documentation/architecture decision remains
 ```
 
 ## Hard scope freeze
@@ -130,4 +134,6 @@ A new feature can enter MK1 only if:
 
 ## Exit condition
 
-MK0 closes when the graph has no unresolved critical nodes. Only then implementation begins.
+MK0 closes when the graph has no unresolved critical product/architecture/design nodes. That condition is met for the K0 snapshot documented in `mk0/CLOSURE-LEDGER.md`.
+
+This closure does **not** certify runtime baselines (W1) or the pilot product (P1); those require actual workflow/test/deployment evidence under `certification/CRITERIA.md`.
