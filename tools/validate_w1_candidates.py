@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Static integrity checks for W1 workflow candidates.
 
-This validator does NOT certify runtime behavior. It verifies that candidates in
-30-hardened are packaged consistently, carry stable engine workflow IDs required
-by the pinned n8n runtime, and are not carrying bound n8n credentials.
-Runtime promotion remains gated by actual TEST-REPORT evidence.
+This validator does NOT certify business/runtime behavior. It verifies that
+candidates in 30-hardened are packaged consistently, carry stable engine IDs,
+do not carry bound credentials, and fit the currently certified factory runtime
+profile `n8n-base-js-v1`.
 """
 
 from __future__ import annotations
@@ -26,6 +26,8 @@ REQUIRED_HARDENED = {
 }
 
 STABLE_WORKFLOW_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{5,127}$")
+CERTIFIED_RUNTIME_PROFILE = "n8n-base-js-v1"
+CERTIFIED_N8N_VERSION = "2.38.7"
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -45,6 +47,18 @@ def load_workflow(package: Path, errors: list[str]) -> dict | None:
     except Exception as exc:
         fail(errors, f"invalid workflow JSON: {package.relative_to(ROOT)}: {exc}")
         return None
+
+
+def uses_unsupported_python(node: dict) -> bool:
+    if node.get("type") != "n8n-nodes-base.code":
+        return False
+    params = node.get("parameters") or {}
+    language = str(params.get("language", "")).strip().lower()
+    if language.startswith("python"):
+        return True
+    if any(key in params for key in ("pythonCode", "pythonNativeCode")):
+        return True
+    return False
 
 
 def validate_workflow_json(package: Path, errors: list[str], seen_ids: dict[str, Path]) -> None:
@@ -87,6 +101,21 @@ def validate_workflow_json(package: Path, errors: list[str], seen_ids: dict[str,
                 f"{package.relative_to(ROOT)} node={node.get('name')!r}",
             )
 
+        node_type = str(node.get("type", ""))
+        if not node_type.startswith("n8n-nodes-base."):
+            fail(
+                errors,
+                f"unsupported node package for {CERTIFIED_RUNTIME_PROFILE}: "
+                f"{package.relative_to(ROOT)} node={node.get('name')!r} type={node_type!r}",
+            )
+
+        if uses_unsupported_python(node):
+            fail(
+                errors,
+                f"Python Code node requires a separately certified runtime profile: "
+                f"{package.relative_to(ROOT)} node={node.get('name')!r}",
+            )
+
     meta = data.get("meta", {})
     if meta.get("stage") != "HARDENED":
         fail(errors, f"workflow meta.stage must be HARDENED: {package.relative_to(ROOT)}")
@@ -110,7 +139,15 @@ def validate_hardened(package: Path, errors: list[str], seen_ids: dict[str, Path
     manifest = package / "manifest.yaml"
     if manifest.is_file():
         text = manifest.read_text(encoding="utf-8")
-        for token in ["stage: HARDENED", "origin:", "idempotency:", "promotion:"]:
+        required_tokens = [
+            "stage: HARDENED",
+            "origin:",
+            "idempotency:",
+            "promotion:",
+            f"profile: {CERTIFIED_RUNTIME_PROFILE}",
+            f'tested_version: "{CERTIFIED_N8N_VERSION}"',
+        ]
+        for token in required_tokens:
             if token not in text:
                 fail(errors, f"manifest missing {token!r}: {package.relative_to(ROOT)}")
 
@@ -159,7 +196,9 @@ def main() -> int:
     print("W1 CANDIDATE VALIDATION: PASS")
     print(f"Hardened candidates checked: {count}")
     print("Stable top-level n8n workflow IDs: PASS")
-    print("Scope: static package integrity only; runtime TESTED/APPROVED gates remain separate.")
+    print(f"Certified runtime profile: {CERTIFIED_RUNTIME_PROFILE} / n8n {CERTIFIED_N8N_VERSION}")
+    print("Unsupported Python/community-node candidates: BLOCKED unless separately profiled.")
+    print("Scope: static package/runtime-profile integrity; business TESTED/APPROVED gates remain separate.")
     return 0
 
 
