@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/baseline-admission-scorecard-v1.json",
+  "title": "Baseline Admission Scorecard v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "baselineKey",
+    "wave",
+    "dimensions",
+    "total",
+    "sideEffecting",
+    "decision",
+    "evidence"
+  ],
+  "properties": {
+    "baselineKey": {"type": "string", "minLength": 3},
+    "wave": {"type": "string", "pattern": "^W[0-9]+$"},
+    "sideEffecting": {"type": "boolean"},
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "businessCoverage",
+        "crossClientReuse",
+        "decisionDepth",
+        "operationalResilience",
+        "securityObservability",
+        "testabilityEvidence"
+      ],
+      "properties": {
+        "businessCoverage": {"type": "integer", "minimum": 0, "maximum": 5},
+        "crossClientReuse": {"type": "integer", "minimum": 0, "maximum": 5},
+        "decisionDepth": {"type": "integer", "minimum": 0, "maximum": 5},
+        "operationalResilience": {"type": "integer", "minimum": 0, "maximum": 5},
+        "securityObservability": {"type": "integer", "minimum": 0, "maximum": 5},
+        "testabilityEvidence": {"type": "integer", "minimum": 0, "maximum": 5}
+      }
+    },
+    "total": {"type": "integer", "minimum": 0, "maximum": 30},
+    "decision": {"enum": ["ADMIT", "NO_PASS_VERIFIED", "REWORK"]},
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "notes": {"type": "string"}
+  },
+  "$comment": "Factory policy additionally requires total >=24, every dimension >=3, and for side-effecting baselines operationalResilience and securityObservability >=4. Scores never replace runtime/domain evidence."
+}
