@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """Preserve a failed candidate/evidence record under no-pass-verified.
 
-This tool never deletes or moves the source candidate.
+This tool never deletes or moves the source candidate. `AUTOMATION_FACTORY_ROOT`
+is supported only so CI can prove this behavior inside a temporary tree.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("AUTOMATION_FACTORY_ROOT", str(DEFAULT_ROOT))).resolve()
 NO_PASS = ROOT / "quarries/workflow-quarry/no-pass-verified"
 ALLOWED = {"license-blocked", "provenance-blocked", "security-blocked", "quality-blocked", "test-failed", "not-current-priority", "superseded", "knowledge-only"}
 
@@ -21,8 +24,7 @@ ALLOWED = {"license-blocked", "provenance-blocked", "security-blocked", "quality
 def file_hash(path: Path) -> str | None:
     if not path.is_file():
         return None
-    h = hashlib.sha256(path.read_bytes()).hexdigest()
-    return h
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def main() -> int:
