@@ -101,13 +101,13 @@ def idempotency_headers(trace):
 
 def import_workflow(path:Path):
     rel=path.relative_to(ROOT)
-    return compose("run","--rm","--no-deps","-T","n8n","n8n","import:workflow",f"--input=/workspace/{rel}",check=False)
+    return compose("run","--rm","--no-deps","-T","n8n","import:workflow",f"--input=/workspace/{rel}",check=False)
 
 def execute_wrapper(wid,extra_env=None):
     args=["run","--rm","--no-deps","-T"]
     if extra_env:
         for k,v in extra_env.items(): args += ["-e",f"{k}={v}"]
-    args += ["n8n","n8n","execute",f"--id={wid}","--rawOutput"]
+    args += ["n8n","execute",f"--id={wid}","--rawOutput"]
     return compose(*args,check=False)
 
 def failed(rc,out,marker=None):
