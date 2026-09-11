@@ -1,4 +1,4 @@
-version: 2
+version: 3
 updated_at: 2026-09-11
 
 sources:
@@ -10,21 +10,24 @@ sources:
     license_status: UNKNOWN
     priority: P0
     preserve_if_blocked: true
+    blocking_bucket: no-pass-verified/license-blocked
     notes:
       - GitHub repository metadata currently reports no license.
       - Mine metadata/patterns; raw redistribution remains blocked.
 
   - id: xuanli-awesome-n8n-templates-scrapernode
     url: https://github.com/xuanli/awesome-n8n-templates-scrapernode
+    upstream_url: https://github.com/ScraperNode/awesome-n8n-templates
     claimed_scale: "8697+ workflows"
-    stage: DISCOVERED
+    stage: LICENSE_CHECKED
     intended_use: search-corpus
-    license_status: UNKNOWN
+    license_status: "repository/fork reports MIT; per-template provenance remains gated"
     priority: P0
     preserve_if_blocked: true
     notes:
-      - Valuable for rare connector combinations.
-      - Provenance must be resolved before adaptation/redistribution.
+      - GitHub identifies this as a fork of ScraperNode/awesome-n8n-templates.
+      - Broad corpus: 25 categories, 236 integrations, 11 use cases claimed.
+      - Run bulk index before any candidate promotion.
 
   - id: sevenandone-n8n-library
     url: https://github.com/7and1/n8n-Library
@@ -46,7 +49,7 @@ sources:
     preserve_if_blocked: true
     notes:
       - Aggregation corpus; repository license is not treated as sufficient proof of origin for every imported workflow.
-      - Multiple P0 LeadFlow/Quote2Cash/OpsFlow candidates are now INSPECTED in mining batches.
+      - Multiple P0 LeadFlow/Quote2Cash/OpsFlow/Appointment candidates are INSPECTED in batches 001-002.
 
   - id: pxw3504k-free-n8n-workflows
     url: https://github.com/pxw3504k-web/free-n8n-workflows
@@ -56,25 +59,34 @@ sources:
     license_status: UNKNOWN
     priority: P1
     preserve_if_blocked: true
+    blocking_bucket: no-pass-verified/license-blocked
+    notes:
+      - GitHub metadata reports no repository license despite the corpus being publicly downloadable.
+      - Keep index/provenance metadata; do not mirror raw code until rights are verified.
 
   - id: mlnjsh-n8n-workflows-mega
     url: https://github.com/mlnjsh/n8n-workflows-mega
     claimed_scale: "5000+ workflows"
-    stage: DISCOVERED
+    stage: LICENSE_CHECKED
     intended_use: thematic-mining
-    license_status: UNKNOWN
-    priority: P1
-    preserve_if_blocked: true
-
-  - id: sander2610-n8n-automation-templates-500
-    url: https://github.com/sander2610/n8n-automation-templates-500
-    claimed_scale: "5000+ workflows"
-    stage: DISCOVERED
-    intended_use: thematic-mining
-    license_status: UNKNOWN
+    license_status: "repository reports MIT; per-workflow provenance still reviewed"
     priority: P1
     preserve_if_blocked: true
     notes:
+      - Top-level domain folders include finance-accounting, customer-support, HR/recruiting, ecommerce, communication, data-analytics and more.
+      - Run bulk indexer before selecting P0 candidates.
+
+  - id: sander2610-n8n-automation-templates-500
+    url: https://github.com/sander2610/n8n-automation-templates-500
+    upstream_url: https://github.com/ritik-prog/n8n-automation-templates-5000
+    claimed_scale: "5000+ workflows"
+    stage: LICENSE_CHECKED
+    intended_use: thematic-mining
+    license_status: "fork reports MIT; upstream/fork lineage must remain attached to candidates"
+    priority: P1
+    preserve_if_blocked: true
+    notes:
+      - GitHub exposes a multi-hop fork/source lineage.
       - Prefer workflows with explicit error/retry patterns for inspection.
 
   - id: utsav-donda-n8n-workflows
@@ -92,12 +104,16 @@ sources:
 
   - id: redsf-n8n-workflows
     url: https://github.com/Redsf/n8n-workflows
-    claimed_scale: "production-style collection"
-    stage: DISCOVERED
+    claimed_scale: "59 production-style workflows"
+    observed_ref: bfb14bb3a0868d4a1288e3e8d010279c8b75142f
+    stage: LICENSE_CHECKED
     intended_use: documentation-and-architecture-baseline
-    license_status: UNKNOWN
+    license_status: MIT
     priority: P0
     preserve_if_blocked: true
+    notes:
+      - Repository reports per-workflow README, architecture diagram, import-ready JSON and CI validation.
+      - Branded website chatbot, cold-email follow-up and support classifier inspected in batch 003.
 
   - id: techpranee-n8n-workflows-repo
     url: https://github.com/techpranee/n8n-workflows-repo
