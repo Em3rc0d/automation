@@ -103,6 +103,13 @@ def import_workflow(path:Path):
     rel=path.relative_to(ROOT)
     return compose("run","--rm","--no-deps","-T","n8n","import:workflow",f"--input=/workspace/{rel}",check=False)
 
+def publish_workflow(wid:str):
+    # n8n 2.x imports workflows unpublished by default. Execute Workflow resolves
+    # only a published target, so publish each candidate explicitly while the
+    # long-running server is stopped. Each subsequent CLI container reads the
+    # persisted published version from the shared SQLite volume.
+    return compose("run","--rm","--no-deps","-T","n8n","publish:workflow",f"--id={wid}",check=False)
+
 def execute_wrapper(wid,extra_env=None):
     args=["run","--rm","--no-deps","-T"]
     if extra_env:
@@ -133,7 +140,7 @@ def write_report(res,evidence_sha,run_id):
         if json.loads((dest/"workflow.json").read_text())!=json.loads((res.package/"workflow.json").read_text()): raise RuntimeError(f"TESTED destination conflict: {dest}")
     else:
         dest.parent.mkdir(parents=True,exist_ok=True); shutil.copytree(res.package,dest)
-    lines=[f"# {res.key}@1.0 — W1 Runtime Test Report","","VERDICT: PASS","",f"- evidence SHA: `{evidence_sha}`",f"- GitHub run: `{run_id}`",f"- n8n: `{N8N_VERSION}`","- execution mode: isolated CLI wrapper → Execute Sub-workflow","- database ownership: n8n server stopped during CLI import/execute","- mock: WireMock 3.9.1",f"- side effect: `{str(res.side_effect).lower()}`","","## Results",""]
+    lines=[f"# {res.key}@1.0 — W1 Runtime Test Report","","VERDICT: PASS","",f"- evidence SHA: `{evidence_sha}`",f"- GitHub run: `{run_id}`",f"- n8n: `{N8N_VERSION}`","- execution mode: isolated CLI wrapper → published Execute Sub-workflow","- database ownership: n8n server stopped during CLI import/publish/execute","- mock: WireMock 3.9.1",f"- side effect: `{str(res.side_effect).lower()}`","","## Results",""]
     for tid,status,detail in res.tests: lines.append(f"- **{tid}** — {status}: {detail}")
     lines += ["","All applicable gates passed. Source HARDENED package remains preserved.",""]
     (dest/"evidence/TEST-REPORT.md").write_text("\n".join(lines))
@@ -157,12 +164,15 @@ def main():
     results=[]; runtime_log=[]
     try:
         # n8n was booted once above to prove the pinned runtime/DB can initialize.
-        # Stop the long-running server before any CLI import or execution so SQLite
-        # has exactly one owner at a time; this prevents hidden SQLITE_BUSY races.
+        # Stop the long-running server before any CLI import/publish/execution so
+        # SQLite has exactly one owner at a time; this prevents SQLITE_BUSY races.
         compose("stop","n8n")
         for key,family,pkg,data in packages():
             rc,out=import_workflow(pkg/"workflow.json")
             if rc!=0: raise RuntimeError(f"T01 import failed {key}\n{out}")
+            rc,pub=publish_workflow(data["id"])
+            if rc!=0 or "published" not in pub.lower():
+                raise RuntimeError(f"T01 publish failed {key}\n{pub}")
         wrappers={}
         for key,family,pkg,data in packages():
             for suffix,name in [("valid","valid.json"),("invalidtenant","invalid-missing-tenant.json"),("duplicate","duplicate.json"),("invalidtime","invalid-timestamp.json"),("transient","transient.json"),("permanent","permanent.json")]:
@@ -172,7 +182,7 @@ def main():
                 if rc!=0: raise RuntimeError(f"wrapper import failed {key}/{suffix}\n{out}")
                 wrappers[(key,suffix)]=wid
         for key,family,pkg,data in packages():
-            se=side_effect(data); tests=[("T01","PASS","candidate and wrappers imported cleanly with exclusive SQLite ownership")]
+            se=side_effect(data); tests=[("T01","PASS","candidate imported and explicitly published; wrappers imported with exclusive SQLite ownership")]
             reset_mock(); rc,out=execute_wrapper(wrappers[(key,"valid")]); runtime_log.append(out)
             if rc!=0 or failed(rc,out): raise RuntimeError(f"T02 valid execution failed {key}\n{out}")
             tests.append(("T02","PASS","valid fixture executed successfully"))
