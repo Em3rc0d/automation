@@ -15,6 +15,7 @@ FACTORY = ROOT / "factory"
 
 REQUIRED = [
     "factory/README.md",
+    "factory/RUNTIME-SUPPORT-POLICY.md",
     "factory/runtime/compose.yml",
     "factory/mock/wiremock/mappings/control-plane.json",
     "factory/probes/runtime-probe.json",
@@ -43,6 +44,13 @@ def main() -> int:
             errors.append("factory runtime must not use latest")
         if "mock-control-plane" not in text:
             errors.append("factory compose lacks mock control plane")
+
+    policy = ROOT / "factory/RUNTIME-SUPPORT-POLICY.md"
+    if policy.is_file():
+        text = policy.read_text(encoding="utf-8")
+        for token in ["n8n-base-js-v1", "2.38.7", "Python Code execution", "community nodes", "requires re-running the full factory certification gate"]:
+            if token not in text:
+                errors.append(f"runtime support policy missing boundary token: {token}")
 
     probe = ROOT / "factory/probes/runtime-probe.json"
     if probe.is_file():
@@ -91,6 +99,7 @@ def main() -> int:
         return 1
 
     print("FACTORY VALIDATION: PASS")
+    print("Certified base runtime profile: n8n-base-js-v1 / n8n 2.38.7")
     print("Scope: factory configuration/static invariants; runtime gate remains separate.")
     return 0
 
