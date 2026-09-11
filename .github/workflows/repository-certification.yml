@@ -1,0 +1,28 @@
+name: Repository Certification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-k0:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate repository certification invariants
+        run: python tools/validate_repository.py
+      - name: Ensure external cache is not tracked
+        run: |
+          if git ls-files | grep -q '^quarries/workflow-quarry/.external-cache/'; then
+            echo 'External raw cache must not be committed.'
+            exit 1
+          fi
