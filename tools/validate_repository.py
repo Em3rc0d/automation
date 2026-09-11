@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Validate repository certification invariants.
 
-This validator proves repository structure/documentation invariants only.
+This validator proves repository structure/documentation/toolbox-governance invariants only.
 It does NOT prove runtime correctness of workflows or MK1 production behavior.
 """
 
 from __future__ import annotations
 
 import re
+import runpy
 import sys
 from pathlib import Path
 
@@ -41,6 +42,7 @@ REQUIRED_PATHS = [
     "docs/PRODUCTION-READINESS-CHECKLIST.md",
     "workflows/SMB-CAPABILITY-LIBRARY.md",
     "workflows/CONNECTOR-MATRIX.md",
+    "workflows/TOOLBOX-NORTH-STAR.md",
     "workflows/n8n/README.md",
     "workflows/n8n/BASELINE-TARGETS.md",
     "quarries/workflow-quarry/README.md",
@@ -51,6 +53,7 @@ REQUIRED_PATHS = [
     "mk0/README.md",
     "mk1/README.md",
     "certification/COVERAGE-MATRIX.md",
+    "certification/CAPABILITY-COVERAGE-MAP.md",
     "certification/CRITERIA.md",
 ]
 
@@ -71,6 +74,12 @@ APPROVED_PACKAGE_REQUIRED = {
     "manifest.yaml",
     "config.schema.json",
     "README.md",
+}
+
+PROVIDER_TOKENS_FORBIDDEN_IN_CAPABILITY_KEYS = {
+    "GMAIL", "OUTLOOK", "HUBSPOT", "PIPEDRIVE", "SALESFORCE", "TWILIO",
+    "SLACK", "NOTION", "ASANA", "CLICKUP", "AIRTABLE", "QUICKBOOKS",
+    "XERO", "SHOPIFY", "WOOCOMMERCE", "STRIPE", "PAYPAL", "GOOGLE_SHEETS",
 }
 
 
@@ -108,6 +117,89 @@ def validate() -> list[str]:
             fail(errors, f"SMB capability families mismatch: expected 1..20, got {sorted(headings)}")
         if "APPROVED_BASELINE" not in text:
             fail(errors, "capability library must distinguish approved baselines")
+
+    # Toolbox governance: count is never the North Star; coverage + composition are.
+    north_star = ROOT / "workflows/TOOLBOX-NORTH-STAR.md"
+    if north_star.is_file():
+        text = north_star.read_text(encoding="utf-8")
+        required_tokens = [
+            "CAPABILITY",
+            "ADAPTER",
+            "POLICY_CONFIG",
+            "VERSION",
+            "Common Process Coverage",
+            "Assembly Coverage",
+            "Certification Ratio",
+            "Reuse Density",
+            "Provider Independence",
+            "Duplicate Semantic Rate",
+            "W11 is a milestone, not a catalog ceiling",
+            "MINING NEVER STOPS; CERTIFICATION REMAINS SELECTIVE",
+        ]
+        for token in required_tokens:
+            if token not in text:
+                fail(errors, f"toolbox North Star missing invariant: {token}")
+        if "The repository is **not** optimized for workflow count" not in text:
+            fail(errors, "toolbox North Star must explicitly reject workflow-count optimization")
+        if "There is no target such as `200 workflows` or `300 workflows`" not in text:
+            fail(errors, "toolbox North Star must explicitly reject numeric workflow quotas")
+
+    coverage = ROOT / "certification/CAPABILITY-COVERAGE-MAP.md"
+    if coverage.is_file():
+        text = coverage.read_text(encoding="utf-8")
+        family_rows = {int(n) for n in re.findall(r"^\|\s*(\d+)\s*\|", text, flags=re.MULTILINE)}
+        expected = set(range(1, 21))
+        if not expected.issubset(family_rows):
+            fail(errors, f"coverage map missing canonical SMB families: {sorted(expected-family_rows)}")
+        for token in [
+            "BROAD_TOOLBOX_READY",
+            "10/12 reference archetypes",
+            "Provider-specific variants are not counted as new capabilities",
+            "W11 proves breadth of the current production program",
+        ]:
+            if token not in text:
+                fail(errors, f"capability coverage map missing readiness invariant: {token}")
+        reference_archetypes = [
+            "Service-sales engine",
+            "Document accounting",
+            "Quote-to-cash",
+            "Appointment/service",
+            "Support desk",
+            "Client onboarding",
+            "Procure-to-pay",
+            "Order-to-fulfillment",
+            "Employee lifecycle",
+            "Smart operations inbox",
+            "Management control",
+            "Integration operations",
+        ]
+        for archetype in reference_archetypes:
+            if archetype not in text:
+                fail(errors, f"coverage map missing reference archetype: {archetype}")
+
+    # Current wave catalogs must remain provider-neutral, unique and classified.
+    catalog = ROOT / "waves/catalog.py"
+    if catalog.is_file():
+        try:
+            ns = runpy.run_path(str(catalog))
+            iter_capabilities = ns.get("iter_capabilities")
+            if not callable(iter_capabilities):
+                fail(errors, "waves catalog missing iter_capabilities()")
+            else:
+                caps = list(iter_capabilities())
+                keys = [str(c.get("key", "")) for c in caps]
+                if len(keys) != len(set(keys)):
+                    fail(errors, "waves catalog contains duplicate capability keys")
+                for cap in caps:
+                    key = str(cap.get("key", ""))
+                    for provider in PROVIDER_TOKENS_FORBIDDEN_IN_CAPABILITY_KEYS:
+                        if provider in key:
+                            fail(errors, f"provider-specific capability key forbidden; use adapter/config instead: {key}")
+                    for required in ["wave", "family", "key", "pattern", "purpose", "risk", "side_effect"]:
+                        if required not in cap:
+                            fail(errors, f"wave capability missing field {required}: {key or cap}")
+        except Exception as exc:
+            fail(errors, f"failed to load waves catalog for governance validation: {exc}")
 
     registry_path = ROOT / "quarries/workflow-quarry/registry.yaml"
     if registry_path.is_file():
@@ -168,7 +260,7 @@ def main() -> int:
         return 1
 
     print("REPOSITORY CERTIFICATION VALIDATION: PASS")
-    print("Scope: structural/documentation invariants for K0; runtime W1/P1 are separate gates.")
+    print("Scope: structural/documentation/toolbox-governance invariants; runtime W1/P1 remain separate gates.")
     return 0
 
 
