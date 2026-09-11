@@ -1,0 +1,31 @@
+name: W1 Candidate Validation
+
+on:
+  push:
+    branches:
+      - w1/baseline-library
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-hardened-candidates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate K0 repository invariants
+        run: python tools/validate_repository.py
+      - name: Validate W1 hardened candidate packages
+        run: python tools/validate_w1_candidates.py
+      - name: Ensure external raw cache is not tracked
+        run: |
+          if git ls-files | grep -q '^quarries/workflow-quarry/.external-cache/'; then
+            echo 'External raw cache must not be committed.'
+            exit 1
+          fi
