@@ -5,6 +5,11 @@ The indexer is intentionally conservative. It produces metadata and risk flags,
 not production approval. External raw JSON stays in the local corpus/cache unless
 its redistribution/provenance gate is separately satisfied.
 
+It records two identities:
+- sha256: exact file identity;
+- semantic_fingerprint: normalized identity with volatile n8n export metadata
+  removed, used to detect duplicate/near-identical workflows across corpora.
+
 Usage:
   python index_workflow_corpus.py \
     --source-dir .external-cache/some-corpus \
@@ -21,7 +26,7 @@ import argparse
 import hashlib
 import json
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
@@ -77,6 +82,30 @@ DOMAIN_KEYWORDS = {
 CURRENT_P0 = {"LEAD", "INVOICE", "PAYMENT", "EMAIL", "APPOINTMENT", "SUPPORT"}
 CURRENT_P1 = {"QUOTE", "REPORTING", "ONBOARDING", "DOCUMENT", "RETENTION"}
 
+# Fields that commonly change between n8n exports without changing business logic.
+# We remove these only for duplicate discovery, never from the original file/evidence.
+VOLATILE_KEYS = {
+    "id",
+    "instanceId",
+    "versionId",
+    "webhookId",
+    "position",
+    "credentials",
+    "pinData",
+    "cachedResultUrl",
+    "cachedResultName",
+    "createdAt",
+    "updatedAt",
+}
+TOP_LEVEL_VOLATILE_KEYS = {
+    "id",
+    "meta",
+    "versionId",
+    "pinData",
+    "active",
+    "tags",
+}
+
 
 @dataclass
 class Candidate:
@@ -87,6 +116,7 @@ class Candidate:
     relative_path: str
     sha256: str
     parse_status: str
+    semantic_fingerprint: str | None = None
     workflow_name: str | None = None
     workflow_id: str | None = None
     active: bool | None = None
@@ -127,6 +157,37 @@ def walk_values(value: Any) -> Iterable[Any]:
             yield from walk_values(item)
     else:
         yield value
+
+
+def canonicalize_for_fingerprint(value: Any, *, top_level: bool = False) -> Any:
+    """Return a deterministic copy stripped of common export-only metadata.
+
+    This is a duplicate-discovery heuristic, not a proof of semantic equivalence.
+    The original file SHA/path/source are always retained independently.
+    """
+    if isinstance(value, dict):
+        out: dict[str, Any] = {}
+        for key in sorted(value.keys()):
+            if top_level and key in TOP_LEVEL_VOLATILE_KEYS:
+                continue
+            if key in VOLATILE_KEYS:
+                continue
+            out[key] = canonicalize_for_fingerprint(value[key], top_level=False)
+        return out
+    if isinstance(value, list):
+        return [canonicalize_for_fingerprint(item, top_level=False) for item in value]
+    return value
+
+
+def semantic_fingerprint(data: dict[str, Any]) -> str:
+    canonical = canonicalize_for_fingerprint(data, top_level=True)
+    encoded = json.dumps(
+        canonical,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def detect_domains(path: str, data: dict[str, Any]) -> list[str]:
@@ -179,6 +240,7 @@ def inspect_workflow(path: Path, root: Path, args: argparse.Namespace) -> Candid
         return candidate
 
     candidate.parse_status = "parsed"
+    candidate.semantic_fingerprint = semantic_fingerprint(data)
     candidate.workflow_name = str(data.get("name")) if data.get("name") is not None else None
     candidate.workflow_id = str(data.get("id")) if data.get("id") is not None else None
     candidate.active = data.get("active") if isinstance(data.get("active"), bool) else None
@@ -325,6 +387,30 @@ def main() -> int:
     node_counts = Counter(t for c in parsed for t in c.node_types)
     finding_counts = Counter(x for c in parsed for x in c.findings)
 
+    fingerprint_groups: dict[str, list[Candidate]] = defaultdict(list)
+    for candidate in parsed:
+        if candidate.semantic_fingerprint:
+            fingerprint_groups[candidate.semantic_fingerprint].append(candidate)
+    duplicate_groups = {
+        fp: group for fp, group in fingerprint_groups.items() if len(group) > 1
+    }
+
+    duplicate_report = [
+        {
+            "semantic_fingerprint": fp,
+            "count": len(group),
+            "paths": [c.relative_path for c in group],
+            "exact_sha256s": sorted({c.sha256 for c in group}),
+        }
+        for fp, group in sorted(
+            duplicate_groups.items(), key=lambda item: (-len(item[1]), item[0])
+        )
+    ]
+    (out / "duplicate-groups.json").write_text(
+        json.dumps(duplicate_report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
     summary = {
         "source": {
             "id": args.source_id,
@@ -336,6 +422,9 @@ def main() -> int:
             "json_files_seen": len(paths),
             "parsed_n8n_workflows": len(parsed),
             "invalid_or_other_json": len(candidates) - len(parsed),
+            "semantic_fingerprints": len(fingerprint_groups),
+            "duplicate_semantic_groups": len(duplicate_groups),
+            "duplicate_files_in_groups": sum(len(g) for g in duplicate_groups.values()),
             "deleted": 0,
             "priority": dict(sorted(priority_counts.items())),
         },
@@ -345,7 +434,9 @@ def main() -> int:
         "policy": {
             "approval_performed": False,
             "failed_candidates_deleted": False,
+            "duplicate_sources_deleted": False,
             "raw_external_code_copied_to_public_repo": False,
+            "semantic_fingerprint_is_heuristic": True,
         },
     }
     (out / "summary.json").write_text(
