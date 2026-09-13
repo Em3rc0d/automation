@@ -3,6 +3,8 @@ import { closeDatabaseForTests, query } from "../lib/persistence/database";
 import { persistSapSnapshot } from "../lib/importer";
 import { processInboundMessage } from "../lib/workflow";
 import { listPendingApprovals } from "../lib/approvals";
+import { findProduct, getQuoteById } from "../lib/store";
+import { buildQuotePdf } from "../lib/pdf";
 
 const enabled = Boolean(process.env.DATABASE_URL);
 
@@ -36,21 +38,38 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
     const input = {
       fileName: "ci-sap.csv",
       fileSha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      rows: [{
-        sku: "EPOX-7000-GRIS",
-        description: "Epoxico Industrial 7000 Gris",
-        stock: 84,
-        unit_of_measure: "GAL",
-        base_price: 100,
-        cost: 65,
-        currency: "USD",
-      }],
+      rows: [
+        {
+          sku: "EPOX-7000-GRIS",
+          description: "Epoxico Industrial 7000 Gris",
+          stock: 84,
+          unit_of_measure: "GAL",
+          base_price: 100,
+          cost: 65,
+          currency: "USD",
+        },
+        {
+          sku: "EPOX-7000-AZUL",
+          description: "Epoxico Industrial 7000 Azul",
+          stock: 42,
+          unit_of_measure: "GAL",
+          base_price: 105,
+          cost: 68,
+          currency: "USD",
+        },
+      ],
     };
     const first = await persistSapSnapshot(input);
     const duplicate = await persistSapSnapshot(input);
     expect(first.duplicate).toBe(false);
     expect(duplicate.duplicate).toBe(true);
     expect(duplicate.snapshotId).toBe(first.snapshotId);
+  });
+
+  it("resolves descriptive products deterministically and refuses ambiguity", async () => {
+    const blue = await findProduct("epóxico azul");
+    expect(blue?.sku).toBe("EPOX-7000-AZUL");
+    expect(await findProduct("industrial")).toBeNull();
   });
 
   it("runs quote, duplicate-event and acceptance flow against PostgreSQL", async () => {
@@ -85,6 +104,35 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
     expect(result.rows[0]?.status).toBe("accepted");
   });
 
+  it("creates a linked quote revision and marks the previous version revised", async () => {
+    const initial = await processInboundMessage({
+      providerMessageId: "ci-revision-001",
+      from: "+51933333333",
+      text: "Cotizame 10 EPOX-7000-GRIS",
+      receivedAt: new Date().toISOString(),
+    });
+    expect(initial.status).toBe("sent");
+
+    const revision = await processInboundMessage({
+      providerMessageId: "ci-revision-002",
+      from: "+51933333333",
+      text: "Cambia a 20",
+      receivedAt: new Date().toISOString(),
+    });
+    expect(revision.status).toBe("sent");
+    if (revision.status === "sent") expect(revision.version).toBe(2);
+
+    const versions = await query<{ version: number; status: string; parent_quote_id: string | null }>(`
+      select version, status, parent_quote_id
+      from public.case001_quotes
+      where tenant_id = $1 and customer_phone = $2
+      order by version asc
+    `, [tenant, "+51933333333"]);
+    expect(versions.rows.map((row) => row.status)).toEqual(["revised", "sent"]);
+    expect(Number(versions.rows[1]?.version)).toBe(2);
+    expect(versions.rows[1]?.parent_quote_id).toBeTruthy();
+  });
+
   it("routes policy exceptions to approval instead of auto-sending", async () => {
     const result = await processInboundMessage({
       providerMessageId: "ci-inbound-003",
@@ -98,5 +146,20 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
     }
     const pending = await listPendingApprovals();
     expect(pending.some((approval) => approval.id === (result.status === "awaiting_approval" ? result.approvalId : ""))).toBe(true);
+  });
+
+  it("renders a stored quote as a PDF", async () => {
+    const result = await processInboundMessage({
+      providerMessageId: "ci-pdf-001",
+      from: "+51944444444",
+      text: "Cotizame 2 EPOX-7000-AZUL",
+      receivedAt: new Date().toISOString(),
+    });
+    expect(result.status).toBe("sent");
+    if (result.status !== "sent") throw new Error("Expected a sent quote for PDF test.");
+    const quote = await getQuoteById(result.quoteId);
+    const pdf = await buildQuotePdf(quote);
+    expect(pdf.byteLength).toBeGreaterThan(500);
+    expect(new TextDecoder().decode(pdf.slice(0, 4))).toBe("%PDF");
   });
 });
