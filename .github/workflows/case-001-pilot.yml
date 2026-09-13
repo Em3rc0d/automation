@@ -57,3 +57,47 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: docker compose config
+
+  docker-poc-smoke:
+    runs-on: ubuntu-latest
+    env:
+      CASE001_MODE: poc
+      CASE001_AI_PROVIDER: mock
+      CASE001_MESSAGING_PROVIDER: local
+      CASE001_ADMIN_TOKEN: case001-local-only
+      CASE001_TENANT_ID: case-001-pilot
+    defaults:
+      run:
+        working-directory: apps/case-001
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and boot local PoC
+        run: docker compose up -d --build --wait
+      - name: Verify health and seeded database
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/health | tee /tmp/case001-health.json
+          grep -q '"ok":true' /tmp/case001-health.json
+          curl -fsS -H 'x-admin-token: case001-local-only' http://127.0.0.1:3000/api/status | tee /tmp/case001-status.json
+          grep -q '"productRows":3' /tmp/case001-status.json
+      - name: Exercise local message to deterministic quote
+        run: |
+          curl -fsS \
+            -H 'x-admin-token: case001-local-only' \
+            -H 'content-type: application/json' \
+            -d '{"phone":"+51999999999","text":"Cotizame 10 EPOX-7000-GRIS","providerMessageId":"docker-smoke-001"}' \
+            http://127.0.0.1:3000/api/poc/message | tee /tmp/case001-message.json
+          grep -q '"status":"sent"' /tmp/case001-message.json
+      - name: Prove clean-volume reset
+        run: |
+          docker compose down -v
+          docker compose up -d --wait
+          curl -fsS http://127.0.0.1:3000/api/health | tee /tmp/case001-health-reset.json
+          grep -q '"ok":true' /tmp/case001-health-reset.json
+          curl -fsS -H 'x-admin-token: case001-local-only' http://127.0.0.1:3000/api/status | tee /tmp/case001-status-reset.json
+          grep -q '"productRows":3' /tmp/case001-status-reset.json
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Tear down PoC
+        if: always()
+        run: docker compose down -v
