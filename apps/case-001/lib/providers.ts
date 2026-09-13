@@ -1,22 +1,32 @@
 import { GoogleGenAI } from "@google/genai";
 import { QuoteIntentSchema, type QuoteIntent } from "./domain";
 
+const MAX_MESSAGE_CHARS = 4000;
+
 export async function interpretWhatsAppMessage(text: string): Promise<QuoteIntent> {
+  const normalizedText = text.trim().slice(0, MAX_MESSAGE_CHARS);
+  if (!normalizedText) return QuoteIntentSchema.parse({ intent: "other", usePreviousQuoteAsReference: false });
+
   if (process.env.CASE001_MODE === "mock") {
-    const qty = Number(text.match(/\b(\d+(?:\.\d+)?)\b/)?.[1] ?? 1);
+    const qtyMatch = normalizedText.match(/\b(\d+(?:\.\d+)?)\b/);
+    const qty = qtyMatch ? Number(qtyMatch[1]) : undefined;
+    const isAccept = /\b(acepto|ok|procede|confirmo)\b/i.test(normalizedText);
+    const isReject = /\b(no gracias|rechazo|no procede|descartamos)\b/i.test(normalizedText);
+    const isRevision = /\b(cambia|cambiar|mejora|mejorar|descuento|en soles|en dolares|en dólares|en vez de|si llevo|si compro)\b/i.test(normalizedText);
     return QuoteIntentSchema.parse({
-      intent: /acepto|ok|procede/i.test(text) ? "quote_accept" : /no gracias|rechazo/i.test(text) ? "quote_reject" : "quote_request",
+      intent: isAccept ? "quote_accept" : isReject ? "quote_reject" : isRevision ? "quote_revision" : "quote_request",
       quantity: qty,
-      productReference: text,
-      usePreviousQuoteAsReference: /mismo|misma|últim|ultima|anterior/i.test(text),
-      requestedCurrency: /soles|pen/i.test(text) ? "PEN" : /d[oó]lares|usd/i.test(text) ? "USD" : undefined,
+      productReference: /mismo|misma|últim|ultima|anterior/i.test(normalizedText) ? undefined : normalizedText,
+      usePreviousQuoteAsReference: /mismo|misma|últim|ultima|anterior/i.test(normalizedText) || isRevision,
+      requestedDiscountPct: Number(normalizedText.match(/(\d+(?:\.\d+)?)\s*%/)?.[1] ?? NaN) || undefined,
+      requestedCurrency: /soles|\bpen\b/i.test(normalizedText) ? "PEN" : /d[oó]lares|\busd\b/i.test(normalizedText) ? "USD" : undefined,
     });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is required in live mode.");
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `You normalize WhatsApp quotation messages for a salesperson. Return ONLY valid JSON matching this shape:\n{\n  "intent": "quote_request|quote_revision|quote_accept|quote_reject|other",\n  "quantity"?: number,\n  "productReference"?: string,\n  "customerReference"?: string,\n  "requestedDiscountPct"?: number,\n  "requestedCurrency"?: "PEN|USD",\n  "usePreviousQuoteAsReference": boolean\n}\nNever calculate prices, tax, margin or totals. Message: ${JSON.stringify(text)}`;
+  const prompt = `You normalize WhatsApp quotation messages for a salesperson. Return ONLY valid JSON matching this shape:\n{\n  "intent": "quote_request" | "quote_revision" | "quote_accept" | "quote_reject" | "other",\n  "quantity"?: number,\n  "productReference"?: string,\n  "customerReference"?: string,\n  "requestedDiscountPct"?: number,\n  "requestedCurrency"?: "PEN" | "USD",\n  "usePreviousQuoteAsReference": boolean\n}\nRules:\n- Never calculate prices, tax, margin, FX or totals.\n- Never invent a missing product, quantity, discount or commercial term.\n- A request to change quantity/product/discount/currency/terms for an already discussed quote is quote_revision.\n- If the customer refers to "same as last time" or equivalent, set usePreviousQuoteAsReference=true and do not invent the SKU.\nMessage: ${JSON.stringify(normalizedText)}`;
 
   const response = await ai.models.generateContent({
     model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
@@ -39,12 +49,13 @@ export function normalizeKapsoWebhook(payload: unknown): NormalizedInboundMessag
   if (!payload || typeof payload !== "object") return null;
   const p = payload as Record<string, any>;
 
-  // Accept a simple normalized Kapso fixture plus the common Meta-style envelope.
+  // Accept a simple normalized Kapso fixture plus a common Meta-style envelope.
+  // The exact Kapso production webhook contract remains provider-bound configuration.
   if (p.message?.id && p.message?.from && typeof p.message?.text === "string") {
     return {
       providerMessageId: String(p.message.id),
       from: String(p.message.from),
-      text: p.message.text,
+      text: p.message.text.slice(0, MAX_MESSAGE_CHARS),
       receivedAt: p.message.timestamp ? new Date(Number(p.message.timestamp) * 1000).toISOString() : new Date().toISOString(),
     };
   }
@@ -54,7 +65,7 @@ export function normalizeKapsoWebhook(payload: unknown): NormalizedInboundMessag
     return {
       providerMessageId: String(msg.id),
       from: String(msg.from),
-      text: String(msg.text.body),
+      text: String(msg.text.body).slice(0, MAX_MESSAGE_CHARS),
       receivedAt: msg.timestamp ? new Date(Number(msg.timestamp) * 1000).toISOString() : new Date().toISOString(),
     };
   }
@@ -63,7 +74,7 @@ export function normalizeKapsoWebhook(payload: unknown): NormalizedInboundMessag
 
 export async function sendWhatsAppText(to: string, body: string): Promise<{ providerMessageId: string }> {
   if (process.env.CASE001_MODE === "mock") {
-    return { providerMessageId: `mock-${Date.now()}` };
+    return { providerMessageId: `mock-${Date.now()}-${Math.random().toString(36).slice(2, 9)}` };
   }
 
   const apiKey = process.env.KAPSO_API_KEY;
@@ -81,7 +92,9 @@ export async function sendWhatsAppText(to: string, body: string): Promise<{ prov
     },
     body: JSON.stringify({ phone_number_id: phoneNumberId, to, type: "text", text: { body } }),
   });
-  if (!response.ok) throw new Error(`Kapso send failed: ${response.status} ${await response.text()}`);
+  if (!response.ok) throw new Error(`Kapso send failed with HTTP ${response.status}.`);
   const data = (await response.json()) as any;
-  return { providerMessageId: String(data.id ?? data.message_id ?? data.messages?.[0]?.id ?? "unknown") };
+  const id = data.id ?? data.message_id ?? data.messages?.[0]?.id;
+  if (!id) throw new Error("Kapso send succeeded but returned no provider message id.");
+  return { providerMessageId: String(id) };
 }
