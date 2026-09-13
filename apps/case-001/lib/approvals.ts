@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { sendWhatsAppText } from "./providers";
-import { markQuoteSent, persistOutboundMessage } from "./store";
+import { markQuoteSent, persistOutboundMessage, tenantId } from "./store";
 
 function db() {
   const url = process.env.SUPABASE_URL;
@@ -14,9 +14,19 @@ function formatMoney(value: number, currency: string) {
 }
 
 export async function requestQuoteApproval(input: { quoteId: string; reasons: string[] }) {
-  const tenantId = process.env.CASE001_TENANT_ID ?? "case-001-pilot";
-  const { data, error } = await db().from("case001_approval_requests").insert({
-    tenant_id: tenantId,
+  const tenant = tenantId();
+  const database = db();
+  const { data: quote, error: quoteError } = await database
+    .from("case001_quotes")
+    .select("id")
+    .eq("tenant_id", tenant)
+    .eq("id", input.quoteId)
+    .single();
+  if (quoteError) throw quoteError;
+  if (!quote) throw new Error("Quote not found for tenant.");
+
+  const { data, error } = await database.from("case001_approval_requests").insert({
+    tenant_id: tenant,
     quote_id: input.quoteId,
     reasons: input.reasons,
     status: "pending",
@@ -32,11 +42,10 @@ export async function requestQuoteApproval(input: { quoteId: string; reasons: st
 }
 
 export async function listPendingApprovals() {
-  const tenantId = process.env.CASE001_TENANT_ID ?? "case-001-pilot";
   const { data, error } = await db()
     .from("case001_approval_requests")
     .select("id,status,reasons,requested_at,quote_id,case001_quotes(*,case001_quote_lines(*))")
-    .eq("tenant_id", tenantId)
+    .eq("tenant_id", tenantId())
     .eq("status", "pending")
     .order("requested_at", { ascending: true });
   if (error) throw error;
@@ -45,9 +54,11 @@ export async function listPendingApprovals() {
 
 export async function decideApproval(input: { approvalId: string; decision: "approved" | "rejected"; decidedBy: string; reason?: string }) {
   const database = db();
+  const tenant = tenantId();
   const { data: approval, error } = await database
     .from("case001_approval_requests")
     .select("id,quote_id,status,case001_quotes(*,case001_quote_lines(*))")
+    .eq("tenant_id", tenant)
     .eq("id", input.approvalId)
     .single();
   if (error) throw error;
@@ -58,14 +69,18 @@ export async function decideApproval(input: { approvalId: string; decision: "app
     decided_at: new Date().toISOString(),
     decided_by: input.decidedBy,
     decision_reason: input.reason ?? null,
-  }).eq("id", input.approvalId);
+  }).eq("tenant_id", tenant).eq("id", input.approvalId);
   if (updateError) throw updateError;
 
   const quote = approval.case001_quotes as any;
   if (input.decision === "rejected") {
-    const { error: quoteError } = await database.from("case001_quotes").update({ status: "rejected", rejected_at: new Date().toISOString() }).eq("id", approval.quote_id);
+    const { error: quoteError } = await database
+      .from("case001_quotes")
+      .update({ status: "approval_rejected" })
+      .eq("tenant_id", tenant)
+      .eq("id", approval.quote_id);
     if (quoteError) throw quoteError;
-    return { status: "rejected" as const, quoteId: approval.quote_id };
+    return { status: "approval_rejected" as const, quoteId: approval.quote_id };
   }
 
   const line = quote?.case001_quote_lines?.[0];
