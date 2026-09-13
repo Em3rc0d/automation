@@ -15,6 +15,29 @@ const quoteWithLinesSql = `
   from public.case001_quotes q
 `;
 
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function productSnapshot(product: any): ProductSnapshot {
+  return {
+    snapshotId: String(product.snapshot_id),
+    sku: String(product.sku),
+    description: String(product.description),
+    stock: Number(product.stock),
+    unitOfMeasure: product.unit_of_measure ? String(product.unit_of_measure) : "UND",
+    basePrice: product.base_price == null ? undefined : Number(product.base_price),
+    cost: product.cost == null ? undefined : Number(product.cost),
+    currency: product.currency === "PEN" || product.currency === "USD" ? product.currency : undefined,
+    importedAt: new Date(product.imported_at).toISOString(),
+  };
+}
+
 export async function hasInboundMessage(providerMessageId: string): Promise<boolean> {
   const result = await query("select 1 from public.case001_messages where tenant_id = $1 and provider_message_id = $2 limit 1", [tenantId(), providerMessageId]);
   return result.rows.length > 0;
@@ -48,35 +71,40 @@ export async function findProduct(reference: string): Promise<ProductSnapshot | 
   if (!value) return null;
   const tenant = tenantId();
 
-  let result = await query<any>(`
+  const exactSku = await query<any>(`
     select snapshot_id, sku, description, stock, unit_of_measure, base_price, cost, currency, imported_at
     from public.case001_product_snapshot_latest
     where tenant_id = $1 and lower(sku) = lower($2)
     limit 2
   `, [tenant, value]);
+  if (exactSku.rows.length === 1) return productSnapshot(exactSku.rows[0]);
+  if (exactSku.rows.length > 1) return null;
 
-  if (result.rows.length === 0) {
-    result = await query<any>(`
-      select snapshot_id, sku, description, stock, unit_of_measure, base_price, cost, currency, imported_at
-      from public.case001_product_snapshot_latest
-      where tenant_id = $1 and description ilike ('%' || $2 || '%')
-      limit 2
-    `, [tenant, value]);
-  }
+  const normalizedReference = normalizeSearch(value);
+  const tokens = normalizedReference.split(/\s+/).filter((token) => token.length >= 2);
+  if (!tokens.length) return null;
 
-  if (result.rows.length !== 1) return null;
-  const product = result.rows[0];
-  return {
-    snapshotId: String(product.snapshot_id),
-    sku: String(product.sku),
-    description: String(product.description),
-    stock: Number(product.stock),
-    unitOfMeasure: product.unit_of_measure ? String(product.unit_of_measure) : "UND",
-    basePrice: product.base_price == null ? undefined : Number(product.base_price),
-    cost: product.cost == null ? undefined : Number(product.cost),
-    currency: product.currency === "PEN" || product.currency === "USD" ? product.currency : undefined,
-    importedAt: new Date(product.imported_at).toISOString(),
-  };
+  // PoC-safe deterministic matcher: evaluate only the latest tenant snapshot surface and
+  // refuse ambiguity. At realistic pilot sizes (~thousands of rows) this remains bounded;
+  // a production search index can replace it behind this same semantic boundary later.
+  const latestProducts = await query<any>(`
+    select snapshot_id, sku, description, stock, unit_of_measure, base_price, cost, currency, imported_at
+    from public.case001_product_snapshot_latest
+    where tenant_id = $1
+    order by sku asc
+    limit 5000
+  `, [tenant]);
+
+  const exactDescription = latestProducts.rows.filter((product) => normalizeSearch(String(product.description)) === normalizedReference);
+  if (exactDescription.length === 1) return productSnapshot(exactDescription[0]);
+  if (exactDescription.length > 1) return null;
+
+  const candidates = latestProducts.rows.filter((product) => {
+    const haystack = normalizeSearch(`${product.sku} ${product.description}`);
+    return tokens.every((token) => haystack.includes(token));
+  });
+  if (candidates.length !== 1) return null;
+  return productSnapshot(candidates[0]);
 }
 
 export async function lastReferenceQuote(phone: string) {
