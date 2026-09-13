@@ -138,9 +138,10 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
   });
 
   it("keeps historical terms as context and re-evaluates them against current data/policy", async () => {
+    const historicalPhone = "51955555555";
     const csv = [
       "quote_ref,quote_date,customer_phone,customer_name,company_name,customer_type,currency,subtotal,tax_total,total,discount_pct,status,sku,description,quantity,list_unit_price,quoted_unit_price",
-      "HIST-CI-001,2026-09-10T12:00:00.000Z,+51955555555,Cliente Demo,ABC SAC,B2B,USD,80,14.4,94.4,10,accepted,EPOX-7000-GRIS,Epoxico Industrial 7000 Gris,1,100,80",
+      `HIST-CI-001,2026-09-10T12:00:00.000Z,${historicalPhone},Cliente Demo,ABC SAC,B2B,USD,80,14.4,94.4,10,accepted,EPOX-7000-GRIS,Epoxico Industrial 7000 Gris,1,100,80`,
     ].join("\n");
     const parsed = parseHistoricalWorkbook(new TextEncoder().encode(csv).buffer as ArrayBuffer);
     expect(parsed.rejected).toEqual([]);
@@ -149,13 +150,13 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
 
     const customer = await query<{ usual_discount_pct: string | null }>(
       "select usual_discount_pct from public.case001_customers where tenant_id = $1 and whatsapp_phone = $2",
-      [tenant, "+51955555555"],
+      [tenant, historicalPhone],
     );
     expect(customer.rows[0]?.usual_discount_pct).toBeNull();
 
     const result = await processInboundMessage({
       providerMessageId: "ci-history-001",
-      from: "+51955555555",
+      from: historicalPhone,
       text: "Dame 5 del mismo que la vez pasada",
       receivedAt: new Date().toISOString(),
     });
