@@ -24,7 +24,7 @@ export async function interpretWhatsAppMessage(text: string): Promise<QuoteInten
     const qty = qtyMatch ? Number(qtyMatch[1]) : undefined;
     const isAccept = /\b(acepto|ok|procede|confirmo)\b/i.test(normalizedText);
     const isReject = /\b(no gracias|rechazo|no procede|descartamos)\b/i.test(normalizedText);
-    const isRevision = /\b(cambia|cambiar|mejora|mejorar|descuento|en soles|en dolares|en dólares|en vez de|si llevo|si compro)\b/i.test(normalizedText);
+    const isRevision = /\b(cambia|cambiar|cámbialo|cambialo|ajusta|ajustar|mejora|mejorar|en vez de|si llevo|si compro)\b/i.test(normalizedText);
     const usesPrevious = /mismo|misma|últim|ultima|anterior/i.test(normalizedText) || isRevision;
     const skuReference = normalizedText.match(/\b[A-Z0-9]+(?:-[A-Z0-9]+)+\b/i)?.[0];
     return QuoteIntentSchema.parse({
@@ -40,7 +40,7 @@ export async function interpretWhatsAppMessage(text: string): Promise<QuoteInten
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is required when CASE001_AI_PROVIDER=gemini.");
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `You normalize WhatsApp quotation messages for a salesperson. Return ONLY valid JSON matching this shape:\n{\n  "intent": "quote_request" | "quote_revision" | "quote_accept" | "quote_reject" | "other",\n  "quantity"?: number,\n  "productReference"?: string,\n  "customerReference"?: string,\n  "requestedDiscountPct"?: number,\n  "requestedCurrency"?: "PEN" | "USD",\n  "usePreviousQuoteAsReference": boolean\n}\nRules:\n- Never calculate prices, tax, margin, FX or totals.\n- Never invent a missing product, quantity, discount or commercial term.\n- A request to change quantity/product/discount/currency/terms for an already discussed quote is quote_revision.\n- If the customer refers to "same as last time" or equivalent, set usePreviousQuoteAsReference=true and do not invent the SKU.\nMessage: ${JSON.stringify(normalizedText)}`;
+  const prompt = `You normalize WhatsApp quotation messages for a salesperson. Return ONLY valid JSON matching this shape:\n{\n  "intent": "quote_request" | "quote_revision" | "quote_accept" | "quote_reject" | "other",\n  "quantity"?: number,\n  "productReference"?: string,\n  "customerReference"?: string,\n  "requestedDiscountPct"?: number,\n  "requestedCurrency"?: "PEN" | "USD",\n  "usePreviousQuoteAsReference": boolean\n}\nRules:\n- Never calculate prices, tax, margin, FX or totals.\n- Never invent a missing product, quantity, discount or commercial term.\n- A request to change quantity/product/discount/currency/terms for an already discussed quote is quote_revision.\n- An initial quotation request that includes a requested discount/currency is still quote_request unless the message clearly refers to changing an existing quote.\n- If the customer refers to "same as last time" or equivalent, set usePreviousQuoteAsReference=true and do not invent the SKU.\nMessage: ${JSON.stringify(normalizedText)}`;
 
   const response = await ai.models.generateContent({
     model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
