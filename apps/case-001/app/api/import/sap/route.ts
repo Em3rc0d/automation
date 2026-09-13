@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { parseSapWorkbook, persistSapSnapshot } from "@/lib/importer";
 
@@ -15,12 +16,20 @@ export async function POST(request: NextRequest) {
     if (!/\.(csv|xlsx|xls)$/i.test(file.name)) return NextResponse.json({ error: "unsupported_file_type" }, { status: 400 });
     if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "file_too_large" }, { status: 413 });
 
-    const parsed = parseSapWorkbook(await file.arrayBuffer());
+    const buffer = await file.arrayBuffer();
+    const fileSha256 = createHash("sha256").update(Buffer.from(buffer)).digest("hex");
+    const parsed = parseSapWorkbook(buffer);
     if (!parsed.accepted.length) {
       return NextResponse.json({ error: "no_valid_rows", ...parsed }, { status: 422 });
     }
-    const snapshot = await persistSapSnapshot({ fileName: file.name, rows: parsed.accepted });
-    return NextResponse.json({ ok: true, ...snapshot, accepted: parsed.accepted.length, rejected: parsed.rejected });
+    const snapshot = await persistSapSnapshot({ fileName: file.name, fileSha256, rows: parsed.accepted });
+    return NextResponse.json({
+      ok: true,
+      ...snapshot,
+      accepted: parsed.accepted.length,
+      rejected: parsed.rejected,
+      total: parsed.total,
+    });
   } catch (error) {
     console.error("case001.sap.import.failed", error instanceof Error ? error.message : "unknown");
     return NextResponse.json({ error: "import_failed" }, { status: 500 });
