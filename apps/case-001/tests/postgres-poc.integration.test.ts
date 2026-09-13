@@ -137,15 +137,21 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
     expect(versions.rows[1]?.parent_quote_id).toBeTruthy();
   });
 
-  it("imports historical context but recalculates from the current SAP snapshot", async () => {
+  it("keeps historical terms as context and re-evaluates them against current data/policy", async () => {
     const csv = [
       "quote_ref,quote_date,customer_phone,customer_name,company_name,customer_type,currency,subtotal,tax_total,total,discount_pct,status,sku,description,quantity,list_unit_price,quoted_unit_price",
-      "HIST-CI-001,2026-09-10T12:00:00.000Z,+51955555555,Cliente Demo,ABC SAC,B2B,USD,90,16.2,106.2,10,accepted,EPOX-7000-GRIS,Epoxico Industrial 7000 Gris,1,100,90",
+      "HIST-CI-001,2026-09-10T12:00:00.000Z,+51955555555,Cliente Demo,ABC SAC,B2B,USD,80,14.4,94.4,10,accepted,EPOX-7000-GRIS,Epoxico Industrial 7000 Gris,1,100,80",
     ].join("\n");
     const parsed = parseHistoricalWorkbook(new TextEncoder().encode(csv).buffer as ArrayBuffer);
     expect(parsed.rejected).toEqual([]);
     const imported = await persistHistoricalQuotes(parsed.accepted);
     expect(imported.imported).toBe(1);
+
+    const customer = await query<{ usual_discount_pct: string | null }>(
+      "select usual_discount_pct from public.case001_customers where tenant_id = $1 and whatsapp_phone = $2",
+      [tenant, "+51955555555"],
+    );
+    expect(customer.rows[0]?.usual_discount_pct).toBeNull();
 
     const result = await processInboundMessage({
       providerMessageId: "ci-history-001",
@@ -153,11 +159,13 @@ describe.runIf(enabled)("CASE-001 PostgreSQL local PoC", () => {
       text: "Dame 5 del mismo que la vez pasada",
       receivedAt: new Date().toISOString(),
     });
-    expect(result.status).toBe("sent");
-    if (result.status !== "sent") throw new Error("Expected history-backed quote to be sent.");
+    expect(result.status).toBe("awaiting_approval");
+    if (result.status !== "awaiting_approval") throw new Error("Expected historical discount to be re-evaluated by current policy.");
     expect(result.calculation.sku).toBe("EPOX-7000-GRIS");
     expect(result.calculation.listUnitPrice).toBe(100);
+    expect(result.calculation.quotedUnitPrice).toBe(90);
     expect(result.calculation.discountPct).toBe(10);
+    expect(result.exceptions).toContain("DISCOUNT_ABOVE_AUTO_LIMIT");
   });
 
   it("routes policy exceptions to approval and sends only after explicit approval", async () => {
