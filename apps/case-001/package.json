@@ -10,7 +10,8 @@
     "test:watch": "vitest",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
-    "test:integration": "vitest run tests/postgres-poc.integration.test.ts"
+    "test:integration": "vitest run tests/postgres-poc.integration.test.ts",
+    "test:gemini": "vitest run tests/gemini.integration.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.17.0",
