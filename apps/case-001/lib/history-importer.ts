@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
-import { createClient } from "@supabase/supabase-js";
 import { tenantId } from "./store";
+import { query, withTransaction } from "./persistence/database";
 
 type HistoricalLine = {
   quoteRef: string;
@@ -100,12 +100,7 @@ export function parseHistoricalWorkbook(buffer: ArrayBuffer) {
 }
 
 export async function persistHistoricalQuotes(lines: HistoricalLine[]) {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Supabase is not configured.");
-  const db = createClient(url, key, { auth: { persistSession: false } });
   const tenant = tenantId();
-
   const grouped = new Map<string, HistoricalLine[]>();
   for (const line of lines) grouped.set(line.quoteRef, [...(grouped.get(line.quoteRef) ?? []), line]);
 
@@ -125,72 +120,84 @@ export async function persistHistoricalQuotes(lines: HistoricalLine[]) {
       continue;
     }
 
-    const { data: existing, error: existingError } = await db
-      .from("case001_quotes")
-      .select("id")
-      .eq("tenant_id", tenant)
-      .eq("source_kind", "HISTORICAL_IMPORT")
-      .eq("external_ref", quoteRef)
-      .maybeSingle();
-    if (existingError) throw existingError;
-    if (existing) {
+    const existing = await query("select id from public.case001_quotes where tenant_id = $1 and source_kind = 'HISTORICAL_IMPORT' and external_ref = $2 limit 1", [tenant, quoteRef]);
+    if (existing.rows[0]) {
       skipped += 1;
       continue;
     }
 
-    const { error: customerError } = await db.from("case001_customers").upsert({
-      tenant_id: tenant,
-      whatsapp_phone: head.customerPhone,
-      name: head.customerName ?? null,
-      company_name: head.companyName ?? null,
-      customer_type: head.customerType ?? null,
-      preferred_currency: head.currency,
-      usual_discount_pct: head.discountPct,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "tenant_id,whatsapp_phone" });
-    if (customerError) throw customerError;
+    try {
+      await withTransaction(async (database) => {
+        await database.query(`
+          insert into public.case001_customers (
+            tenant_id, whatsapp_phone, name, company_name, customer_type,
+            preferred_currency, usual_discount_pct, updated_at
+          ) values ($1, $2, $3, $4, $5, $6, $7, now())
+          on conflict (tenant_id, whatsapp_phone) do update set
+            name = coalesce(excluded.name, public.case001_customers.name),
+            company_name = coalesce(excluded.company_name, public.case001_customers.company_name),
+            customer_type = coalesce(excluded.customer_type, public.case001_customers.customer_type),
+            preferred_currency = excluded.preferred_currency,
+            usual_discount_pct = excluded.usual_discount_pct,
+            updated_at = now()
+        `, [tenant, head.customerPhone, head.customerName ?? null, head.companyName ?? null, head.customerType ?? null, head.currency, head.discountPct]);
 
-    const timestamps = {
-      sent_at: head.quoteDate,
-      accepted_at: head.status === "accepted" ? head.quoteDate : null,
-      rejected_at: head.status === "rejected" ? head.quoteDate : null,
-    };
-    const { data: quote, error: quoteError } = await db.from("case001_quotes").insert({
-      tenant_id: tenant,
-      customer_phone: head.customerPhone,
-      status: head.status,
-      currency: head.currency,
-      subtotal: head.subtotal,
-      tax_total: head.taxTotal,
-      total: head.total,
-      discount_pct: head.discountPct,
-      requires_approval: false,
-      source_intent: { intent: "historical_import" },
-      source_kind: "HISTORICAL_IMPORT",
-      external_ref: quoteRef,
-      source_observed_at: head.quoteDate,
-      created_at: head.quoteDate,
-      ...timestamps,
-    }).select("id").single();
-    if (quoteError) throw quoteError;
+        const quoteResult = await database.query<{ id: string }>(`
+          insert into public.case001_quotes (
+            tenant_id, customer_phone, status, currency, subtotal, tax_total, total,
+            discount_pct, requires_approval, source_intent, source_kind, external_ref,
+            source_observed_at, created_at, sent_at, accepted_at, rejected_at
+          ) values (
+            $1, $2, $3, $4, $5, $6, $7, $8, false, $9::jsonb,
+            'HISTORICAL_IMPORT', $10, $11, $11, $11, $12, $13
+          )
+          returning id
+        `, [
+          tenant,
+          head.customerPhone,
+          head.status,
+          head.currency,
+          head.subtotal,
+          head.taxTotal,
+          head.total,
+          head.discountPct,
+          JSON.stringify({ intent: "historical_import" }),
+          quoteRef,
+          head.quoteDate,
+          head.status === "accepted" ? head.quoteDate : null,
+          head.status === "rejected" ? head.quoteDate : null,
+        ]);
+        const quote = quoteResult.rows[0];
+        if (!quote) throw new Error("Historical quote insert returned no id.");
 
-    const payload = quoteLines.map((line) => ({
-      quote_id: quote.id,
-      snapshot_id: null,
-      source_type: "HISTORICAL_QUOTE_IMPORT",
-      sku: line.sku,
-      description: line.description,
-      quantity: line.quantity,
-      list_unit_price: line.listUnitPrice,
-      quoted_unit_price: line.quotedUnitPrice,
-      discount_pct: line.discountPct,
-    }));
-    const { error: lineError } = await db.from("case001_quote_lines").insert(payload);
-    if (lineError) {
-      await db.from("case001_quotes").delete().eq("tenant_id", tenant).eq("id", quote.id);
-      throw lineError;
+        await database.query(`
+          insert into public.case001_quote_lines (
+            quote_id, snapshot_id, source_type, sku, description, quantity,
+            list_unit_price, quoted_unit_price, discount_pct
+          )
+          select $1, null, 'HISTORICAL_QUOTE_IMPORT', r.sku, r.description, r.quantity,
+            r.list_unit_price, r.quoted_unit_price, r.discount_pct
+          from jsonb_to_recordset($2::jsonb) as r(
+            sku text,
+            description text,
+            quantity numeric,
+            list_unit_price numeric,
+            quoted_unit_price numeric,
+            discount_pct numeric
+          )
+        `, [quote.id, JSON.stringify(quoteLines.map((line) => ({
+          sku: line.sku,
+          description: line.description,
+          quantity: line.quantity,
+          list_unit_price: line.listUnitPrice,
+          quoted_unit_price: line.quotedUnitPrice,
+          discount_pct: line.discountPct,
+        })))]);
+      });
+      imported += 1;
+    } catch (error) {
+      errors.push({ quoteRef, reason: error instanceof Error ? error.message : "historical_import_failed" });
     }
-    imported += 1;
   }
 
   return { imported, skipped, errors };

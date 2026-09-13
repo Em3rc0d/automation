@@ -1,62 +1,50 @@
-import { createClient } from "@supabase/supabase-js";
 import { sendWhatsAppText } from "./providers";
 import { persistOutboundMessage, tenantId } from "./store";
+import { query } from "./persistence/database";
 
-function db() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
-async function latestInboundAt(database: ReturnType<typeof db>, phone: string) {
-  const { data, error } = await database
-    .from("case001_messages")
-    .select("occurred_at")
-    .eq("tenant_id", tenantId())
-    .eq("phone", phone)
-    .eq("direction", "inbound")
-    .order("occurred_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.occurred_at ? new Date(data.occurred_at) : null;
+async function latestInboundAt(phone: string) {
+  const result = await query<{ occurred_at: Date | string }>(`
+    select occurred_at
+    from public.case001_messages
+    where tenant_id = $1 and phone = $2 and direction = 'inbound'
+    order by occurred_at desc
+    limit 1
+  `, [tenantId(), phone]);
+  const value = result.rows[0]?.occurred_at;
+  return value ? new Date(value) : null;
 }
 
 export async function runQuoteFollowups(now = new Date()) {
   const delayHours = Number(process.env.FOLLOWUP_AFTER_HOURS ?? 12);
   const maxAttempts = Math.max(1, Number(process.env.FOLLOWUP_MAX_ATTEMPTS ?? 1));
   const cutoff = new Date(now.getTime() - delayHours * 3_600_000).toISOString();
-  const database = db();
   const tenant = tenantId();
 
-  const { data: quotes, error } = await database
-    .from("case001_quotes")
-    .select("id,customer_phone,sent_at,total,currency,follow_up_count,last_follow_up_at,follow_up_template_required_at")
-    .eq("tenant_id", tenant)
-    .eq("status", "sent")
-    .lte("sent_at", cutoff)
-    .order("sent_at", { ascending: true })
-    .limit(50);
-  if (error) throw error;
+  const result = await query<any>(`
+    select id, customer_phone, sent_at, total, currency, follow_up_count,
+      last_follow_up_at, follow_up_template_required_at
+    from public.case001_quotes
+    where tenant_id = $1 and status = 'sent' and sent_at <= $2
+    order by sent_at asc
+    limit 50
+  `, [tenant, cutoff]);
 
   const results: Array<Record<string, unknown>> = [];
-  for (const quote of quotes ?? []) {
+  for (const quote of result.rows) {
     if (!quote.sent_at || Number(quote.follow_up_count ?? 0) >= maxAttempts) continue;
 
     const lastAttemptAt = quote.last_follow_up_at ? new Date(quote.last_follow_up_at) : new Date(quote.sent_at);
     const hoursSinceAttempt = (now.getTime() - lastAttemptAt.getTime()) / 3_600_000;
     if (hoursSinceAttempt < delayHours) continue;
 
-    const inboundAt = await latestInboundAt(database, quote.customer_phone);
+    const inboundAt = await latestInboundAt(quote.customer_phone);
     if (!inboundAt || (now.getTime() - inboundAt.getTime()) / 3_600_000 >= 24) {
       if (!quote.follow_up_template_required_at) {
-        const { error: blockedError } = await database
-          .from("case001_quotes")
-          .update({ follow_up_template_required_at: now.toISOString() })
-          .eq("tenant_id", tenant)
-          .eq("id", quote.id);
-        if (blockedError) throw blockedError;
+        await query(`
+          update public.case001_quotes
+          set follow_up_template_required_at = $1
+          where tenant_id = $2 and id = $3
+        `, [now.toISOString(), tenant, quote.id]);
       }
       results.push({ quoteId: quote.id, status: "template_required" });
       continue;
@@ -66,12 +54,11 @@ export async function runQuoteFollowups(now = new Date()) {
     const sent = await sendWhatsAppText(quote.customer_phone, body);
     await persistOutboundMessage({ providerMessageId: sent.providerMessageId, phone: quote.customer_phone, body, quoteId: quote.id });
     const nextCount = Number(quote.follow_up_count ?? 0) + 1;
-    const { error: updateError } = await database
-      .from("case001_quotes")
-      .update({ follow_up_sent_at: now.toISOString(), last_follow_up_at: now.toISOString(), follow_up_count: nextCount })
-      .eq("tenant_id", tenant)
-      .eq("id", quote.id);
-    if (updateError) throw updateError;
+    await query(`
+      update public.case001_quotes
+      set follow_up_sent_at = $1, last_follow_up_at = $1, follow_up_count = $2
+      where tenant_id = $3 and id = $4
+    `, [now.toISOString(), nextCount, tenant, quote.id]);
     results.push({ quoteId: quote.id, status: "sent", attempt: nextCount });
   }
   return results;

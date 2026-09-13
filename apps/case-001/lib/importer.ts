@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
-import { createClient } from "@supabase/supabase-js";
 import { tenantId } from "./store";
+import { query, withTransaction } from "./persistence/database";
 
 const aliases = {
   sku: ["sku", "codigo", "código", "material", "material_code"],
@@ -85,47 +85,51 @@ export async function persistSapSnapshot(input: {
   fileSha256: string;
   rows: Array<Record<string, unknown>>;
 }) {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Supabase is not configured.");
-  const db = createClient(url, key, { auth: { persistSession: false } });
   const tenant = tenantId();
-
-  const { data: existing, error: existingError } = await db
-    .from("case001_sap_snapshots")
-    .select("id,imported_at")
-    .eq("tenant_id", tenant)
-    .eq("file_sha256", input.fileSha256)
-    .maybeSingle();
-  if (existingError) throw existingError;
-  if (existing) {
-    return { snapshotId: existing.id as string, importedAt: existing.imported_at as string, duplicate: true };
+  const existing = await query<{ id: string; imported_at: Date | string }>(`
+    select id, imported_at
+    from public.case001_sap_snapshots
+    where tenant_id = $1 and file_sha256 = $2
+    limit 1
+  `, [tenant, input.fileSha256]);
+  const found = existing.rows[0];
+  if (found) {
+    return { snapshotId: found.id, importedAt: new Date(found.imported_at).toISOString(), duplicate: true };
   }
 
-  const { data: snapshot, error } = await db.from("case001_sap_snapshots").insert({
-    tenant_id: tenant,
-    source_file_name: input.fileName,
-    file_sha256: input.fileSha256,
-    imported_at: new Date().toISOString(),
-  }).select("id,imported_at").single();
-  if (error) throw error;
+  return withTransaction(async (database) => {
+    const snapshotResult = await database.query<{ id: string; imported_at: Date | string }>(`
+      insert into public.case001_sap_snapshots (tenant_id, source_file_name, file_sha256, imported_at)
+      values ($1, $2, $3, now())
+      returning id, imported_at
+    `, [tenant, input.fileName, input.fileSha256]);
+    const snapshot = snapshotResult.rows[0];
+    if (!snapshot) throw new Error("SAP snapshot insert returned no row.");
 
-  const payload = input.rows.map((row) => ({
-    ...row,
-    tenant_id: tenant,
-    snapshot_id: snapshot.id,
-    imported_at: snapshot.imported_at,
-  }));
-
-  try {
-    if (payload.length) {
-      const { error: rowsError } = await db.from("case001_product_snapshots").insert(payload);
-      if (rowsError) throw rowsError;
+    if (input.rows.length) {
+      await database.query(`
+        insert into public.case001_product_snapshots (
+          tenant_id, snapshot_id, sku, description, stock, unit_of_measure,
+          base_price, cost, currency, imported_at
+        )
+        select $1, $2, r.sku, r.description, r.stock, r.unit_of_measure,
+          r.base_price, r.cost, r.currency, $3
+        from jsonb_to_recordset($4::jsonb) as r(
+          sku text,
+          description text,
+          stock numeric,
+          unit_of_measure text,
+          base_price numeric,
+          cost numeric,
+          currency text
+        )
+      `, [tenant, snapshot.id, snapshot.imported_at, JSON.stringify(input.rows)]);
     }
-  } catch (error) {
-    await db.from("case001_sap_snapshots").delete().eq("tenant_id", tenant).eq("id", snapshot.id);
-    throw error;
-  }
 
-  return { snapshotId: snapshot.id as string, importedAt: snapshot.imported_at as string, duplicate: false };
+    return {
+      snapshotId: snapshot.id,
+      importedAt: new Date(snapshot.imported_at).toISOString(),
+      duplicate: false,
+    };
+  });
 }

@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { aiProvider, messagingProvider } from "@/lib/providers";
+import { persistenceBackend, query } from "@/lib/persistence/database";
 import { tenantId } from "@/lib/store";
 
-function db() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Supabase is not configured.");
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const expected = process.env.CASE001_ADMIN_TOKEN;
@@ -15,38 +11,76 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const database = db();
-  const tenant = tenantId();
-  const [{ data: snapshot, error: snapshotError }, { count: pendingApprovals, error: approvalError }, { count: quotes, error: quoteError }] = await Promise.all([
-    database.from("case001_sap_snapshots").select("id,source_file_name,imported_at", { count: "exact" }).eq("tenant_id", tenant).order("imported_at", { ascending: false }).limit(1).maybeSingle(),
-    database.from("case001_approval_requests").select("id", { count: "exact", head: true }).eq("tenant_id", tenant).eq("status", "pending"),
-    database.from("case001_quotes").select("id", { count: "exact", head: true }).eq("tenant_id", tenant),
-  ]);
-  if (snapshotError) throw snapshotError;
-  if (approvalError) throw approvalError;
-  if (quoteError) throw quoteError;
+  try {
+    const tenant = tenantId();
+    const [snapshotResult, pendingResult, quoteCountResult, recentQuotesResult, recentMessagesResult, recentProductsResult] = await Promise.all([
+      query<any>(`
+        select id, source_file_name, imported_at
+        from public.case001_sap_snapshots
+        where tenant_id = $1
+        order by imported_at desc
+        limit 1
+      `, [tenant]),
+      query<{ count: string }>("select count(*)::text as count from public.case001_approval_requests where tenant_id = $1 and status = 'pending'", [tenant]),
+      query<{ count: string }>("select count(*)::text as count from public.case001_quotes where tenant_id = $1", [tenant]),
+      query<any>(`
+        select id, version, status, currency, total, discount_pct, requires_approval, exception_codes, created_at, sent_at
+        from public.case001_quotes
+        where tenant_id = $1
+        order by created_at desc
+        limit 10
+      `, [tenant]),
+      query<any>(`
+        select id, provider_message_id, phone, direction, body, quote_id, occurred_at
+        from public.case001_messages
+        where tenant_id = $1
+        order by occurred_at desc
+        limit 20
+      `, [tenant]),
+      query<any>(`
+        select sku, description, stock, unit_of_measure, base_price, cost, currency, imported_at
+        from public.case001_product_snapshot_latest
+        where tenant_id = $1
+        order by sku asc
+        limit 20
+      `, [tenant]),
+    ]);
 
-  let productRows = 0;
-  if (snapshot?.id) {
-    const { count, error } = await database
-      .from("case001_product_snapshots")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", tenant)
-      .eq("snapshot_id", snapshot.id);
-    if (error) throw error;
-    productRows = count ?? 0;
+    const snapshot = snapshotResult.rows[0] ?? null;
+    let productRows = 0;
+    if (snapshot?.id) {
+      const countResult = await query<{ count: string }>(
+        "select count(*)::text as count from public.case001_product_snapshots where tenant_id = $1 and snapshot_id = $2",
+        [tenant, snapshot.id],
+      );
+      productRows = Number(countResult.rows[0]?.count ?? 0);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      proofLevel: "LOCAL_POC_ONLY",
+      notProduction: true,
+      tenantId: tenant,
+      runtime: {
+        mode: process.env.CASE001_MODE ?? "poc",
+        persistence: persistenceBackend(),
+        ai: aiProvider(),
+        messaging: messagingProvider(),
+      },
+      lastSapImport: snapshot ? {
+        snapshotId: snapshot.id,
+        fileName: snapshot.source_file_name,
+        importedAt: snapshot.imported_at,
+        productRows,
+      } : null,
+      pendingApprovals: Number(pendingResult.rows[0]?.count ?? 0),
+      quotes: Number(quoteCountResult.rows[0]?.count ?? 0),
+      recentQuotes: recentQuotesResult.rows,
+      recentMessages: recentMessagesResult.rows,
+      recentProducts: recentProductsResult.rows,
+    });
+  } catch (error) {
+    console.error("case001.status.failed", error instanceof Error ? error.message : "unknown");
+    return NextResponse.json({ ok: false, error: "status_failed" }, { status: 500 });
   }
-
-  return NextResponse.json({
-    ok: true,
-    tenantId: tenant,
-    lastSapImport: snapshot ? {
-      snapshotId: snapshot.id,
-      fileName: snapshot.source_file_name,
-      importedAt: snapshot.imported_at,
-      productRows,
-    } : null,
-    pendingApprovals: pendingApprovals ?? 0,
-    quotes: quotes ?? 0,
-  });
 }

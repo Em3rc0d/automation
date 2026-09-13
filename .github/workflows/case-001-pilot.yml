@@ -15,6 +15,33 @@ on:
 jobs:
   test-build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: case001
+          POSTGRES_USER: case001
+          POSTGRES_PASSWORD: case001
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U case001 -d case001"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://case001:case001@127.0.0.1:5432/case001
+      CASE001_MODE: mock
+      CASE001_AI_PROVIDER: mock
+      CASE001_MESSAGING_PROVIDER: local
+      CASE001_ADMIN_TOKEN: ci-only
+      CASE001_TENANT_ID: ci-case-001
+      DEFAULT_CURRENCY: USD
+      IGV_RATE: '0.18'
+      MAX_AUTO_DISCOUNT_PCT: '8'
+      MINIMUM_MARGIN_PCT: '22'
+      QUOTE_VALIDITY_DAYS: '7'
+      SAP_STALE_AFTER_HOURS: '24'
     defaults:
       run:
         working-directory: apps/case-001
@@ -25,15 +52,8 @@ jobs:
           node-version: 22
       - run: npm install --package-lock-only
       - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:seed
       - run: npm test
       - run: npm run build
-        env:
-          CASE001_MODE: mock
-          CASE001_ADMIN_TOKEN: ci-only
-          CASE001_TENANT_ID: ci-case-001
-          DEFAULT_CURRENCY: USD
-          IGV_RATE: '0.18'
-          MAX_AUTO_DISCOUNT_PCT: '8'
-          MINIMUM_MARGIN_PCT: '22'
-          QUOTE_VALIDITY_DAYS: '7'
-          SAP_STALE_AFTER_HOURS: '24'
+      - run: docker compose config
