@@ -1,0 +1,41 @@
+name: CASE-001 Pilot
+
+on:
+  pull_request:
+    paths:
+      - 'apps/case-001/**'
+      - '.github/workflows/case-001-pilot.yml'
+  push:
+    branches:
+      - 'case-001/whatsapp-quote-assistant'
+    paths:
+      - 'apps/case-001/**'
+      - '.github/workflows/case-001-pilot.yml'
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/case-001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/case-001/package-lock.json
+      - run: npm install --package-lock-only
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          CASE001_MODE: mock
+          CASE001_ADMIN_TOKEN: ci-only
+          CASE001_TENANT_ID: ci-case-001
+          DEFAULT_CURRENCY: USD
+          IGV_RATE: '0.18'
+          MAX_AUTO_DISCOUNT_PCT: '8'
+          MINIMUM_MARGIN_PCT: '22'
+          QUOTE_VALIDITY_DAYS: '7'
+          SAP_STALE_AFTER_HOURS: '24'
