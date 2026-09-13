@@ -1,12 +1,13 @@
+import { requestQuoteApproval } from "./approvals";
 import { calculateQuote, defaultPolicyFromEnv } from "./domain";
 import { interpretWhatsAppMessage, sendWhatsAppText } from "./providers";
-import { requestQuoteApproval } from "./approvals";
 import {
   createQuote,
   findCustomerByPhone,
   findProduct,
   hasInboundMessage,
-  lastAcceptedOrSentQuote,
+  lastOpenQuote,
+  lastReferenceQuote,
   markQuoteSent,
   persistInboundMessage,
   persistOutboundMessage,
@@ -43,40 +44,57 @@ export async function processInboundMessage(input: {
     const terminal = intent.intent === "quote_accept" ? "accepted" : "rejected";
     const quoteId = await setQuoteTerminalByPhone(input.from, terminal);
     const body = quoteId
-      ? terminal === "accepted" ? "Perfecto. Registré la aceptación de la cotización." : "Entendido. Registré que esta cotización no continúa."
+      ? terminal === "accepted"
+        ? "Perfecto. Registré la aceptación de la cotización."
+        : "Entendido. Registré que esta cotización no continúa."
       : "No encontré una cotización activa asociada a este número.";
     const sent = await sendWhatsAppText(input.from, body);
     await persistOutboundMessage({ providerMessageId: sent.providerMessageId, phone: input.from, body, quoteId: quoteId ?? undefined });
     return { status: terminal, quoteId };
   }
 
-  if (!intent.quantity) return { status: "needs_human", reason: "MISSING_QUANTITY" as const };
+  const activeQuote = intent.intent === "quote_revision" ? await lastOpenQuote(input.from) : null;
+  const referenceQuote = intent.usePreviousQuoteAsReference || intent.intent === "quote_revision"
+    ? activeQuote ?? await lastReferenceQuote(input.from)
+    : null;
+  const referenceLine = referenceQuote?.case001_quote_lines?.[0];
+
+  const quantity = intent.quantity ?? (intent.intent === "quote_revision" ? Number(referenceLine?.quantity) || undefined : undefined);
+  if (!quantity) return { status: "needs_human", reason: "MISSING_QUANTITY" as const };
 
   const customer = await findCustomerByPhone(input.from);
-  const previous = intent.usePreviousQuoteAsReference ? await lastAcceptedOrSentQuote(input.from) : null;
-  const productReference = intent.productReference ?? previous?.case001_quote_lines?.[0]?.sku;
+  const productReference = intent.productReference ?? referenceLine?.sku;
   if (!productReference) return { status: "needs_human", reason: "MISSING_PRODUCT_REFERENCE" as const };
 
   let product = await findProduct(productReference);
-  if (!product && previous?.case001_quote_lines?.[0]?.sku) product = await findProduct(previous.case001_quote_lines[0].sku);
+  if (!product && referenceLine?.sku) product = await findProduct(referenceLine.sku);
   if (!product) return { status: "needs_human", reason: "PRODUCT_AMBIGUOUS_OR_NOT_FOUND" as const };
 
-  const requestedDiscountPct = intent.requestedDiscountPct ?? customer?.usual_discount_pct ?? previous?.discount_pct ?? 0;
-  const requestedCurrency = intent.requestedCurrency ?? customer?.preferred_currency ?? previous?.currency ?? product.currency;
+  const requestedDiscountPct = intent.requestedDiscountPct ?? customer?.usual_discount_pct ?? referenceQuote?.discount_pct ?? 0;
+  const requestedCurrency = intent.requestedCurrency ?? customer?.preferred_currency ?? referenceQuote?.currency ?? product.currency;
   const fxRate = requestedCurrency && product.currency && requestedCurrency !== product.currency
     ? Number(process.env.CASE001_FIXED_FX_RATE || 0) || undefined
     : undefined;
 
   const calculation = calculateQuote({
     product,
-    quantity: intent.quantity,
+    quantity,
     discountPct: Number(requestedDiscountPct),
     requestedCurrency,
     fxRate,
     policy: defaultPolicyFromEnv(),
   });
 
-  const quoteId = await createQuote({ phone: input.from, intent, calculation, sourceSnapshotId: product.snapshotId });
+  const parentQuoteId = intent.intent === "quote_revision" && activeQuote ? String(activeQuote.id) : undefined;
+  const version = parentQuoteId ? Number(activeQuote?.version ?? 1) + 1 : 1;
+  const quoteId = await createQuote({
+    phone: input.from,
+    intent,
+    calculation,
+    sourceSnapshotId: product.snapshotId,
+    parentQuoteId,
+    version,
+  });
 
   if (calculation.requiresApproval) {
     const approvalId = await requestQuoteApproval({ quoteId, reasons: calculation.exceptionCodes });
@@ -93,5 +111,5 @@ export async function processInboundMessage(input: {
   const sent = await sendWhatsAppText(input.from, body);
   await persistOutboundMessage({ providerMessageId: sent.providerMessageId, phone: input.from, body, quoteId });
   await markQuoteSent(quoteId);
-  return { status: "sent" as const, quoteId, calculation };
+  return { status: "sent" as const, quoteId, version, calculation };
 }
