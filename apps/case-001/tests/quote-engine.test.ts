@@ -43,7 +43,37 @@ describe("calculateQuote", () => {
     expect(result.exceptionCodes).toContain("INSUFFICIENT_STOCK");
   });
 
+  it("requires approval when the SAP snapshot is stale", () => {
+    const result = calculateQuote({ product, quantity: 10, discountPct: 0, policy, now: new Date("2026-09-14T13:00:00Z") });
+    expect(result.exceptionCodes).toContain("STALE_SAP_SNAPSHOT");
+  });
+
+  it("requires approval when margin is below policy", () => {
+    const result = calculateQuote({ product, quantity: 10, discountPct: 20, policy: { ...policy, maxAutoDiscountPct: 100 }, now: new Date("2026-09-12T13:00:00Z") });
+    expect(result.grossMarginPct).toBeLessThan(policy.minimumMarginPct);
+    expect(result.exceptionCodes).toContain("MARGIN_BELOW_MINIMUM");
+  });
+
+  it("marks margin as unverifiable when authorized cost is unavailable", () => {
+    const result = calculateQuote({ product: { ...product, cost: undefined }, quantity: 10, discountPct: 0, policy, now: new Date("2026-09-12T13:00:00Z") });
+    expect(result.exceptionCodes).toContain("MARGIN_NOT_VERIFIABLE");
+    expect(result.grossMarginPct).toBeUndefined();
+  });
+
+  it("converts USD to PEN using the supplied authoritative FX snapshot", () => {
+    const result = calculateQuote({ product, quantity: 2, discountPct: 0, policy, requestedCurrency: "PEN", fxRate: 3.75, now: new Date("2026-09-12T13:00:00Z") });
+    expect(result.currency).toBe("PEN");
+    expect(result.listUnitPrice).toBe(375);
+    expect(result.subtotal).toBe(750);
+    expect(result.tax).toBe(135);
+    expect(result.total).toBe(885);
+  });
+
   it("refuses currency conversion without an FX rate", () => {
     expect(() => calculateQuote({ product, quantity: 10, discountPct: 0, policy, requestedCurrency: "PEN" })).toThrow(/FX rate/);
+  });
+
+  it("refuses authoritative calculation when the current snapshot has no price or currency", () => {
+    expect(() => calculateQuote({ product: { ...product, basePrice: undefined }, quantity: 10, discountPct: 0, policy })).toThrow(/missing basePrice or currency/);
   });
 });
