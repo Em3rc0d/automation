@@ -128,19 +128,20 @@ export async function persistHistoricalQuotes(lines: HistoricalLine[]) {
 
     try {
       await withTransaction(async (database) => {
+        // Historical quote terms are reference context only. Importing one old quote must not
+        // silently promote its discount to the customer's current usual/authorized discount.
         await database.query(`
           insert into public.case001_customers (
             tenant_id, whatsapp_phone, name, company_name, customer_type,
-            preferred_currency, usual_discount_pct, updated_at
-          ) values ($1, $2, $3, $4, $5, $6, $7, now())
+            preferred_currency, updated_at
+          ) values ($1, $2, $3, $4, $5, $6, now())
           on conflict (tenant_id, whatsapp_phone) do update set
             name = coalesce(excluded.name, public.case001_customers.name),
             company_name = coalesce(excluded.company_name, public.case001_customers.company_name),
             customer_type = coalesce(excluded.customer_type, public.case001_customers.customer_type),
             preferred_currency = excluded.preferred_currency,
-            usual_discount_pct = excluded.usual_discount_pct,
             updated_at = now()
-        `, [tenant, head.customerPhone, head.customerName ?? null, head.companyName ?? null, head.customerType ?? null, head.currency, head.discountPct]);
+        `, [tenant, head.customerPhone, head.customerName ?? null, head.companyName ?? null, head.customerType ?? null, head.currency]);
 
         const quoteResult = await database.query<{ id: string }>(`
           insert into public.case001_quotes (
