@@ -1,5 +1,6 @@
 import { calculateQuote, defaultPolicyFromEnv } from "./domain";
 import { interpretWhatsAppMessage, sendWhatsAppText } from "./providers";
+import { requestQuoteApproval } from "./approvals";
 import {
   createQuote,
   findCustomerByPhone,
@@ -78,9 +79,11 @@ export async function processInboundMessage(input: {
   const quoteId = await createQuote({ phone: input.from, intent, calculation, sourceSnapshotId: product.snapshotId });
 
   if (calculation.requiresApproval) {
+    const approvalId = await requestQuoteApproval({ quoteId, reasons: calculation.exceptionCodes });
     return {
       status: "awaiting_approval" as const,
       quoteId,
+      approvalId,
       exceptions: calculation.exceptionCodes,
       calculation,
     };
