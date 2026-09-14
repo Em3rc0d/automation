@@ -1,0 +1,114 @@
+key: KAPSO_MESSAGE_RECEIVE
+version: 1.0.0
+artifact_class: ADAPTER
+family: messaging
+provider: kapso
+stage: HARDENED
+origin: ORIGINAL_SYNTHESIS
+runtime:
+  engine: n8n
+  profile: n8n-base-js-v1
+  tested_version: "2.38.7"
+
+purpose: >-
+  Verify and normalize one Kapso WhatsApp inbound-message webhook and forward
+  a provider-neutral messaging envelope to the Automation control plane.
+
+implements:
+  - messaging.receive
+
+non_goals:
+  - business intent classification
+  - ServiceRequest creation
+  - mechanical diagnosis
+  - media binary storage
+  - outbound message sending
+
+provider_contract:
+  event: whatsapp.message.received
+  payload_version: v2
+  buffering: disabled_in_v1
+  signature: HMAC-SHA256 over raw request body
+  required_headers:
+    - X-Webhook-Event
+    - X-Webhook-Signature
+    - X-Idempotency-Key
+    - X-Webhook-Payload-Version
+
+output_contract:
+  schema_version: "1.0"
+  channel: whatsapp
+  provider: kapso
+  required:
+    - providerPhoneNumberId
+    - providerEventId
+    - providerMessageId
+    - threadId
+    - senderId
+    - direction
+    - messageType
+    - occurredAt
+    - idempotencyKey
+
+side_effects:
+  - type: HTTP_POST
+    capability: control_plane.messaging_inbound.write
+    endpoint: /internal/connectors/messaging/inbound
+
+idempotency:
+  strategy: kapso:<providerPhoneNumberId>:<providerMessageId>
+  provider_delivery_key: X-Idempotency-Key
+  enforcement_boundary: control-plane API
+
+retry_policy:
+  max_tries: 3
+  wait_between_tries_ms: 1000
+  safety_condition: retries reuse the same Idempotency-Key
+
+failure_policy:
+  invalid_signature: HTTP_401
+  unsupported_payload_version: reject
+  malformed_message: fail visibly
+  control_plane_exhausted: fail workflow for ERROR_TO_INCIDENT projection
+
+configuration:
+  credentials:
+    - Crypto HMAC credential containing the Kapso webhook secret
+    - internal HTTP Header Auth credential for the control plane
+  environment:
+    - AUTOMATION_CONTROL_PLANE_URL
+  provider_setup:
+    - number-scoped Kapso webhook
+    - payload v2
+    - event whatsapp.message.received
+    - buffering disabled
+
+security:
+  raw_body_required: true
+  embedded_secrets: false
+  client_specific_ids: false
+  raw_payload_logging: prohibited
+  media_binary_logging: prohibited
+  tenant_resolution: control-plane connector mapping from providerPhoneNumberId
+
+provenance:
+  external_code_copied: false
+  sources:
+    - quarries/workflow-quarry/mining-batches/2026-09-11-batch-005-whatsapp-document-accounting.md
+    - quarries/workflow-quarry/mining-batches/2026-09-11-batch-006-control-plane-infrastructure.md
+    - https://docs.kapso.ai/docs/platform/webhooks/overview
+    - https://docs.kapso.ai/docs/platform/webhooks/security
+  notes:
+    - Repository-native synthesis. External sources informed provider behavior and hardening only.
+
+promotion:
+  next_stage: TESTED
+  requires:
+    - clean import into pinned n8n runtime
+    - valid signed v2 webhook test
+    - invalid signature rejection test
+    - duplicate delivery test
+    - provider retry test
+    - malformed-message rejection test
+    - raw payload and secret leakage review
+    - TEST-REPORT.md
