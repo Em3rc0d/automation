@@ -1,0 +1,48 @@
+{
+  "provider": "kapso",
+  "webhook": {
+    "headers": {
+      "x-webhook-event": "whatsapp.message.received",
+      "x-webhook-payload-version": "v2",
+      "x-idempotency-key": "11111111-2222-3333-4444-555555555555",
+      "x-webhook-signature": "COMPUTE_AT_TEST_RUNTIME"
+    },
+    "body": {
+      "type": "whatsapp.message.received",
+      "data": {
+        "phone_number_id": "123456789012345",
+        "message": {
+          "id": "wamid.TEST001",
+          "from": "51999999999",
+          "timestamp": "1789405200",
+          "type": "text",
+          "text": {
+            "body": "Quiero agendar una revisión porque escucho un ruido adelante"
+          },
+          "kapso": {
+            "direction": "inbound",
+            "status": "received",
+            "origin": "cloud_api",
+            "phone_number_id": "123456789012345",
+            "whatsapp_conversation_id": "conv-test-001",
+            "contact_name": "Cliente Demo",
+            "content": "Quiero agendar una revisión porque escucho un ruido adelante"
+          }
+        },
+        "conversation": {
+          "id": "conv-test-001",
+          "phone_number": "+51999999999",
+          "phone_number_id": "123456789012345"
+        }
+      }
+    }
+  },
+  "expected": {
+    "provider": "kapso",
+    "providerMessageId": "wamid.TEST001",
+    "threadId": "conv-test-001",
+    "senderId": "51999999999",
+    "messageType": "text",
+    "idempotencyKey": "kapso:123456789012345:wamid.TEST001"
+  }
+}
