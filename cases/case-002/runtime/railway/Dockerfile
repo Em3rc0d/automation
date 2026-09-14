@@ -1,4 +1,4 @@
-FROM docker.n8n.io/n8nio/n8n:2.38.7
+FROM n8nio/n8n:2.38.7
 
 USER root
 RUN mkdir -p /opt/case002
