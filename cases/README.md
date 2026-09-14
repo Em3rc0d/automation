@@ -28,8 +28,11 @@ Each case SHOULD document:
 | ID | Case | Status |
 |---|---|---|
 | `CASE-001` | WhatsApp quote assistant for an industrial-paint salesperson using SAP exports | Productive pilot design |
+| `CASE-002` | Automotive workshop service intake, media evidence, appointment and pre-work-order orchestration | Productive pilot design |
 
 See [`CASE-001-WHATSAPP-QUOTE-ASSISTANT.md`](./CASE-001-WHATSAPP-QUOTE-ASSISTANT.md).
+
+See [`CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md`](./CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md).
 
 ## Invariant
 
