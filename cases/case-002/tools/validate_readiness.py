@@ -66,7 +66,6 @@ def validate() -> list[str]:
             schema = load_json(path, errors)
             if schema:
                 require(schema.get("type") == "object", errors, f"contract must be object schema: {name}")
-                # Provider names must not leak into provider-neutral case contracts.
                 raw = path.read_text(encoding="utf-8").lower()
                 for provider in ("kapso", "openwa"):
                     require(provider not in raw, errors, f"provider leak in case contract {name}: {provider}")
@@ -126,9 +125,13 @@ def validate() -> list[str]:
     require("Kapso" in assembly and "OpenWA" in assembly, errors, "assembly adapter preference missing")
     require("KAPSO_MESSAGE_RECEIVE@1.0" in assembly, errors, "assembly does not bind Kapso receive package")
     require("KAPSO_MEDIA_DOWNLOAD@1.0" in assembly, errors, "assembly does not bind Kapso media package")
+    require("KAPSO_MESSAGE_SEND@1.0" in assembly, errors, "assembly does not bind Kapso send package")
+    require("READY_TO_TEST_MOCK" in assembly, errors, "assembly is not marked READY_TO_TEST_MOCK")
 
     require((ROOT / "workflows/adapters/messaging/KAPSO-WHATSAPP.md").is_file(), errors, "Kapso adapter spec missing")
     require((ROOT / "workflows/adapters/messaging/OPENWA-WHATSAPP.md").is_file(), errors, "OpenWA adapter spec missing")
+    require((CASE / "TESTING.md").is_file(), errors, "CASE-002 testing runbook missing")
+    require((CASE / "runtime/case002-acceptance-probe.json").is_file(), errors, "CASE-002 n8n acceptance probe missing")
 
     return errors
 
