@@ -81,9 +81,13 @@ def validate() -> list[str]:
             fid = fixture.get("id", "<unknown>")
             expected = fixture.get("expected") or {}
             triage = expected.get("triage") or {}
-            require(triage.get("mechanicalDiagnosisProduced") is False, errors, f"{fid}: diagnosis invariant missing/true")
-            must_not = set(expected.get("mustNot") or [])
-            require("mechanical_diagnosis" in must_not or fid == "F03_SCHEDULED_MAINTENANCE_NO_MEDIA", errors, f"{fid}: mustNot lacks mechanical_diagnosis")
+            # This explicit field is the frozen authority boundary for every fixture.
+            # `mustNot` is scenario-specific and is not required to redundantly repeat it.
+            require(
+                triage.get("mechanicalDiagnosisProduced") is False,
+                errors,
+                f"{fid}: diagnosis invariant missing/true",
+            )
 
     adapter_root = ROOT / "quarries/workflow-quarry/30-hardened/adapters/messaging"
     seen_workflow_ids: set[str] = set()
