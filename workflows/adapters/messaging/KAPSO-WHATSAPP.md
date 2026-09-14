@@ -1,7 +1,7 @@
 # Kapso WhatsApp Adapter
 
 Artifact class: **ADAPTER**  
-Status: **PILOT PRIMARY / IMPLEMENTATION TARGET**  
+Status: **PILOT PRIMARY / HARDENED RECEIVE+MEDIA+SEND CANDIDATES**  
 Provider: **Kapso**
 
 ## Purpose
@@ -19,7 +19,7 @@ CASE-002 binds this adapter first. Business contracts such as `ServiceRequest`, 
 
 ## Current provider surfaces
 
-The current provider documentation exposes:
+The provider documentation currently exposes:
 
 - Platform API v1 webhooks under `https://api.kapso.ai/platform/v1`;
 - WhatsApp proxy endpoints under `https://api.kapso.ai/meta/whatsapp/v24.0`;
@@ -27,8 +27,11 @@ The current provider documentation exposes:
 - webhook payload version `v2` for new integrations;
 - `whatsapp.message.received` for inbound messages;
 - HMAC-SHA256 webhook signatures over the raw request body;
-- `X-Idempotency-Key` for delivery deduplication;
-- message/media IDs compatible with the WhatsApp/Meta-shaped payload plus `kapso` extensions.
+- `X-Idempotency-Key` for webhook delivery deduplication;
+- message/media IDs compatible with the WhatsApp/Meta-shaped payload plus Kapso extensions;
+- `POST /{phone_number_id}/messages` for outbound messages;
+- `biz_opaque_callback_data` for caller-supplied correlation data;
+- temporary authenticated media-download URLs and provider SHA-256 metadata.
 
 Provider references used during hardening:
 
@@ -37,7 +40,7 @@ Provider references used during hardening:
 - https://docs.kapso.ai/docs/platform/webhooks/advanced
 - https://docs.kapso.ai/api/meta/whatsapp/messages/send-a-message
 - https://docs.kapso.ai/api/meta/whatsapp/media/get-media-url
-- https://docs.kapso.ai/docs/whatsapp/typescript-sdk/media
+- https://docs.kapso.ai/docs/whatsapp/send-messages/text
 
 ## Inbound contract
 
@@ -70,7 +73,7 @@ The adapter MUST:
 5. preserve provider phone-number, conversation, message and media IDs;
 6. derive a stable idempotency key;
 7. forward the normalized event to the control plane;
-8. never place the raw payload or media binary in execution telemetry.
+8. never place the raw payload or media binary in generic execution telemetry.
 
 ## Canonical normalized event
 
@@ -80,7 +83,7 @@ The adapter MUST:
   "channel": "whatsapp",
   "provider": "kapso",
   "providerPhoneNumberId": "1234567890",
-  "providerEventId": "uuid-from-idempotency-header",
+  "providerEventId": "provider-idempotency-key",
   "providerMessageId": "wamid...",
   "threadId": "conversation-id",
   "senderId": "15551234567",
@@ -113,6 +116,32 @@ The metadata response may include:
 
 The adapter then downloads the bytes, enforces size/type policy, recomputes SHA-256, and returns binary to the evidence-storage composition. The binary is not serialized into logs.
 
+## Outbound text send
+
+V1 sends through:
+
+```text
+POST https://api.kapso.ai/meta/whatsapp/v24.0/{phone_number_id}/messages
+```
+
+The adapter receives a provider-neutral outbound action and returns the provider `wamid` as `providerMessageId`.
+
+Before invocation, the caller MUST allocate a durable `BusinessAction`/`idempotencyKey`. The adapter sets:
+
+```text
+biz_opaque_callback_data = businessActionId
+```
+
+so downstream provider status/webhook events can be reconciled back to the same business action.
+
+### Retry boundary
+
+The first hardened send adapter intentionally does **not** automatically retry the provider POST.
+
+A network timeout can be ambiguous: the provider may already have accepted the message. Blind retry could send duplicate appointment confirmations or follow-up questions. Therefore an ambiguous outcome becomes a reconciliation/operator-review condition before replay.
+
+This is different from safe retries when posting normalized telemetry/control-plane events with a known idempotency boundary.
+
 ## Credential model
 
 No API key or webhook secret belongs in workflow JSON.
@@ -128,18 +157,21 @@ Required deployment bindings:
 Before pilot activation verify:
 
 - webhook exists and is active;
-- test delivery succeeds;
+- signed test delivery succeeds;
 - message IDs and conversation IDs are persisted;
-- media retrieval succeeds;
 - duplicate webhook delivery is harmless;
+- media retrieval/hash succeeds;
+- outbound send returns/persists provider message ID;
+- ambiguous outbound failure does not trigger a blind duplicate send;
 - 401/404/provider 5xx behavior is classified correctly;
 - credential rotation procedure is documented.
 
 ## CASE-002 packages
 
-Initial hardened adapter packages:
+Current hardened adapter candidates:
 
-- `KAPSO_MESSAGE_RECEIVE@1.0`
-- `KAPSO_MEDIA_DOWNLOAD@1.0`
+- `KAPSO_MESSAGE_RECEIVE@1.0` -> `messaging.receive`
+- `KAPSO_MEDIA_DOWNLOAD@1.0` -> `messaging.media.download`
+- `KAPSO_MESSAGE_SEND@1.0` -> `messaging.send`
 
-These are provider adapters, not new business capabilities.
+These are provider adapters, not new business capabilities. Each still needs its own runtime/provider test evidence before `TESTED` or `APPROVED_BASELINE`.
