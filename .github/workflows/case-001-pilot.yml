@@ -71,6 +71,8 @@ jobs:
         working-directory: apps/case-001
     steps:
       - uses: actions/checkout@v4
+      - name: Simulate Windows CRLF checkout for DB init
+        run: python3 -c "from pathlib import Path; p=Path('local/db/init.sh'); d=p.read_bytes().replace(b'\r\n', b'\n'); p.write_bytes(d.replace(b'\n', b'\r\n'))"
       - name: Build and boot local PoC
         run: docker compose up -d --build --wait
       - name: Verify health and seeded database
