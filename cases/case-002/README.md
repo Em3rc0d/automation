@@ -1,104 +1,64 @@
 # CASE-002 Materialization Bundle
 
-Status: **ASSEMBLY CANDIDATE / NOT APPROVED_BASELINE**
+Status: **ASSEMBLY CANDIDATE**
 
-Authority: `cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md`
+Authority: `../CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md`
 
-This directory converts CASE-002 from a design narrative into a traceable assembly package that can be taken through the repository factory. It does **not** certify any new baseline by itself.
+This directory turns CASE-002 from a design document into a traceable assembly plan that can be manufactured through the certified Baseline Factory without copying a monolithic external workflow.
 
 ## V1 materialized path
 
 ```text
-Meta WhatsApp webhook
-  -> verify/dedupe provider event
-  -> normalize message/thread/customer context
-  -> resolve/request vehicle
-  -> create/update ServiceRequest
-  -> decide missing information
-  -> request evidence when policy requires it
-  -> fetch media
-  -> validate/hash/store Evidence
-  -> optional multimodal VisualAssessment
-  -> deterministic operational triage
-  -> HUMAN_REVIEW or APPOINTMENT
-  -> availability
-  -> slot hold
-  -> appointment create
-  -> pre-work-order create
-  -> customer confirmation
-  -> execution telemetry
-  -> incident path on failure
+WhatsApp
+-> provider-normalized inbound message
+-> ServiceRequest / customer + vehicle context
+-> optional evidence request
+-> media fetch
+-> Evidence storage + hash
+-> optional structured visual assessment
+-> deterministic operational triage
+-> appointment request / availability / hold / create
+-> pre-work-order
+-> confirmation
+-> execution telemetry / incident path
 ```
 
-## What is reused directly
+## WhatsApp adapter decision
 
-Two platform primitives already exist as `HARDENED` factory packages and are referenced, not duplicated:
+Preferred pilot adapters:
 
-- `quarries/workflow-quarry/30-hardened/platform/EXECUTION_TELEMETRY@1.0`
-- `quarries/workflow-quarry/30-hardened/platform/ERROR_TO_INCIDENT@1.0`
+1. **Kapso**
+2. **OpenWA**
 
-The remaining blocks are mapped to mined quarry evidence and are queued for repository-native synthesis/hardening. See `QUARRY-TO-ASSEMBLY.md` and `RUNTIME-SYNTHESIS.md`.
+Direct Meta WhatsApp Cloud API remains a fallback/reference adapter. The business-semantic workflow remains provider-neutral. See `WHATSAPP-ADAPTER-DECISION.md`.
 
-## Case-local domain contracts
+## Files
 
-The following are case-domain records, not automatically new toolbox capabilities:
+- `assembly.yaml` — machine-readable case assembly and current stage of each component.
+- `QUARRY-TO-ASSEMBLY.md` — provenance/traceability from quarry evidence into CASE-002 blocks.
+- `RUNTIME-SYNTHESIS.md` — ordered factory synthesis queue.
+- `WHATSAPP-ADAPTER-DECISION.md` — binding policy for Kapso/OpenWA and portability requirements.
+- `contracts/` — stable provider-neutral contracts for service requests, evidence, visual assessment and triage.
+- `fixtures/acceptance-fixtures.json` — materialized branch fixtures for E2E acceptance.
 
-- `Vehicle`
-- `ServiceRequest`
-- `CustomerReportedCondition`
-- `Evidence`
-- `AutomatedObservation`
+## Certification boundary
 
-Schemas in `contracts/` freeze the V1 exchange boundaries needed by the assembly.
-
-## Permanent authority boundary
-
-```text
-CustomerReportedCondition
-!= AutomatedObservation
-!= TechnicianFinding
-!= Diagnosis
-```
-
-A model may classify, summarize and describe visible evidence. It must not create a definitive mechanical diagnosis, declare a vehicle safe to drive, approve warranty coverage or authorize repair.
-
-## Evidence policy
-
-Media binaries are stored in object storage. Process records and execution logs store references/metadata only.
+CASE-002 does not promote anything automatically. Reusable workflow packages must still pass:
 
 ```text
-WhatsApp media
-  -> object storage
-  -> Evidence(storageReference, hash, metadata)
-  -> optional AutomatedObservation
-
-execution logs
-  -> evidenceId/reference only
-```
-
-## Acceptance fixtures
-
-`fixtures/acceptance-fixtures.json` materializes the minimum branches that the first runtime assembly must pass:
-
-1. fluid leak + usable image;
-2. fluid leak + unusable image;
-3. scheduled maintenance without media;
-4. warranty/comeback requiring human review;
-5. roadside assistance requiring human escalation because dispatch is not yet a certified capability.
-
-## Promotion boundary
-
-Nothing under this case directory should be copied into `workflows/n8n/` as `APPROVED_BASELINE` merely because the case works.
-
-Reusable semantic blocks must pass the normal factory path:
-
-```text
-quarry evidence
--> repository-native synthesis
--> HARDENED
+HARDENED
 -> RUNTIME_IMPORTABLE
 -> TESTED
 -> APPROVED_BASELINE
 ```
 
-The case-level orchestrator is an assembly proof. Reusable components are promoted independently.
+The case may use CASE-specific policy/configuration and domain records without converting every entity or decision into a new toolbox capability.
+
+## Existing hardened reuse
+
+CASE-002 reuses rather than duplicates:
+
+- `quarries/workflow-quarry/30-hardened/platform/EXECUTION_TELEMETRY@1.0`
+- `quarries/workflow-quarry/30-hardened/platform/ERROR_TO_INCIDENT@1.0`
+
+All other V1 business blocks remain in synthesis/certification according to `assembly.yaml`.
