@@ -1,6 +1,6 @@
 case: CASE-002
 name: AUTOMOTIVE_WORKSHOP_SERVICE_INTAKE
-version: 0.1.0
+version: 0.1.1
 status: ASSEMBLY_CANDIDATE
 authority: cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md
 runtime_target:
@@ -14,6 +14,13 @@ invariants:
 - side_effects_are_idempotent
 - provider_ids_are_persisted
 - tenant_scope_is_required
+adapter_policy:
+  whatsapp:
+    preferred:
+    - Kapso
+    - OpenWA
+    direct_meta_cloud_api: fallback_or_reference_only
+    rule: business semantics depend on messaging capabilities, not a hard-coded WhatsApp provider
 stages:
 - id: ingress
   semantic: WHATSAPP_INBOUND
@@ -22,7 +29,11 @@ stages:
   - batch-005:A1
   - batch-005:A2
   - batch-006:Standard Webhooks
-  adapter: Meta WhatsApp Cloud API
+  adapter:
+    preferred:
+    - Kapso
+    - OpenWA
+    fallback: Meta WhatsApp Cloud API
 - id: message_normalize
   semantic: MESSAGE_INTAKE
   status: DESIGNED_MINED
@@ -51,7 +62,11 @@ stages:
   quarry:
   - batch-005:A1
   - batch-005:A2
-  adapter: Meta WhatsApp Cloud API
+  adapter:
+    preferred:
+    - Kapso
+    - OpenWA
+    fallback: Meta WhatsApp Cloud API
 - id: evidence_store
   semantic: STORAGE_ADAPTER_COMPOSITION
   status: DESIGNED_MINED
@@ -115,7 +130,7 @@ stages:
   status: IN_CERTIFICATION
   quarry:
   - batch-007:reliable-calendar-booking
-  adapter: messaging.send
+  adapter: messaging.send via configured WhatsApp adapter
 - id: telemetry
   semantic: EXECUTION_TELEMETRY
   status: HARDENED
