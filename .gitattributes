@@ -1,0 +1,6 @@
+apps/case-001/**/*.sh text eol=lf
+apps/case-001/**/*.sql text eol=lf
+apps/case-001/Dockerfile text eol=lf
+apps/case-001/local/db/Dockerfile text eol=lf
+apps/case-001/docker-compose.yml text eol=lf
+.github/workflows/case-001-pilot.yml text eol=lf
