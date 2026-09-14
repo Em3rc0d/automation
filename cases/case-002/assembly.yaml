@@ -1,6 +1,6 @@
 case: CASE-002
 name: AUTOMOTIVE_WORKSHOP_SERVICE_INTAKE
-version: 0.1.1
+version: 0.1.2
 status: ASSEMBLY_CANDIDATE
 authority: cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md
 runtime_target:
@@ -21,22 +21,36 @@ adapter_policy:
     - OpenWA
     direct_meta_cloud_api: fallback_or_reference_only
     rule: business semantics depend on messaging capabilities, not a hard-coded WhatsApp provider
+    canonical_capabilities:
+    - messaging.receive
+    - messaging.send
+    - messaging.thread.read
+    - messaging.media.download
 stages:
 - id: ingress
-  semantic: WHATSAPP_INBOUND
-  status: NEEDS_SYNTHESIS
+  semantic: messaging.receive
+  artifact_class: ADAPTER
+  status: PARTIAL_HARDENED
   quarry:
   - batch-005:A1
   - batch-005:A2
   - batch-006:Standard Webhooks
-  adapter:
-    preferred:
-    - Kapso
-    - OpenWA
-    fallback: Meta WhatsApp Cloud API
+  primary_adapter:
+    provider: Kapso
+    status: HARDENED
+    package: quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_RECEIVE@1.0
+    spec: workflows/adapters/messaging/KAPSO-WHATSAPP.md
+  secondary_adapter:
+    provider: OpenWA
+    status: DESIGNED_MINED
+    spec: workflows/adapters/messaging/OPENWA-WHATSAPP.md
+  fallback_adapter:
+    provider: Meta WhatsApp Cloud API
+    status: REFERENCE_ONLY
 - id: message_normalize
   semantic: MESSAGE_INTAKE
   status: DESIGNED_MINED
+  notes: provider normalization occurs inside the selected messaging adapter; this stage maps the canonical messaging envelope into ServiceRequest input
   quarry:
   - batch-005:A1
   - batch-001:A03
@@ -57,16 +71,24 @@ stages:
   status: CASE_POLICY
   notes: request media only when useful for configured symptom/category
 - id: media_fetch
-  semantic: WHATSAPP_MEDIA_FETCH
-  status: NEEDS_SYNTHESIS
+  semantic: messaging.media.download
+  artifact_class: ADAPTER
+  status: PARTIAL_HARDENED
   quarry:
   - batch-005:A1
   - batch-005:A2
-  adapter:
-    preferred:
-    - Kapso
-    - OpenWA
-    fallback: Meta WhatsApp Cloud API
+  primary_adapter:
+    provider: Kapso
+    status: HARDENED
+    package: quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MEDIA_DOWNLOAD@1.0
+    spec: workflows/adapters/messaging/KAPSO-WHATSAPP.md
+  secondary_adapter:
+    provider: OpenWA
+    status: DESIGNED_MINED
+    spec: workflows/adapters/messaging/OPENWA-WHATSAPP.md
+  fallback_adapter:
+    provider: Meta WhatsApp Cloud API
+    status: REFERENCE_ONLY
 - id: evidence_store
   semantic: STORAGE_ADAPTER_COMPOSITION
   status: DESIGNED_MINED
