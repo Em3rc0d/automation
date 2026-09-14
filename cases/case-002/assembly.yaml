@@ -1,7 +1,7 @@
 case: CASE-002
 name: AUTOMOTIVE_WORKSHOP_SERVICE_INTAKE
-version: 0.1.2
-status: ASSEMBLY_CANDIDATE
+version: 0.2.0
+status: READY_TO_TEST_MOCK
 authority: cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md
 runtime_target:
   engine: n8n
@@ -11,7 +11,7 @@ invariants:
 - customer_reported_condition != automated_observation != technician_finding != diagnosis
 - media_binary_not_in_execution_logs
 - ai_has_no_mechanical_diagnosis_authority
-- side_effects_are_idempotent
+- side_effects_are_idempotent_or_explicitly_non_replayable
 - provider_ids_are_persisted
 - tenant_scope_is_required
 adapter_policy:
@@ -26,6 +26,20 @@ adapter_policy:
     - messaging.send
     - messaging.thread.read
     - messaging.media.download
+test_readiness:
+  static_validator: cases/case-002/tools/validate_readiness.py
+  acceptance_runner: cases/case-002/tools/run_acceptance.py
+  runtime_probe: cases/case-002/runtime/case002-acceptance-probe.json
+  runtime_smoke: cases/case-002/tools/runtime_smoke.sh
+  ci_workflow: .github/workflows/case-002-readiness.yml
+  fixtures: 5
+  provider_mode: mocked
+  live_provider_test_requires:
+  - Kapso API key
+  - Kapso webhook secret
+  - connected WhatsApp test number
+  - public HTTPS test webhook endpoint
+  boundary: READY_TO_TEST does not mean TESTED or APPROVED_BASELINE
 stages:
 - id: ingress
   semantic: messaging.receive
@@ -148,11 +162,22 @@ stages:
   - capability-library:work-order
   - certification:priority-a-field-service
 - id: confirmation
-  semantic: APPOINTMENT_CONFIRM
-  status: IN_CERTIFICATION
+  semantic: messaging.send
+  artifact_class: ADAPTER
+  status: PARTIAL_HARDENED
+  business_semantic: APPOINTMENT_CONFIRM
   quarry:
   - batch-007:reliable-calendar-booking
-  adapter: messaging.send via configured WhatsApp adapter
+  primary_adapter:
+    provider: Kapso
+    status: HARDENED
+    package: quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_SEND@1.0
+    spec: workflows/adapters/messaging/KAPSO-WHATSAPP.md
+  secondary_adapter:
+    provider: OpenWA
+    status: DESIGNED_MINED
+    spec: workflows/adapters/messaging/OPENWA-WHATSAPP.md
+  replay_policy: provider send is not assumed idempotent; ambiguous outcome requires reconciliation before replay
 - id: telemetry
   semantic: EXECUTION_TELEMETRY
   status: HARDENED
