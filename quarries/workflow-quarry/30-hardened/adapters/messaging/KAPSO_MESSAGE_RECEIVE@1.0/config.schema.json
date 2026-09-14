@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "automation://adapters/messaging/kapso-message-receive/1.0/config",
+  "title": "KAPSO_MESSAGE_RECEIVE@1.0 configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "webhookPayloadVersion": {
+      "type": "string",
+      "const": "v2"
+    },
+    "event": {
+      "type": "string",
+      "const": "whatsapp.message.received"
+    },
+    "bufferingEnabled": {
+      "type": "boolean",
+      "const": false
+    },
+    "controlPlanePath": {
+      "type": "string",
+      "const": "/internal/connectors/messaging/inbound"
+    }
+  },
+  "required": [
+    "webhookPayloadVersion",
+    "event",
+    "bufferingEnabled",
+    "controlPlanePath"
+  ]
+}
