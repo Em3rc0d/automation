@@ -22,6 +22,7 @@
       "parameters": {
         "action": "hmac",
         "binaryData": true,
+        "binaryPropertyName": "data",
         "type": "SHA256",
         "dataPropertyName": "signatureCalculated",
         "encoding": "hex"
@@ -29,9 +30,9 @@
       "id": "kapso-hmac",
       "name": "Calculate Kapso HMAC",
       "type": "n8n-nodes-base.crypto",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [440, 300],
-      "notes": "Bind a Crypto HMAC credential containing the Kapso webhook secret. The credential is intentionally not stored in workflow.json."
+      "notes": "Bind a Crypto credential containing the Kapso webhook secret. The credential is intentionally not stored in workflow.json."
     },
     {
       "parameters": {
