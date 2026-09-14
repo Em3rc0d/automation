@@ -1,0 +1,43 @@
+name: CASE-002 Readiness
+
+on:
+  push:
+    paths:
+      - 'cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md'
+      - 'cases/case-002/**'
+      - 'quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_*/**'
+      - 'workflows/adapters/messaging/**'
+      - '.github/workflows/case-002-readiness.yml'
+  pull_request:
+    paths:
+      - 'cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md'
+      - 'cases/case-002/**'
+      - 'quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_*/**'
+      - 'workflows/adapters/messaging/**'
+      - '.github/workflows/case-002-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Static readiness
+        run: python cases/case-002/tools/validate_readiness.py
+
+      - name: Acceptance fixtures
+        run: python cases/case-002/tools/run_acceptance.py
+
+      - name: Pinned n8n runtime smoke
+        run: bash cases/case-002/tools/runtime_smoke.sh
