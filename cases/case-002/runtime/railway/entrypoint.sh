@@ -1,18 +1,23 @@
 #!/bin/sh
 set -eu
 
-# Railway source rebuild marker: workflow recovery
-# Pin n8n's user folder to the persistent Railway volume namespace.
+# CASE-002 runtime invariant: n8n state lives on the persistent Railway volume.
 export N8N_USER_FOLDER="${N8N_USER_FOLDER:-/home/node}"
+export DB_SQLITE_DATABASE="${DB_SQLITE_DATABASE:-${N8N_USER_FOLDER}/.n8n/database.sqlite}"
+export CASE002_BACKUP_REQUIRED="${CASE002_BACKUP_REQUIRED:-true}"
+export CASE002_BACKUP_RETENTION="${CASE002_BACKUP_RETENTION:-20}"
 
 echo "[case002] runtime bootstrap"
 echo "[case002] n8n version: $(n8n --version)"
 echo "[case002] n8n user folder: ${N8N_USER_FOLDER}"
+echo "[case002] sqlite database: ${DB_SQLITE_DATABASE}"
+
+# LAW: before n8n can run migrations, recovery, imports, publishing, or any
+# startup mutation, create a consistent SQLite snapshot plus n8n config copy.
+# Fail closed by default if an existing DB cannot be backed up.
+node /opt/case002/backup-n8n-state.js startup
 
 # One-shot, data-preserving repair for n8n workflow/project visibility.
-# The recovery helper discovers every plausible SQLite DB, selects the populated
-# one, backs it up, repairs only missing ownership/access rows, and writes the
-# selected DB path to /tmp/case002-selected-db-path.
 if [ "${CASE002_RECOVER_WORKFLOWS:-false}" = "repair" ]; then
   echo "[case002] workflow access recovery requested"
   sleep 8
@@ -24,9 +29,13 @@ if [ "${CASE002_RECOVER_WORKFLOWS:-false}" = "repair" ]; then
       /home/node/*|/root/*|/data/*)
         export DB_SQLITE_DATABASE="$RECOVERED_DB_PATH"
         echo "[case002] pinning n8n to recovered database: ${DB_SQLITE_DATABASE}"
+        # Recovery may have selected a different populated DB. Snapshot the
+        # selected DB before n8n starts against it.
+        node /opt/case002/backup-n8n-state.js post-recovery-selection
         ;;
       *)
         echo "[case002] refusing unexpected recovered database path: ${RECOVERED_DB_PATH}"
+        exit 1
         ;;
     esac
   fi
@@ -36,6 +45,9 @@ fi
 # repository workflow JSON on every container restart overwrites UI-bound
 # credentials and live test wiring. Seed imports are therefore opt-in only.
 if [ "${CASE002_IMPORT_WORKFLOWS_ON_STARTUP:-false}" = "true" ]; then
+  # Snapshot again immediately before explicit imports.
+  node /opt/case002/backup-n8n-state.js pre-seed-import
+
   for f in \
     /opt/case002/kapso-receive.json \
     /opt/case002/kapso-media.json \
