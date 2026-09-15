@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 
+# Railway source rebuild marker: workflow recovery
 echo "[case002] runtime bootstrap"
 echo "[case002] n8n version: $(n8n --version)"
 
