@@ -24,7 +24,7 @@ if [ "${CASE002_IMPORT_WORKFLOWS_ON_STARTUP:-false}" = "true" ]; then
     /opt/case002/control-plane-stub.json
   do
     echo "[case002] importing $f"
-    n88 import:workflow --input="$f"
+    n8n import:workflow --input="$f"
   done
 
   # Publish only webhook workflows required for a fresh Level-2 seed.
