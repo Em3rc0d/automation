@@ -10,6 +10,11 @@ echo "[case002] n8n version: $(n8n --version)"
 # it adds only missing access/ownership association rows.
 if [ "${CASE002_RECOVER_WORKFLOWS:-false}" = "repair" ]; then
   echo "[case002] workflow access recovery requested"
+  # Railway can emit the container-start log before the mounted filesystem is
+  # fully visible to the process. Give the persisted volume a short settle
+  # window before locating the existing n8n database. This does not start n8n,
+  # import workflows, or write anything by itself.
+  sleep 8
   node /opt/case002/recover-workflows.js
 fi
 
