@@ -1,5 +1,6 @@
 FROM n8nio/n8n:2.38.7
 
+# CASE-002 runtime marker: backup law helper must be present in every live image.
 USER root
 RUN mkdir -p /opt/case002
 COPY quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_RECEIVE@1.0/workflow.json /opt/case002/kapso-receive.json
