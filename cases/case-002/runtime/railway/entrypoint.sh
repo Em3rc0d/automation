@@ -2,8 +2,14 @@
 set -eu
 
 # Railway source rebuild marker: workflow recovery
+# Railway runs this service with RAILWAY_RUN_UID=0 so the process can write to
+# the attached volume. Pin n8n's user folder to /home/node so n8n keeps using
+# the volume mounted at /home/node/.n8n instead of resolving a root home.
+export N8N_USER_FOLDER="${N8N_USER_FOLDER:-/home/node}"
+
 echo "[case002] runtime bootstrap"
 echo "[case002] n8n version: $(n8n --version)"
+echo "[case002] n8n user folder: ${N8N_USER_FOLDER}"
 
 # One-shot, data-preserving repair for n8n workflow/project visibility. The
 # recovery script backs up the SQLite database and exports all workflows before
