@@ -27,7 +27,22 @@ Marker: `CASE002-L2-004`
 
 Observed at Railway edge: `2026-09-15T00:28:26.958378962Z`.
 
-Evidence:
+Provider-side delivery evidence captured from Kapso Logs:
+
+- webhook delivery time: `2026-09-15T00:28:27Z`;
+- Kapso webhook delivery resource: `7053f38a-83f2-488d-9936-ac88bde1553a`;
+- webhook ID: `5ae34fce-3565-4c32-8f91-b207168ab8df`;
+- event: `whatsapp.message.received`;
+- status: `delivered`;
+- response status: `200`;
+- phone number ID: `597907523413541`;
+- provider message ID: `wamid.HBgLNTE5MzMwNzUyMDAVAgASGBYzRUIwRDRERkNFQzFFMkU1Qzg1Qjg1AA==`;
+- provider conversation ID: `d6496bac-a276-454f-98e9-18a39229eb45`;
+- request body text: `CASE002-L2-004 quiero agendar mantenimiento`;
+- request body message type: `text`;
+- request body source number: `51933075200`.
+
+Runtime evidence:
 
 - Kapso delivered `POST /webhook/adapters/kapso/whatsapp/messages`;
 - Railway returned HTTP `200` in `210 ms` with no upstream error;
@@ -42,6 +57,8 @@ Evidence:
 - no Kapso webhook secret or internal auth token was committed to Git.
 
 The successful execution followed earlier failed attempts that exposed a test-harness deadlock: with n8n production concurrency limited to `1`, posting the normalized event back into another webhook on the same n8n instance caused the ingress execution to wait on itself. The Level-2 harness was corrected to use the separate Railway-private control-plane endpoint. The outbound internal request is bounded to two attempts with a short wait, avoiding the prior 300-second blocking behavior.
+
+The Kapso dashboard evidence available for this successful delivery shows the request payload and delivery result but does not expose a manual replay/redelivery action or the `X-Idempotency-Key` header value in the shown log detail. Therefore replay proof remains a separate controlled test; a new WhatsApp message cannot substitute for replay because it receives a new provider message ID.
 
 Remaining evidence for Test A:
 
@@ -115,4 +132,4 @@ The current CASE-002 branch already passes:
 - Baseline Factory Validation;
 - CASE-002 Readiness, including static checks, all five acceptance fixtures and pinned n8n runtime smoke.
 
-The first real signed inbound text path is now also proven live. Level 2 remains in progress until replay/idempotency, real media, real outbound send, and ambiguous-send protection are evidenced.
+The first real signed inbound text path is now proven live with provider-side and runtime-side evidence. Level 2 remains in progress until replay/idempotency, real media, real outbound send, and ambiguous-send protection are evidenced.
