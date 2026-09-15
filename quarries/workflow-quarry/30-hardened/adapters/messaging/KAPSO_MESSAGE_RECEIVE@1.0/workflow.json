@@ -122,7 +122,9 @@
         "contentType": "raw",
         "rawContentType": "application/json",
         "body": "={{ JSON.stringify($json) }}",
-        "options": {}
+        "options": {
+          "timeout": 3000
+        }
       },
       "id": "post-normalized-message",
       "name": "Post Normalized Message",
@@ -130,9 +132,9 @@
       "typeVersion": 4.2,
       "position": [1440, 220],
       "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 1000,
-      "notes": "Bind the internal control-plane HTTP Header Auth credential at deployment."
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "notes": "Bind the internal control-plane HTTP Header Auth credential at deployment. Retry bounds match the proven Level-2 live configuration."
     },
     {
       "parameters": {
