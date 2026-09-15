@@ -45,16 +45,45 @@ messaging.send
 
 Provider choice belongs to adapter/configuration binding, not to the semantic capability catalog.
 
+## Agent ownership boundary
+
+Kapso/OpenWA/Meta are transport and connector providers. They are **not** the business agent for CASE-002.
+
+All customer-facing interpretation, follow-up questions, triage, policy application, tool use and response generation must originate from the platform-owned CASE-002 agent/runtime and then leave through `messaging.send` using the configured provider adapter.
+
+Provider-hosted autonomous agents, auto-replies or AI workflow responders must be disabled for the bound CASE-002 number/session during pilot and production operation unless they are explicitly acting as a thin transport primitive under platform control. A provider-side agent must never independently decide customer-facing business behavior.
+
+Required conversation path:
+
+```text
+WhatsApp customer
+  -> provider transport (Kapso/OpenWA/Meta)
+  -> messaging.receive adapter
+  -> platform control plane / CASE-002 agent
+  -> policy + tools + human gates
+  -> messaging.send
+  -> provider transport
+  -> WhatsApp customer
+```
+
+Consequences:
+
+- provider-generated replies are not valid CASE-002 acceptance evidence;
+- provider agents must not race or duplicate platform responses;
+- conversation state, audit, idempotency and business policy remain platform-owned;
+- switching Kapso/OpenWA/Meta must not change the agent's business semantics;
+- outbound tests must prove the response came through the platform agent and `messaging.send`, not a provider-hosted agent.
+
 ## Current implementation state
 
 | Capability | Kapso | OpenWA | Direct Meta |
 |---|---|---|---|
 | `messaging.receive` | `HARDENED` candidate — `KAPSO_MESSAGE_RECEIVE@1.0` | `DESIGNED_MINED` | fallback/reference |
 | `messaging.media.download` | `HARDENED` candidate — `KAPSO_MEDIA_DOWNLOAD@1.0` | `DESIGNED_MINED` | fallback/reference |
-| `messaging.send` | next adapter package | `DESIGNED_MINED` | fallback/reference |
+| `messaging.send` | `HARDENED` candidate — `KAPSO_MESSAGE_SEND@1.0` | `DESIGNED_MINED` | fallback/reference |
 | `messaging.thread.read` | provider mapping documented; not yet hardened | `DESIGNED_MINED` | fallback/reference |
 
-`HARDENED` does not mean `APPROVED_BASELINE`. The two Kapso packages still require pinned-runtime execution tests and promotion evidence.
+`HARDENED` does not mean `APPROVED_BASELINE`. The Kapso packages still require pinned-runtime execution tests and promotion evidence.
 
 Provider specifications:
 
@@ -77,10 +106,11 @@ Before an adapter is accepted for a productive pilot it must document and test:
 - connector healthcheck/reconnect behavior;
 - credential expiry/rotation behavior;
 - PII/media handling and retention implications;
-- adapter-specific cost telemetry when applicable.
+- adapter-specific cost telemetry when applicable;
+- provider-hosted autonomous responders disabled or proven non-authoritative for the bound number/session.
 
 ## Portability acceptance condition
 
-CASE-002 must not require changes to `ServiceRequest`, `Evidence`, appointment, work-order or telemetry contracts when switching between Kapso and OpenWA. Only the connector binding and provider-normalization layer may change.
+CASE-002 must not require changes to `ServiceRequest`, `Evidence`, appointment, work-order, agent policy or telemetry contracts when switching between Kapso and OpenWA. Only the connector binding and provider-normalization layer may change.
 
 The acceptance suite must eventually replay equivalent inbound text/media fixtures through both adapters and compare the resulting canonical messaging envelope before business processing begins.
