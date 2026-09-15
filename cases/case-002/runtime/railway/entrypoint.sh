@@ -2,26 +2,34 @@
 set -eu
 
 # Railway source rebuild marker: workflow recovery
-# Railway runs this service with RAILWAY_RUN_UID=0 so the process can write to
-# the attached volume. Pin n8n's user folder to /home/node so n8n keeps using
-# the volume mounted at /home/node/.n8n instead of resolving a root home.
+# Pin n8n's user folder to the persistent Railway volume namespace.
 export N8N_USER_FOLDER="${N8N_USER_FOLDER:-/home/node}"
 
 echo "[case002] runtime bootstrap"
 echo "[case002] n8n version: $(n8n --version)"
 echo "[case002] n8n user folder: ${N8N_USER_FOLDER}"
 
-# One-shot, data-preserving repair for n8n workflow/project visibility. The
-# recovery script backs up the SQLite database and exports all workflows before
-# it adds only missing access/ownership association rows.
+# One-shot, data-preserving repair for n8n workflow/project visibility.
+# The recovery helper discovers every plausible SQLite DB, selects the populated
+# one, backs it up, repairs only missing ownership/access rows, and writes the
+# selected DB path to /tmp/case002-selected-db-path.
 if [ "${CASE002_RECOVER_WORKFLOWS:-false}" = "repair" ]; then
   echo "[case002] workflow access recovery requested"
-  # Railway can emit the container-start log before the mounted filesystem is
-  # fully visible to the process. Give the persisted volume a short settle
-  # window before locating the existing n8n database. This does not start n8n,
-  # import workflows, or write anything by itself.
   sleep 8
   node /opt/case002/recover-workflows.js
+
+  if [ -s /tmp/case002-selected-db-path ]; then
+    RECOVERED_DB_PATH="$(tr -d '\r\n' < /tmp/case002-selected-db-path)"
+    case "$RECOVERED_DB_PATH" in
+      /home/node/*|/root/*|/data/*)
+        export DB_SQLITE_DATABASE="$RECOVERED_DB_PATH"
+        echo "[case002] pinning n8n to recovered database: ${DB_SQLITE_DATABASE}"
+        ;;
+      *)
+        echo "[case002] refusing unexpected recovered database path: ${RECOVERED_DB_PATH}"
+        ;;
+    esac
+  fi
 fi
 
 # The Railway volume is the live n8n state during Level-2 testing. Re-importing
