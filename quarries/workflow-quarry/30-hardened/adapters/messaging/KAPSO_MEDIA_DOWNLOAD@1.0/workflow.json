@@ -3,11 +3,24 @@
   "name": "ADAPTER CANDIDATE - KAPSO_MEDIA_DOWNLOAD@1.0",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {"name":"tenantId","type":"string"},
+            {"name":"providerPhoneNumberId","type":"string"},
+            {"name":"providerMessageId","type":"string"},
+            {"name":"mediaId","type":"string"},
+            {"name":"traceId","type":"string"},
+            {"name":"expectedMediaType","type":"string"},
+            {"name":"maxBytes","type":"number"},
+            {"name":"idempotencyKey","type":"string"}
+          ]
+        }
+      },
       "id": "kapso-media-trigger",
       "name": "Called by Another Workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
+      "typeVersion": 1.2,
       "position": [220, 300]
     },
     {
@@ -23,7 +36,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ (($env.KAPSO_META_API_BASE_URL || 'https://api.kapso.ai/meta/whatsapp/v24.0').replace(/\\/$/, '')) + '/' + encodeURIComponent($json.mediaId) }}",
+        "url": "={{ 'https://api.kapso.ai/meta/whatsapp/v24.0/' + encodeURIComponent($json.mediaId) }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendQuery": true,
@@ -45,7 +58,7 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 1000,
-      "notes": "Bind an HTTP Header Auth credential with X-API-Key at deployment."
+      "notes": "Bind an HTTP Header Auth credential with X-API-Key at deployment. Restrict the credential to api.kapso.ai."
     },
     {
       "parameters": {
