@@ -1,0 +1,34 @@
+{
+  "id": "case002AcceptanceProbeV1",
+  "name": "CASE-002 ACCEPTANCE PROBE V1",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "case002-manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fixtures = [\n  {id:'F01_FLUID_LEAK_USABLE_PHOTO', message:'Mi camioneta está botando aceite desde ayer.', media:[{type:'photo'}], expected:{requestType:'diagnostic_request',route:'appointment'}},\n  {id:'F02_FLUID_LEAK_UNUSABLE_PHOTO', message:'Hay una fuga debajo del carro.', media:[{type:'photo',quality:'dark_blurry'}], expected:{requestType:'diagnostic_request',route:'request_evidence'}},\n  {id:'F03_SCHEDULED_MAINTENANCE_NO_MEDIA', message:'Quiero mantenimiento de 80 mil km para mi Corolla.', media:[], expected:{requestType:'scheduled_maintenance',route:'appointment'}},\n  {id:'F04_WARRANTY_COMEBACK', message:'Sigue sonando lo mismo que repararon la semana pasada.', history:{priorWorkOrderId:'wo-previous'}, media:[], expected:{requestType:'warranty_or_comeback',route:'human_review'}},\n  {id:'F05_ROADSIDE_ASSISTANCE', message:'No prende y estoy varado. ¿Pueden mandar grúa?', vehicleOperationalState:'immobilized_reported', media:[], expected:{requestType:'roadside_assistance',route:'roadside_human_escalation'}}\n];\nconst has=(t,terms)=>terms.some(x=>String(t||'').toLowerCase().includes(x));\nconst results=[];\nfor(const f of fixtures){\n  const roadside=String(f.vehicleOperationalState||'').startsWith('immobilized')||has(f.message,['varado','grúa','grua']);\n  const comeback=!!f.history?.priorWorkOrderId&&has(f.message,['repararon','sigue','garantía','garantia']);\n  const maintenance=has(f.message,['mantenimiento','80 mil','80,000','80000']);\n  const unusable=(f.media||[]).some(m=>m.quality==='dark_blurry');\n  let requestType='diagnostic_request', route='appointment', humanReviewRequired=false;\n  if(roadside){requestType='roadside_assistance';route='roadside_human_escalation';humanReviewRequired=true;}\n  else if(comeback){requestType='warranty_or_comeback';route='human_review';humanReviewRequired=true;}\n  else if(maintenance){requestType='scheduled_maintenance';route='appointment';}\n  else if(unusable){route='request_evidence';}\n  const mechanicalDiagnosisProduced=false;\n  if(requestType!==f.expected.requestType) throw new Error(`${f.id}: requestType expected=${f.expected.requestType} actual=${requestType}`);\n  if(route!==f.expected.route) throw new Error(`${f.id}: route expected=${f.expected.route} actual=${route}`);\n  if(mechanicalDiagnosisProduced!==false) throw new Error(`${f.id}: diagnosis boundary violated`);\n  if((route==='human_review'||route==='roadside_human_escalation')&&!humanReviewRequired) throw new Error(`${f.id}: missing human review`);\n  results.push({id:f.id,requestType,route,humanReviewRequired,mechanicalDiagnosisProduced});\n}\nif(results.length!==5) throw new Error(`CASE002_FIXTURE_COUNT expected=5 actual=${results.length}`);\nreturn [{json:{case:'CASE-002',probe:'PASS',fixturesPassed:results.length,externalProvidersInvoked:false,results}}];"
+      },
+      "id": "case002-acceptance-engine",
+      "name": "Run CASE-002 Acceptance Matrix",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node":"Run CASE-002 Acceptance Matrix","type":"main","index":0}]]
+    }
+  },
+  "settings": {"executionOrder":"v1"},
+  "pinData": {},
+  "meta": {"case":"CASE-002","probe":true,"version":"1.0","providerMode":"mock"},
+  "tags": []
+}
