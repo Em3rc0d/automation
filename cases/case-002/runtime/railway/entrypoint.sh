@@ -4,6 +4,14 @@ set -eu
 echo "[case002] runtime bootstrap"
 echo "[case002] n8n version: $(n8n --version)"
 
+# One-shot, data-preserving repair for n8n workflow/project visibility. The
+# recovery script backs up the SQLite database and exports all workflows before
+# it adds only missing access/ownership association rows.
+if [ "${CASE002_RECOVER_WORKFLOWS:-false}" = "repair" ]; then
+  echo "[case002] workflow access recovery requested"
+  node /opt/case002/recover-workflows.js
+fi
+
 # The Railway volume is the live n8n state during Level-2 testing. Re-importing
 # repository workflow JSON on every container restart overwrites UI-bound
 # credentials and live test wiring. Seed imports are therefore opt-in only.
@@ -16,7 +24,7 @@ if [ "${CASE002_IMPORT_WORKFLOWS_ON_STARTUP:-false}" = "true" ]; then
     /opt/case002/control-plane-stub.json
   do
     echo "[case002] importing $f"
-    n8n import:workflow --input="$f"
+    n88 import:workflow --input="$f"
   done
 
   # Publish only webhook workflows required for a fresh Level-2 seed.
