@@ -66,5 +66,27 @@ else
   echo "[case002] skipping workflow import; preserving persisted n8n state"
 fi
 
+# Controlled Level-2 WhatsApp reply harness. This is intentionally guarded and
+# is not a production business workflow. It keeps the hardened send adapter as
+# a separate sub-workflow and only replies to normalized text beginning with
+# "PRUEBA CASE002". Every live mutation has an immediate backup checkpoint.
+if [ "${CASE002_LEVEL2_REPLY_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case002] preparing guarded Level-2 WhatsApp reply test"
+
+  node /opt/case002/backup-n8n-state.js pre-bind-send-kapso-api
+  node /opt/case002/prepare-level2-reply-test.js bind-send
+  node /opt/case002/backup-n8n-state.js post-bind-send-kapso-api
+
+  node /opt/case002/backup-n8n-state.js pre-level2-reply-overlay
+  node /opt/case002/prepare-level2-reply-test.js overlay-receive
+  node /opt/case002/backup-n8n-state.js post-level2-reply-overlay
+
+  node /opt/case002/backup-n8n-state.js pre-publish-level2-reply
+  n8n publish:workflow --id=kapsoMessageReceiveV1
+  node /opt/case002/backup-n8n-state.js post-publish-level2-reply
+
+  echo "[case002] guarded Level-2 WhatsApp reply test prepared"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
