@@ -48,4 +48,16 @@ Operational rule: every live n8n mutation requires a verified checkpoint immedia
 - Verification: backup helper completed successfully and reported the snapshot path, SHA-256, workflow count, credential count, and user count.
 - Note: a later verification command selected an older manifest because the backup directories use two timestamp naming formats and a plain lexical sort does not reliably identify the newest snapshot. This does not invalidate the `pre-kapso-credentials` checkpoint itself.
 
+### 2026-09-16T00:23:05Z — `post-kapso-hmac-credential` (no credential persisted)
+
+- Source database: `/home/node/.n8n/database.sqlite`
+- Snapshot database: `/home/node/.n8n/backups/snapshot-2026-09-16T00-23-05-747Z-post-kapso-hmac-credential/database.sqlite`
+- Workflow count: `5`
+- Credential count: `0`
+- User count: `1`
+- SHA-256: `ea9592ff89a7fbde8bbb2ae8c5bf4183db9fae66d9bbc8e8a9e9ccd4ab72018b`
+- Verification: the snapshot is valid, but its identical SHA-256 to `pre-kapso-credentials` plus `credentials_entity=0` proves the attempted HMAC credential creation did not mutate the live persistent database.
+- Read-only follow-up confirmed process 1 uses `N8N_USER_FOLDER=/home/node` and `DB_SQLITE_DATABASE=/home/node/.n8n/database.sqlite`, and only one non-backup SQLite database exists under `/home/node`, `/root`, and `/data`; that database contains `5` workflows, `0` credentials, and `1` user.
+- Operational conclusion: this is not a wrong-database-path issue. Credential creation must be re-attempted and verified at the UI/API level before any additional credential or workflow binding changes.
+
 This ledger never stores credential values, API keys, webhook secrets, encryption keys, tokens, or other secret material.
