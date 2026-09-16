@@ -89,4 +89,26 @@ Operational rule: every live n8n mutation requires a verified checkpoint immedia
 - SHA-256: `3fb40368c0e5016bc80fdc883cc06bca68036a8b2bdc26d8cf0ce65d2ff5e7a3`
 - Verification: direct read-only query returned exactly two credentials and the post-change backup reported `workflows=5 credentials=2 users=1`. No credential secret value is recorded here.
 
+### 2026-09-16T00:40:55Z / 00:41:29Z — Receive HMAC binding
+
+- `pre-bind-receive-hmac` SHA-256: `80d3bdd7f2880f44d22cbf4c46319fa02cf7f544df1aadb2220f6eb4c8e35326`.
+- `post-bind-receive-hmac` SHA-256: `8ef24c7b262f651de8c5bb0b5fd74eb24c4914a75766d6992f9f91aa09017594`.
+- Both checkpoints reported `5` workflows, `2` credentials, `1` user.
+- Read-only workflow inspection confirmed `kapsoMessageReceiveV1` node `Calculate Kapso HMAC` is bound to credential ID `pw3kluykAPVTJDmZ` (`Kapso Webhook HMAC`, type `crypto`).
+- Verification: changed checksum plus direct node credential metadata confirms the binding persisted.
+
+### 2026-09-16T00:41:40Z / 00:42:24Z — Media API binding
+
+- `pre-bind-media-api` SHA-256: `8ef24c7b262f651de8c5bb0b5fd74eb24c4914a75766d6992f9f91aa09017594`.
+- `post-bind-media-api` SHA-256: `4664908d9f216013299627181489fcb0ef853f96f1d2c592b6c35349d80fa5d5`.
+- Both checkpoints reported `5` workflows, `2` credentials, `1` user.
+- Read-only workflow inspection confirmed `kapsoMediaDownloadV1` node `Get Kapso Media Metadata` is bound to credential ID `vjVACD0rH6qX4fL3` (`KAPSO API`, type `httpHeaderAuth`).
+- Verification: changed checksum plus direct node credential metadata confirms the binding persisted.
+
+### 2026-09-16T00:42:33Z / 00:43:15Z — Send API pre-bind checkpoints (binding not yet persisted)
+
+- Two `pre-bind-send-api` checkpoints were created, both with SHA-256 `4664908d9f216013299627181489fcb0ef853f96f1d2c592b6c35349d80fa5d5` and counts `5` workflows, `2` credentials, `1` user.
+- Read-only workflow inspection of `kapsoMessageSendV1` showed no credential metadata on `Send Kapso Message`.
+- Conclusion: no Send credential binding had persisted as of this verification. No `post-bind-send-api` checkpoint exists yet.
+
 This ledger never stores credential values, API keys, webhook secrets, encryption keys, tokens, or other secret material.
