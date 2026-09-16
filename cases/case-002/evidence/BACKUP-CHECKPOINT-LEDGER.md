@@ -111,4 +111,25 @@ Operational rule: every live n8n mutation requires a verified checkpoint immedia
 - Read-only workflow inspection of `kapsoMessageSendV1` showed no credential metadata on `Send Kapso Message`.
 - Conclusion: no Send credential binding had persisted as of this verification. No `post-bind-send-api` checkpoint exists yet.
 
+### 2026-09-16T19:45:31Z / 19:45:33Z — Control-plane auth credential
+
+- `pre-control-plane-auth-credential-retry` SHA-256: `376eccdca44ad8f9263f29d4dadb0ebbc9b99b7de34d4edc01bfb8d3986dbced`.
+- Preflight state: `5` workflows, `2` credentials, `1` user.
+- Existing credential metadata before mutation: `pw3kluykAPVTJDmZ` / `Kapso Webhook HMAC` / `crypto`, and `vjVACD0rH6qX4fL3` / `KAPSO API` / `httpHeaderAuth`.
+- `post-control-plane-auth-credential` SHA-256: `fa4f1668d2dda7618bc2544e71409433ca88a387c3481ba50dc462c06001c419`.
+- Post-change state: `5` workflows, `3` credentials, `1` user.
+- Persisted credential metadata: `PG-SUfipeU9dxbre` / `CASE002 Control Plane Internal` / `httpHeaderAuth`.
+- Verification: direct read-only query returned exactly three credentials and the expected new credential ID/name/type. No credential secret value is recorded here.
+
+### 2026-09-16T19:45:34Z / 19:45:38Z — Receive control-plane binding
+
+- `pre-bind-control-plane-auth` SHA-256: `fa4f1668d2dda7618bc2544e71409433ca88a387c3481ba50dc462c06001c419`.
+- `post-bind-control-plane-auth` SHA-256: `cc61df8f20e2bf7d88e499f1ee3c8b755c4b79b7b802f249630c29d6d11d8ad1`.
+- Both checkpoints reported `5` workflows, `3` credentials, `1` user.
+- Final workflow export confirmed `kapsoMessageReceiveV1` remains inactive.
+- `Calculate Kapso HMAC` remains bound to `pw3kluykAPVTJDmZ`.
+- `Post Normalized Message` is bound to `PG-SUfipeU9dxbre` (`CASE002 Control Plane Internal`, type `httpHeaderAuth`).
+- Verification result: `PASS`.
+- Operational note: Receive intentionally remains inactive until the media/evidence composition boundary is resolved and verified.
+
 This ledger never stores credential values, API keys, webhook secrets, encryption keys, tokens, or other secret material.
