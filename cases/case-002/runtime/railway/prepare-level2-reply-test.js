@@ -68,7 +68,7 @@ function credentialBinding(node, type) {
 
 async function bindSend() {
   const rows = await queryAll(
-    "SELECT id, name, type FROM credentials_entity WHERE name = ? AND type = ? ORDER BY id",
+    'SELECT id, name, type FROM credentials_entity WHERE name = ? AND type = ? ORDER BY id',
     ['KAPSO API', 'httpHeaderAuth'],
   );
   if (rows.length !== 1) fail(`expected exactly one KAPSO API httpHeaderAuth credential, found ${rows.length}`);
@@ -143,6 +143,24 @@ function buildReplyGateNode() {
   };
 }
 
+function buildTestAcknowledgeNode() {
+  return {
+    parameters: {
+      respondWith: 'json',
+      responseBody: "={{ { ok: true, test: 'case002-level2-reply' } }}",
+      options: {
+        responseCode: 200,
+      },
+    },
+    id: 'case002-level2-test-ack',
+    name: 'Acknowledge CASE002 Level2 Webhook',
+    type: 'n8n-nodes-base.respondToWebhook',
+    typeVersion: 1.4,
+    position: [1940, 120],
+    notes: 'LEVEL-2 TEST ONLY. Acknowledge Kapso before the outbound provider call so a slow or ambiguous send cannot trigger an inbound provider retry.',
+  };
+}
+
 function buildReplyNode() {
   return {
     parameters: {
@@ -152,7 +170,7 @@ function buildReplyNode() {
     name: 'Build CASE002 Level2 Reply',
     type: 'n8n-nodes-base.code',
     typeVersion: 2,
-    position: [1940, 140],
+    position: [2200, 120],
     notes: 'LEVEL-2 TEST ONLY. Produces a deterministic BusinessAction-like request for the hardened Kapso send adapter.',
   };
 }
@@ -175,9 +193,9 @@ function executeSendNode() {
     name: 'Send CASE002 Level2 Reply',
     type: 'n8n-nodes-base.executeWorkflow',
     typeVersion: 1.3,
-    position: [2200, 140],
+    position: [2460, 120],
     onError: 'continueRegularOutput',
-    notes: 'LEVEL-2 TEST ONLY. Calls KAPSO_MESSAGE_SEND@1.0 as a separate adapter. Errors continue so the inbound provider webhook can still be acknowledged without encouraging a blind inbound replay.',
+    notes: 'LEVEL-2 TEST ONLY. Calls KAPSO_MESSAGE_SEND@1.0 as a separate adapter after the inbound webhook has already been acknowledged.',
   };
 }
 
@@ -197,11 +215,13 @@ async function overlayReceive() {
     if (!ack) fail('Acknowledge Kapso Webhook node missing');
 
     const gateId = 'case002-level2-reply-gate';
+    const testAckId = 'case002-level2-test-ack';
     const buildId = 'case002-level2-build-reply';
     const sendId = 'case002-level2-execute-send';
+    const overlayIds = [gateId, testAckId, buildId, sendId];
     const existingIds = new Set(workflow.nodes.map((item) => item.id));
     const postTargets = workflow.connections?.['Post Normalized Message']?.main?.[0] || [];
-    const alreadyPrepared = existingIds.has(gateId) && existingIds.has(buildId) && existingIds.has(sendId) &&
+    const alreadyPrepared = overlayIds.every((id) => existingIds.has(id)) &&
       postTargets.some((edge) => edge.node === 'CASE002 Level2 Reply Gate');
 
     if (alreadyPrepared) {
@@ -209,8 +229,8 @@ async function overlayReceive() {
       return;
     }
 
-    workflow.nodes = workflow.nodes.filter((item) => ![gateId, buildId, sendId].includes(item.id));
-    workflow.nodes.push(buildReplyGateNode(), buildReplyNode(), executeSendNode());
+    workflow.nodes = workflow.nodes.filter((item) => !overlayIds.includes(item.id));
+    workflow.nodes.push(buildReplyGateNode(), buildTestAcknowledgeNode(), buildReplyNode(), executeSendNode());
 
     workflow.connections = workflow.connections || {};
     workflow.connections['Post Normalized Message'] = {
@@ -218,18 +238,19 @@ async function overlayReceive() {
     };
     workflow.connections['CASE002 Level2 Reply Gate'] = {
       main: [
-        [{ node: 'Build CASE002 Level2 Reply', type: 'main', index: 0 }],
+        [{ node: 'Acknowledge CASE002 Level2 Webhook', type: 'main', index: 0 }],
         [{ node: 'Acknowledge Kapso Webhook', type: 'main', index: 0 }],
       ],
+    };
+    workflow.connections['Acknowledge CASE002 Level2 Webhook'] = {
+      main: [[{ node: 'Build CASE002 Level2 Reply', type: 'main', index: 0 }]],
     };
     workflow.connections['Build CASE002 Level2 Reply'] = {
       main: [[{ node: 'Send CASE002 Level2 Reply', type: 'main', index: 0 }]],
     };
-    workflow.connections['Send CASE002 Level2 Reply'] = {
-      main: [[{ node: 'Acknowledge Kapso Webhook', type: 'main', index: 0 }]],
-    };
+    delete workflow.connections['Send CASE002 Level2 Reply'];
 
-    ack.position = [2460, 220];
+    ack.position = [1940, 340];
 
     importWorkflow(current.parsed, current.list, workflow, patched);
 
@@ -238,11 +259,13 @@ async function overlayReceive() {
     const verifyHmac = verify.workflow.nodes.find((item) => item.name === 'Calculate Kapso HMAC');
     const verifyPost = verify.workflow.nodes.find((item) => item.name === 'Post Normalized Message');
     const verifyTargets = verify.workflow.connections?.['Post Normalized Message']?.main?.[0] || [];
+    const verifyTestAckTargets = verify.workflow.connections?.['Acknowledge CASE002 Level2 Webhook']?.main?.[0] || [];
 
-    if (![gateId, buildId, sendId].every((id) => ids.has(id))) fail('receive overlay node verification failed');
+    if (!overlayIds.every((id) => ids.has(id))) fail('receive overlay node verification failed');
     if (!credentialBinding(verifyHmac, 'crypto')) fail('Receive HMAC binding lost during overlay');
     if (!credentialBinding(verifyPost, 'httpHeaderAuth')) fail('Receive control-plane binding lost during overlay');
-    if (!verifyTargets.some((edge) => edge.node === 'CASE002 Level2 Reply Gate')) fail('receive overlay connection verification failed');
+    if (!verifyTargets.some((edge) => edge.node === 'CASE002 Level2 Reply Gate')) fail('receive overlay gate connection verification failed');
+    if (!verifyTestAckTargets.some((edge) => edge.node === 'Build CASE002 Level2 Reply')) fail('receive overlay post-ack connection verification failed');
 
     console.log('[case002-level2-reply] receive overlay PASS');
   } finally {
