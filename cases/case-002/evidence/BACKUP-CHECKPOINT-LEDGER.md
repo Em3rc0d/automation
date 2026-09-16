@@ -78,4 +78,15 @@ Operational rule: every live n8n mutation requires a verified checkpoint immedia
 - Direct read-only query still reports credential ID `pw3kluykAPVTJDmZ`, name `Crypto account`, type `crypto`.
 - Conclusion: the attempted rename did not mutate persistent state. The credential itself remains valid and backed up; the default name is cosmetic and does not block the next credential-creation step.
 
+### 2026-09-16T00:37:57Z — `post-kapso-api-credential`
+
+- Source database: `/home/node/.n8n/database.sqlite`
+- Snapshot database: `/home/node/.n8n/backups/snapshot-2026-09-16T00-37-57-279Z-post-kapso-api-credential/database.sqlite`
+- Workflow count: `5`
+- Credential count: `2`
+- User count: `1`
+- Persisted credential metadata: `pw3kluykAPVTJDmZ` / `Crypto account` / `crypto`, and `vjVACD0rH6qX4fL3` / `KAPSO API` / `httpHeaderAuth`.
+- SHA-256: `3fb40368c0e5016bc80fdc883cc06bca68036a8b2bdc26d8cf0ce65d2ff5e7a3`
+- Verification: direct read-only query returned exactly two credentials and the post-change backup reported `workflows=5 credentials=2 users=1`. No credential secret value is recorded here.
+
 This ledger never stores credential values, API keys, webhook secrets, encryption keys, tokens, or other secret material.
