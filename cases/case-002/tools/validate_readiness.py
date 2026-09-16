@@ -42,6 +42,10 @@ REQUIRED_PACKAGE_FILES = {
     "README.md",
 }
 
+MEDIA_EVIDENCE_WORKFLOW = (
+    CASE / "workflows/CASE002_LEVEL2_MEDIA_EVIDENCE@1.0/workflow.json"
+)
+
 
 def load_json(path: Path, errors: list[str]):
     try:
@@ -125,6 +129,44 @@ def validate() -> list[str]:
                 if send_nodes:
                     require(send_nodes[0].get("retryOnFail") is not True, errors, "KAPSO_MESSAGE_SEND: provider send must not auto-retry")
 
+    require(
+        MEDIA_EVIDENCE_WORKFLOW.is_file(),
+        errors,
+        f"missing Level-2 media evidence composition: {MEDIA_EVIDENCE_WORKFLOW.relative_to(ROOT)}",
+    )
+    media_evidence = load_json(MEDIA_EVIDENCE_WORKFLOW, errors) if MEDIA_EVIDENCE_WORKFLOW.is_file() else None
+    if media_evidence:
+        require(
+            media_evidence.get("id") == "case002Level2MediaEvidenceV1",
+            errors,
+            "Level-2 media evidence composition has unexpected workflow id",
+        )
+        require(media_evidence.get("active") is False, errors, "Level-2 media evidence composition must remain inactive")
+        meta = media_evidence.get("meta") or {}
+        require(meta.get("stage") == "CASE_COMPOSITION", errors, "Level-2 media evidence composition stage mismatch")
+        require(meta.get("testOnly") is True, errors, "Level-2 media evidence composition must be testOnly")
+        require(meta.get("productionStorageRequired") is True, errors, "Level-2 media evidence composition must preserve production-storage gap")
+
+        nodes = media_evidence.get("nodes") or []
+        names = {node.get("name") for node in nodes}
+        required_nodes = {
+            "Download Media via Kapso Adapter",
+            "Prepare Evidence Storage",
+            "Write Evidence Binary",
+            "Read Persisted Evidence",
+            "Hash Persisted Evidence",
+            "Verify Persistence and Build Evidence",
+        }
+        require(required_nodes.issubset(names), errors, "Level-2 media evidence composition missing required nodes")
+        for node in nodes:
+            require(not node.get("credentials"), errors, f"Level-2 media evidence composition has bound credential on node {node.get('name')}")
+
+        raw = MEDIA_EVIDENCE_WORKFLOW.read_text(encoding="utf-8")
+        require("kapsoMediaDownloadV1" in raw, errors, "Level-2 media evidence composition does not call hardened media adapter")
+        require("/home/node/.n8n/storage/" in raw, errors, "Level-2 media evidence composition missing test-volume storage path")
+        require("test-local-volume://case002/" in raw, errors, "Level-2 media evidence composition missing test-only storage reference")
+        require("sha256:" in raw, errors, "Level-2 media evidence composition missing Evidence contentHash prefix")
+
     assembly = (CASE / "assembly.yaml").read_text(encoding="utf-8") if (CASE / "assembly.yaml").is_file() else ""
     require("Kapso" in assembly and "OpenWA" in assembly, errors, "assembly adapter preference missing")
     require("KAPSO_MESSAGE_RECEIVE@1.0" in assembly, errors, "assembly does not bind Kapso receive package")
@@ -151,6 +193,7 @@ def main() -> int:
     print(f"Contracts: {len(CONTRACTS)}")
     print(f"Acceptance fixtures: {len(EXPECTED_FIXTURES)}")
     print(f"Kapso HARDENED adapters: {len(KAPSO_PACKAGES)}")
+    print("Level-2 media evidence composition source: PASS")
     print("Provider-neutral case contracts: PASS")
     print("No bound adapter credentials / no base64 workflow serialization: PASS")
     print("Boundary: ready for mock/runtime testing; not a production certification.")
