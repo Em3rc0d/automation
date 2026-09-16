@@ -60,4 +60,22 @@ Operational rule: every live n8n mutation requires a verified checkpoint immedia
 - Read-only follow-up confirmed process 1 uses `N8N_USER_FOLDER=/home/node` and `DB_SQLITE_DATABASE=/home/node/.n8n/database.sqlite`, and only one non-backup SQLite database exists under `/home/node`, `/root`, and `/data`; that database contains `5` workflows, `0` credentials, and `1` user.
 - Operational conclusion: this is not a wrong-database-path issue. Credential creation must be re-attempted and verified at the UI/API level before any additional credential or workflow binding changes.
 
+### 2026-09-16T00:32:53Z — `post-kapso-hmac-credential` (credential persisted)
+
+- Source database: `/home/node/.n8n/database.sqlite`
+- Snapshot database: `/home/node/.n8n/backups/snapshot-2026-09-16T00-32-53-966Z-post-kapso-hmac-credential/database.sqlite`
+- Workflow count: `5`
+- Credential count: `1`
+- User count: `1`
+- Persisted credential metadata: one credential of type `crypto`, ID `pw3kluykAPVTJDmZ`, current name `Crypto account`.
+- SHA-256: `cbd52cf5cab8200bd31ac471e61c82b5d8fa640f700e7b8001f51d68dbd8f788`
+- Verification: direct read-only query returned `credentials_entity=1`, and the post-change backup produced a new SHA-256 distinct from the pre-credential state. No credential secret value is recorded here.
+
+### 2026-09-16T00:34:06Z / 00:34:32Z — attempted HMAC credential rename (no-op)
+
+- `pre-rename-kapso-hmac` and `post-rename-kapso-hmac` both report `5` workflows, `1` credential, `1` user.
+- Both snapshots have SHA-256 `cbd52cf5cab8200bd31ac471e61c82b5d8fa640f700e7b8001f51d68dbd8f788`.
+- Direct read-only query still reports credential ID `pw3kluykAPVTJDmZ`, name `Crypto account`, type `crypto`.
+- Conclusion: the attempted rename did not mutate persistent state. The credential itself remains valid and backed up; the default name is cosmetic and does not block the next credential-creation step.
+
 This ledger never stores credential values, API keys, webhook secrets, encryption keys, tokens, or other secret material.
