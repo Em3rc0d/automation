@@ -1,0 +1,202 @@
+case: CASE-002
+name: AUTOMOTIVE_WORKSHOP_SERVICE_INTAKE
+version: 0.2.0
+status: READY_TO_TEST_MOCK
+authority: cases/CASE-002-AUTOMOTIVE-WORKSHOP-SERVICE-INTAKE.md
+runtime_target:
+  engine: n8n
+  profile: n8n-base-js-v1
+  pinned_version: 2.38.7
+invariants:
+- customer_reported_condition != automated_observation != technician_finding != diagnosis
+- media_binary_not_in_execution_logs
+- ai_has_no_mechanical_diagnosis_authority
+- side_effects_are_idempotent_or_explicitly_non_replayable
+- provider_ids_are_persisted
+- tenant_scope_is_required
+adapter_policy:
+  whatsapp:
+    preferred:
+    - Kapso
+    - OpenWA
+    direct_meta_cloud_api: fallback_or_reference_only
+    rule: business semantics depend on messaging capabilities, not a hard-coded WhatsApp provider
+    canonical_capabilities:
+    - messaging.receive
+    - messaging.send
+    - messaging.thread.read
+    - messaging.media.download
+test_readiness:
+  static_validator: cases/case-002/tools/validate_readiness.py
+  acceptance_runner: cases/case-002/tools/run_acceptance.py
+  runtime_probe: cases/case-002/runtime/case002-acceptance-probe.json
+  runtime_smoke: cases/case-002/tools/runtime_smoke.sh
+  ci_workflow: .github/workflows/case-002-readiness.yml
+  fixtures: 5
+  provider_mode: mocked
+  live_provider_test_requires:
+  - Kapso API key
+  - Kapso webhook secret
+  - connected WhatsApp test number
+  - public HTTPS test webhook endpoint
+  boundary: READY_TO_TEST does not mean TESTED or APPROVED_BASELINE
+stages:
+- id: ingress
+  semantic: messaging.receive
+  artifact_class: ADAPTER
+  status: PARTIAL_HARDENED
+  quarry:
+  - batch-005:A1
+  - batch-005:A2
+  - batch-006:Standard Webhooks
+  primary_adapter:
+    provider: Kapso
+    status: HARDENED
+    package: quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_RECEIVE@1.0
+    spec: workflows/adapters/messaging/KAPSO-WHATSAPP.md
+  secondary_adapter:
+    provider: OpenWA
+    status: DESIGNED_MINED
+    spec: workflows/adapters/messaging/OPENWA-WHATSAPP.md
+  fallback_adapter:
+    provider: Meta WhatsApp Cloud API
+    status: REFERENCE_ONLY
+- id: message_normalize
+  semantic: MESSAGE_INTAKE
+  status: DESIGNED_MINED
+  notes: provider normalization occurs inside the selected messaging adapter; this stage maps the canonical messaging envelope into ServiceRequest input
+  quarry:
+  - batch-005:A1
+  - batch-001:A03
+  output: ServiceRequest input
+- id: customer_vehicle
+  semantic: DOMAIN_RESOLUTION
+  status: CASE_DOMAIN
+  notes: Customer/Vehicle lookup or collection; not admitted as toolbox capability
+- id: service_request
+  semantic: WORK_REQUEST_INTAKE
+  status: NEEDS_SYNTHESIS
+  quarry:
+  - batch-001:A03
+  - batch-008:support-sla
+  - capability-library:work-order
+- id: evidence_request
+  semantic: POLICY_CONFIG
+  status: CASE_POLICY
+  notes: request media only when useful for configured symptom/category
+- id: media_fetch
+  semantic: messaging.media.download
+  artifact_class: ADAPTER
+  status: PARTIAL_HARDENED
+  quarry:
+  - batch-005:A1
+  - batch-005:A2
+  primary_adapter:
+    provider: Kapso
+    status: HARDENED
+    package: quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MEDIA_DOWNLOAD@1.0
+    spec: workflows/adapters/messaging/KAPSO-WHATSAPP.md
+  secondary_adapter:
+    provider: OpenWA
+    status: DESIGNED_MINED
+    spec: workflows/adapters/messaging/OPENWA-WHATSAPP.md
+  fallback_adapter:
+    provider: Meta WhatsApp Cloud API
+    status: REFERENCE_ONLY
+- id: evidence_store
+  semantic: STORAGE_ADAPTER_COMPOSITION
+  status: DESIGNED_MINED
+  requires:
+  - storage.file.put
+  - storage.file.hash
+- id: visual_assessment
+  semantic: VISUAL_EVIDENCE_ASSESS_CANDIDATE
+  status: CASE_COMPOSITION
+  quarry:
+  - batch-005:paperflow
+  - batch-005:structured-extraction
+  admission: DEFER
+- id: triage
+  semantic: DETERMINISTIC_OPERATIONAL_TRIAGE
+  status: CASE_POLICY
+  quarry:
+  - batch-001:A03
+  - batch-008:support-sla
+  output: triage-decision.schema.json
+- id: human_review
+  semantic: HUMAN_REVIEW_TASK
+  status: IN_CERTIFICATION
+  quarry:
+  - batch-006:durable-approval
+  - batch-008:approvals
+- id: appointment_request
+  semantic: APPOINTMENT_REQUEST
+  status: IN_CERTIFICATION
+  quarry:
+  - batch-002:B12
+  - batch-004:D03
+- id: availability
+  semantic: AVAILABILITY_CHECK
+  status: IN_CERTIFICATION
+  quarry:
+  - batch-007:reliable-calendar-booking
+  adapter: Google Calendar first
+- id: slot_hold
+  semantic: SLOT_HOLD
+  status: IN_CERTIFICATION
+  quarry:
+  - batch-002:appointment-decomposition
+  - batch-007:double-booking-prevention
+- id: appointment_create
+  semantic: APPOINTMENT_CREATE
+  status: IN_CERTIFICATION
+  quarry:
+  - batch-002:B12
+  - batch-007:Cal.com-semantics
+  persist:
+  - providerEventId
+- id: work_order
+  semantic: WORK_ORDER_CREATE
+  status: PARTIAL_NEEDS_SYNTHESIS
+  quarry:
+  - capability-library:work-order
+  - certification:priority-a-field-service
+- id: confirmation
+  semantic: messaging.send
+  artifact_class: ADAPTER
+  status: PARTIAL_HARDENED
+  business_semantic: APPOINTMENT_CONFIRM
+  quarry:
+  - batch-007:reliable-calendar-booking
+  primary_adapter:
+    provider: Kapso
+    status: HARDENED
+    package: quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_SEND@1.0
+    spec: workflows/adapters/messaging/KAPSO-WHATSAPP.md
+  secondary_adapter:
+    provider: OpenWA
+    status: DESIGNED_MINED
+    spec: workflows/adapters/messaging/OPENWA-WHATSAPP.md
+  replay_policy: provider send is not assumed idempotent; ambiguous outcome requires reconciliation before replay
+- id: telemetry
+  semantic: EXECUTION_TELEMETRY
+  status: HARDENED
+  package: quarries/workflow-quarry/30-hardened/platform/EXECUTION_TELEMETRY@1.0
+- id: incident
+  semantic: ERROR_TO_INCIDENT
+  status: HARDENED
+  package: quarries/workflow-quarry/30-hardened/platform/ERROR_TO_INCIDENT@1.0
+blocked_v1:
+- semantic: FIELD_SERVICE_DISPATCH
+  reason: capability gap; roadside/tow requests route to human review
+- semantic: WARRANTY_ELIGIBILITY_EVALUATE
+  reason: not admitted; human review remains authority
+- semantic: MECHANICAL_DIAGNOSIS
+  reason: explicit non-goal; technician authority
+contracts:
+- contracts/service-request.schema.json
+- contracts/evidence.schema.json
+- contracts/visual-assessment.schema.json
+- contracts/triage-decision.schema.json
+fixtures:
+- fixtures/acceptance-fixtures.json
