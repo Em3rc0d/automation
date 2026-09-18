@@ -85,8 +85,9 @@ if [ "${CASE002_LEVEL2_REPLY_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case002] guarded Level-2 WhatsApp reply test prepared"
 fi
 
-# CASE-local conversational appointment harness. It proves the WhatsApp intake
-# loop and persists a sandbox Appointment in workflow static data. It does NOT
+# CASE-local conversational appointment harness (source package v1.1+). It proves
+# the WhatsApp intake loop and persists a sandbox Appointment in workflow static
+# data. It does NOT
 # claim Google Calendar authority. External calendar availability/create remains
 # a separate certification step.
 if [ "${CASE002_LEVEL2_APPOINTMENT_AGENT_ON_STARTUP:-false}" = "true" ]; then
