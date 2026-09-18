@@ -25,7 +25,7 @@ Safety/authority rules:
 - outbound WhatsApp still goes through the hardened Kapso send adapter;
 - booking confirmation explicitly states that the appointment is stored in the internal Level-2 pilot calendar, not Google Calendar.
 
-Persistence uses n8n workflow static data for the controlled Level-2 test only. This is **not** the final scheduling authority and does not satisfy the production race/idempotency gate for Google Calendar/Cal.com/Microsoft Calendar.
+Persistence uses n8n workflow static data for the controlled Level-2 test only. In the live WhatsApp composition, the conversation state node is inlined into the active `kapsoMessageReceiveV1` webhook workflow so the state owner is the production webhook workflow across separate inbound deliveries. A prior child-subworkflow composition reset to `idle` between WhatsApp messages and was rejected by live evidence. This is **not** the final scheduling authority and does not satisfy the production race/idempotency gate for Google Calendar/Cal.com/Microsoft Calendar.
 
 Production promotion still requires:
 - real `calendar.availability.read`;
