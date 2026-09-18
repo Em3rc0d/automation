@@ -7,6 +7,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const N8N = '/usr/local/lib/node_modules/n8n/bin/n8n';
+const APPOINTMENT_SOURCE = '/opt/case002/appointment-agent.json';
 const mode = process.argv[2] || '';
 
 function fail(message) {
@@ -51,31 +52,45 @@ function buildInputNode() {
     type: 'n8n-nodes-base.code',
     typeVersion: 2,
     position: [2200, 340],
-    notes: 'LEVEL-2 TEST ONLY. Maps the provider-neutral inbound envelope into the CASE-local appointment agent contract.'
+    notes: 'LEVEL-2 TEST ONLY. Maps the provider-neutral inbound envelope into the CASE-local appointment contract.'
   };
 }
 
-function buildExecuteNode() {
-  return {
-    parameters: {
-      source: 'database',
-      workflowId: {
-        __rl: true,
-        value: 'case002Level2AppointmentAgentV1',
-        mode: 'id'
-      },
-      mode: 'once',
-      options: {
-        waitForSubWorkflow: true
-      }
+function loadInlineAgentNodes() {
+  const source = JSON.parse(fs.readFileSync(APPOINTMENT_SOURCE, 'utf8'));
+  const wanted = {
+    'Conversation Appointment State': {
+      id: 'case002-appointment-inline-state',
+      name: 'CASE002 Appointment Conversation State',
+      position: [2460, 340]
     },
-    id: 'case002-appointment-execute-agent',
-    name: 'Run CASE002 Appointment Agent',
-    type: 'n8n-nodes-base.executeWorkflow',
-    typeVersion: 1.3,
-    position: [2460, 340],
-    notes: 'LEVEL-2 TEST ONLY. Child workflow owns conversational state and routes outbound replies through KAPSO_MESSAGE_SEND@1.0.'
+    'Send Appointment Agent Reply': {
+      id: 'case002-appointment-inline-send',
+      name: 'CASE002 Appointment Send Reply',
+      position: [2720, 340]
+    },
+    'Verify Appointment Agent Reply': {
+      id: 'case002-appointment-inline-verify',
+      name: 'CASE002 Appointment Verify Reply',
+      position: [2980, 340]
+    }
   };
+
+  const cloned = {};
+  for (const [sourceName, target] of Object.entries(wanted)) {
+    const node = (source.nodes || []).find((item) => item.name === sourceName);
+    if (!node) fail(`source node missing: ${sourceName}`);
+    cloned[sourceName] = JSON.parse(JSON.stringify(node));
+    cloned[sourceName].id = target.id;
+    cloned[sourceName].name = target.name;
+    cloned[sourceName].position = target.position;
+  }
+
+  const stateCode = cloned['Conversation Appointment State']?.parameters?.jsCode || '';
+  if (!stateCode.includes("$getWorkflowStaticData('global')")) {
+    fail('appointment source no longer owns state through workflow static data');
+  }
+  return cloned;
 }
 
 async function overlayReceive() {
@@ -95,35 +110,67 @@ async function overlayReceive() {
     if (!ack) fail('Acknowledge Kapso Webhook node missing');
     if (!replyGate) fail('Level-2 reply gate missing; appointment overlay expects the hardened text reply harness');
 
-    const ids = ['case002-appointment-build-input', 'case002-appointment-execute-agent'];
-    workflow.nodes = workflow.nodes.filter((item) => !ids.includes(item.id));
-    workflow.nodes.push(buildInputNode(), buildExecuteNode());
+    const inline = loadInlineAgentNodes();
+    const removeIds = new Set([
+      'case002-appointment-build-input',
+      'case002-appointment-execute-agent',
+      'case002-appointment-inline-state',
+      'case002-appointment-inline-send',
+      'case002-appointment-inline-verify'
+    ]);
+    workflow.nodes = workflow.nodes.filter((item) => !removeIds.has(item.id));
+    workflow.nodes.push(
+      buildInputNode(),
+      inline['Conversation Appointment State'],
+      inline['Send Appointment Agent Reply'],
+      inline['Verify Appointment Agent Reply']
+    );
 
     workflow.connections = workflow.connections || {};
     workflow.connections['Acknowledge Kapso Webhook'] = {
       main: [[{ node: 'Build CASE002 Appointment Agent Input', type: 'main', index: 0 }]]
     };
     workflow.connections['Build CASE002 Appointment Agent Input'] = {
-      main: [[{ node: 'Run CASE002 Appointment Agent', type: 'main', index: 0 }]]
+      main: [[{ node: 'CASE002 Appointment Conversation State', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Appointment Conversation State'] = {
+      main: [[{ node: 'CASE002 Appointment Send Reply', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Appointment Send Reply'] = {
+      main: [[{ node: 'CASE002 Appointment Verify Reply', type: 'main', index: 0 }]]
     };
     delete workflow.connections['Run CASE002 Appointment Agent'];
+    delete workflow.connections['CASE002 Appointment Verify Reply'];
 
     importWorkflow(current.parsed, current.list, workflow, patched);
 
     const verify = exportWorkflow('kapsoMessageReceiveV1', exported);
     const nodeIds = new Set(verify.workflow.nodes.map((item) => item.id));
-    const ackTargets = verify.workflow.connections?.['Acknowledge Kapso Webhook']?.main?.[0] || [];
-    const buildTargets = verify.workflow.connections?.['Build CASE002 Appointment Agent Input']?.main?.[0] || [];
     const verifyHmac = verify.workflow.nodes.find((item) => item.name === 'Calculate Kapso HMAC');
     const verifyPost = verify.workflow.nodes.find((item) => item.name === 'Post Normalized Message');
+    const ackTargets = verify.workflow.connections?.['Acknowledge Kapso Webhook']?.main?.[0] || [];
+    const buildTargets = verify.workflow.connections?.['Build CASE002 Appointment Agent Input']?.main?.[0] || [];
+    const stateTargets = verify.workflow.connections?.['CASE002 Appointment Conversation State']?.main?.[0] || [];
+    const sendTargets = verify.workflow.connections?.['CASE002 Appointment Send Reply']?.main?.[0] || [];
+    const stateNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Appointment Conversation State');
 
-    if (!ids.every((id) => nodeIds.has(id))) fail('appointment overlay node verification failed');
+    const requiredIds = [
+      'case002-appointment-build-input',
+      'case002-appointment-inline-state',
+      'case002-appointment-inline-send',
+      'case002-appointment-inline-verify'
+    ];
+    if (!requiredIds.every((id) => nodeIds.has(id))) fail('appointment inline overlay node verification failed');
+    if (nodeIds.has('case002-appointment-execute-agent')) fail('legacy child appointment execution node still present');
     if (!verifyHmac?.credentials?.crypto) fail('Receive HMAC binding lost during appointment overlay');
     if (!verifyPost?.credentials?.httpHeaderAuth) fail('Receive control-plane binding lost during appointment overlay');
+    if (!(stateNode?.parameters?.jsCode || '').includes("$getWorkflowStaticData('global')")) fail('Receive-owned state node missing static data persistence');
     if (!ackTargets.some((edge) => edge.node === 'Build CASE002 Appointment Agent Input')) fail('ack -> appointment input connection missing');
-    if (!buildTargets.some((edge) => edge.node === 'Run CASE002 Appointment Agent')) fail('appointment input -> agent connection missing');
+    if (!buildTargets.some((edge) => edge.node === 'CASE002 Appointment Conversation State')) fail('appointment input -> state connection missing');
+    if (!stateTargets.some((edge) => edge.node === 'CASE002 Appointment Send Reply')) fail('appointment state -> send connection missing');
+    if (!sendTargets.some((edge) => edge.node === 'CASE002 Appointment Verify Reply')) fail('appointment send -> verify connection missing');
 
-    console.log('[case002-appointment-agent] receive overlay PASS');
+    console.log('[case002-appointment-agent] receive overlay PASS state-owner=receive fail-closed=true');
   } finally {
     for (const file of [exported, patched]) {
       try { fs.unlinkSync(file); } catch (_) {}
