@@ -77,6 +77,13 @@ if [ "${CASE002_LEVEL2_REPLY_TEST_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/prepare-level2-reply-test.js bind-send
   node /opt/case002/backup-n8n-state.js post-bind-send-kapso-api
 
+  # Execute Sub-workflow loads the published version from the database. Publish
+  # the send adapter after credential binding so the live version includes the
+  # KAPSO API credential and can be invoked by Receive.
+  node /opt/case002/backup-n8n-state.js pre-publish-level2-send
+  n8n publish:workflow --id=kapsoMessageSendV1
+  node /opt/case002/backup-n8n-state.js post-publish-level2-send
+
   node /opt/case002/backup-n8n-state.js pre-level2-reply-overlay
   node /opt/case002/prepare-level2-reply-test.js overlay-receive
   node /opt/case002/backup-n8n-state.js post-level2-reply-overlay
