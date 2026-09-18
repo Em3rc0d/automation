@@ -29,8 +29,6 @@ if [ "${CASE002_RECOVER_WORKFLOWS:-false}" = "repair" ]; then
       /home/node/*|/root/*|/data/*)
         export DB_SQLITE_DATABASE="$RECOVERED_DB_PATH"
         echo "[case002] pinning n8n to recovered database: ${DB_SQLITE_DATABASE}"
-        # Recovery may have selected a different populated DB. Snapshot the
-        # selected DB before n8n starts against it.
         node /opt/case002/backup-n8n-state.js post-recovery-selection
         ;;
       *)
@@ -45,7 +43,6 @@ fi
 # repository workflow JSON on every container restart overwrites UI-bound
 # credentials and live test wiring. Seed imports are therefore opt-in only.
 if [ "${CASE002_IMPORT_WORKFLOWS_ON_STARTUP:-false}" = "true" ]; then
-  # Snapshot again immediately before explicit imports.
   node /opt/case002/backup-n8n-state.js pre-seed-import
 
   for f in \
@@ -59,17 +56,13 @@ if [ "${CASE002_IMPORT_WORKFLOWS_ON_STARTUP:-false}" = "true" ]; then
     n8n import:workflow --input="$f"
   done
 
-  # Publish only webhook workflows required for a fresh Level-2 seed.
   n8n publish:workflow --id=case002ControlPlaneStubV1 || true
   n8n publish:workflow --id=kapsoMessageReceiveV1 || true
 else
   echo "[case002] skipping workflow import; preserving persisted n8n state"
 fi
 
-# Controlled Level-2 WhatsApp reply harness. This is intentionally guarded and
-# is not a production business workflow. It keeps the hardened send adapter as
-# a separate sub-workflow and only replies to normalized text beginning with
-# "PRUEBA CASE002". Every live mutation has an immediate backup checkpoint.
+# Controlled Level-2 WhatsApp reply harness.
 if [ "${CASE002_LEVEL2_REPLY_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case002] preparing guarded Level-2 WhatsApp reply test"
 
@@ -77,9 +70,6 @@ if [ "${CASE002_LEVEL2_REPLY_TEST_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/prepare-level2-reply-test.js bind-send
   node /opt/case002/backup-n8n-state.js post-bind-send-kapso-api
 
-  # Execute Sub-workflow loads the published version from the database. Publish
-  # the send adapter after credential binding so the live version includes the
-  # KAPSO API credential and can be invoked by Receive.
   node /opt/case002/backup-n8n-state.js pre-publish-level2-send
   n8n publish:workflow --id=kapsoMessageSendV1
   node /opt/case002/backup-n8n-state.js post-publish-level2-send
@@ -93,6 +83,46 @@ if [ "${CASE002_LEVEL2_REPLY_TEST_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js post-publish-level2-reply
 
   echo "[case002] guarded Level-2 WhatsApp reply test prepared"
+fi
+
+# CASE-local conversational appointment harness. It proves the WhatsApp intake
+# loop and persists a sandbox Appointment in workflow static data. It does NOT
+# claim Google Calendar authority. External calendar availability/create remains
+# a separate certification step.
+if [ "${CASE002_LEVEL2_APPOINTMENT_AGENT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case002] preparing Level-2 workshop appointment agent"
+
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-bind-send
+  node /opt/case002/prepare-level2-reply-test.js bind-send
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-bind-send
+
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-publish-send
+  n8n publish:workflow --id=kapsoMessageSendV1
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-publish-send
+
+  # Ensure the hardened PRUEBA CASE002 gate exists before attaching the normal
+  # conversational branch. This operation is idempotent at the workflow shape.
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-base-overlay
+  node /opt/case002/prepare-level2-reply-test.js overlay-receive
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-base-overlay
+
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-import
+  n8n import:workflow --input=/opt/case002/appointment-agent.json
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-import
+
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-publish
+  n8n publish:workflow --id=case002Level2AppointmentAgentV1
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-publish
+
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-receive-overlay
+  node /opt/case002/prepare-level2-appointment-agent.js overlay-receive
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-receive-overlay
+
+  node /opt/case002/backup-n8n-state.js pre-appointment-agent-publish-receive
+  n8n publish:workflow --id=kapsoMessageReceiveV1
+  node /opt/case002/backup-n8n-state.js post-appointment-agent-publish-receive
+
+  echo "[case002] Level-2 workshop appointment agent prepared"
 fi
 
 echo "[case002] bootstrap complete; starting n8n"
