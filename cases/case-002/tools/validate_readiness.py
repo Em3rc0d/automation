@@ -48,6 +48,9 @@ MEDIA_EVIDENCE_WORKFLOW = (
 APPOINTMENT_AGENT_WORKFLOW = (
     CASE / "workflows/CASE002_LEVEL2_APPOINTMENT_AGENT@1.0/workflow.json"
 )
+APPOINTMENT_OVERLAY_HELPER = (
+    CASE / "runtime/railway/prepare-level2-appointment-agent.js"
+)
 
 
 def load_json(path: Path, errors: list[str]):
@@ -202,6 +205,18 @@ def validate() -> list[str]:
         require("America/Lima" in raw, errors, "Level-2 appointment agent timezone must be explicit")
         require("case002-level2-internal" in raw, errors, "Level-2 appointment agent must preserve sandbox calendar boundary")
         require("diagn" in raw.lower(), errors, "Level-2 appointment agent must preserve diagnosis authority boundary")
+
+    require(
+        APPOINTMENT_OVERLAY_HELPER.is_file(),
+        errors,
+        f"missing Level-2 appointment overlay helper: {APPOINTMENT_OVERLAY_HELPER.relative_to(ROOT)}",
+    )
+    if APPOINTMENT_OVERLAY_HELPER.is_file():
+        helper_raw = APPOINTMENT_OVERLAY_HELPER.read_text(encoding="utf-8")
+        require("state-owner=receive" in helper_raw, errors, "appointment overlay does not assert Receive-owned state")
+        require("case002-appointment-execute-agent" in helper_raw, errors, "appointment overlay does not remove legacy child execution node")
+        require("CASE002 Appointment Conversation State" in helper_raw, errors, "appointment overlay does not inline conversation state")
+        require("$getWorkflowStaticData('global')" in helper_raw, errors, "appointment overlay does not verify workflow static-data persistence")
 
     assembly = (CASE / "assembly.yaml").read_text(encoding="utf-8") if (CASE / "assembly.yaml").is_file() else ""
     require("Kapso" in assembly and "OpenWA" in assembly, errors, "assembly adapter preference missing")
