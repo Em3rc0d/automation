@@ -47,6 +47,9 @@ done
 echo "[case-002] import Level-2 media evidence composition"
 docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input=/workspace/cases/case-002/workflows/CASE002_LEVEL2_MEDIA_EVIDENCE@1.0/workflow.json </dev/null
 
+echo "[case-002] import Level-2 appointment agent"
+docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input=/workspace/cases/case-002/workflows/CASE002_LEVEL2_APPOINTMENT_AGENT@1.0/workflow.json </dev/null
+
 echo "[case-002] import acceptance probe"
 docker compose -f "$COMPOSE" exec -T n8n n8n import:workflow --input=/workspace/cases/case-002/runtime/case002-acceptance-probe.json </dev/null
 
@@ -57,4 +60,4 @@ echo "[case-002] execute acceptance probe"
 docker compose -f "$COMPOSE" run --rm --no-deps n8n execute --id=case002AcceptanceProbeV1 </dev/null
 
 echo "CASE-002 RUNTIME SMOKE: PASS"
-echo "Boundary: Kapso adapters + Level-2 media evidence composition imported; case acceptance executed with mocked providers."
+echo "Boundary: Kapso adapters + Level-2 media evidence + Level-2 appointment agent imported; case acceptance executed with mocked providers."

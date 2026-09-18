@@ -45,6 +45,9 @@ REQUIRED_PACKAGE_FILES = {
 MEDIA_EVIDENCE_WORKFLOW = (
     CASE / "workflows/CASE002_LEVEL2_MEDIA_EVIDENCE@1.0/workflow.json"
 )
+APPOINTMENT_AGENT_WORKFLOW = (
+    CASE / "workflows/CASE002_LEVEL2_APPOINTMENT_AGENT@1.0/workflow.json"
+)
 
 
 def load_json(path: Path, errors: list[str]):
@@ -167,6 +170,39 @@ def validate() -> list[str]:
         require("test-local-volume://case002/" in raw, errors, "Level-2 media evidence composition missing test-only storage reference")
         require("sha256:" in raw, errors, "Level-2 media evidence composition missing Evidence contentHash prefix")
 
+    require(
+        APPOINTMENT_AGENT_WORKFLOW.is_file(),
+        errors,
+        f"missing Level-2 appointment agent: {APPOINTMENT_AGENT_WORKFLOW.relative_to(ROOT)}",
+    )
+    appointment_agent = load_json(APPOINTMENT_AGENT_WORKFLOW, errors) if APPOINTMENT_AGENT_WORKFLOW.is_file() else None
+    if appointment_agent:
+        require(
+            appointment_agent.get("id") == "case002Level2AppointmentAgentV1",
+            errors,
+            "Level-2 appointment agent has unexpected workflow id",
+        )
+        meta = appointment_agent.get("meta") or {}
+        require(meta.get("stage") == "CASE_HARNESS", errors, "Level-2 appointment agent stage mismatch")
+        require(meta.get("artifactClass") == "CASE_COMPOSITION", errors, "Level-2 appointment agent artifact class mismatch")
+
+        nodes = appointment_agent.get("nodes") or []
+        names = {node.get("name") for node in nodes}
+        required_nodes = {
+            "Conversation Appointment State",
+            "Send Appointment Agent Reply",
+            "Verify Appointment Agent Reply",
+        }
+        require(required_nodes.issubset(names), errors, "Level-2 appointment agent missing required nodes")
+        for node in nodes:
+            require(not node.get("credentials"), errors, f"Level-2 appointment agent has bound credential on node {node.get('name')}")
+
+        raw = APPOINTMENT_AGENT_WORKFLOW.read_text(encoding="utf-8")
+        require("kapsoMessageSendV1" in raw, errors, "Level-2 appointment agent does not call hardened send adapter")
+        require("America/Lima" in raw, errors, "Level-2 appointment agent timezone must be explicit")
+        require("case002-level2-internal" in raw, errors, "Level-2 appointment agent must preserve sandbox calendar boundary")
+        require("diagn" in raw.lower(), errors, "Level-2 appointment agent must preserve diagnosis authority boundary")
+
     assembly = (CASE / "assembly.yaml").read_text(encoding="utf-8") if (CASE / "assembly.yaml").is_file() else ""
     require("Kapso" in assembly and "OpenWA" in assembly, errors, "assembly adapter preference missing")
     require("KAPSO_MESSAGE_RECEIVE@1.0" in assembly, errors, "assembly does not bind Kapso receive package")
@@ -194,6 +230,7 @@ def main() -> int:
     print(f"Acceptance fixtures: {len(EXPECTED_FIXTURES)}")
     print(f"Kapso HARDENED adapters: {len(KAPSO_PACKAGES)}")
     print("Level-2 media evidence composition source: PASS")
+    print("Level-2 appointment agent source: PASS")
     print("Provider-neutral case contracts: PASS")
     print("No bound adapter credentials / no base64 workflow serialization: PASS")
     print("Boundary: ready for mock/runtime testing; not a production certification.")
