@@ -205,6 +205,12 @@ def validate() -> list[str]:
         require("America/Lima" in raw, errors, "Level-2 appointment agent timezone must be explicit")
         require("case002-level2-internal" in raw, errors, "Level-2 appointment agent must preserve sandbox calendar boundary")
         require("diagn" in raw.lower(), errors, "Level-2 appointment agent must preserve diagnosis authority boundary")
+        require('"candidateVersion": "1.1.0"' in raw, errors, "Level-2 appointment agent conversational version mismatch")
+        require("awaiting_service_detail" in raw, errors, "Level-2 appointment agent missing service clarification state")
+        require("awaiting_operational_state" in raw, errors, "Level-2 appointment agent missing operational-state question")
+        require("awaiting_preference" in raw, errors, "Level-2 appointment agent missing natural-language schedule preference state")
+        require("awaiting_confirmation" in raw, errors, "Level-2 appointment agent must confirm before booking")
+        require("otra hora" in raw.lower(), errors, "Level-2 appointment agent missing conversational reschedule path")
 
     require(
         APPOINTMENT_OVERLAY_HELPER.is_file(),
