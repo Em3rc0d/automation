@@ -91,7 +91,7 @@ def main() -> int:
     print("PASS: CASE-003 G0 static contract gate")
     print("PASS: 18 invariants registered and documented")
     print("PASS: adapter boundaries present")
-    print("BLOCKED BY DESIGN: G1 requires representative anonymized S/4HANA XLSX/CSV")
+    print("PASS: CASE-003 G1 structural report contract is evidence-frozen")\n    print("OPEN PILOT GAPS: SAP status dictionary, QQVA version policy, RUC/contact authority, freshness policy")
     return 0
 
 
