@@ -19,6 +19,12 @@ existing case002-n8n
        |       +--> Google Gemini API
        |
        +--> deterministic CASE-002 policy/state
+       |       |
+       |       +--> response plan + deterministic fallback
+       |                |
+       |                +--> CASE002_GEMINI_RESPONSE_RENDERER@1.0
+       |                           |
+       |                           +--> deterministic render validator
        |
        +--> existing Kapso send adapter
 ```
@@ -135,3 +141,19 @@ The sandbox calendar remains `case002-level2-internal`.
 ## Conversation tone
 
 CASE-002 may speak in a warm, feminine, natural and personable workshop-assistant voice to make WhatsApp feel human rather than form-like. Tone never changes business authority: dates, slots, confirmations, safety routing and provider receipts remain deterministic facts.
+
+
+## Response rendering
+
+Gemini now has two separate non-authoritative roles:
+
+```text
+semantic interpreter -> understand the customer's message
+response renderer     -> phrase an already-decided reply naturally
+```
+
+The renderer receives no scheduling authority. Deterministic policy supplies a response plan, protected facts and a fallback. A deterministic validator checks the rendered reply before Kapso send. If the renderer fails, omits protected facts, invents a date/time/plate/price, or exposes internal terminology, the fallback is sent.
+
+The tone target is warm, feminine, natural, attentive and confident without explicit gender performance, flirtation, cutesy language or forced slang.
+
+Customer-facing replies do not expose `piloto`, `Level-2`, `sandbox`, internal calendar/provider details, workflow/model/node/API terminology, or other implementation details.
