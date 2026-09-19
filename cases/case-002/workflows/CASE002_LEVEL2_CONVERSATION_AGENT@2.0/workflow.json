@@ -1,0 +1,198 @@
+{
+  "id": "case002Level2ConversationAgentV2",
+  "name": "CASE002 LEVEL2 - CONVERSATION AGENT@2.0",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "case002-appointment-agent-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst required = ['tenantId','providerPhoneNumberId','senderId','providerMessageId'];\nconst missing = required.filter((k) => input[k] === undefined || input[k] === null || input[k] === '');\nif (missing.length) throw new Error('CASE002_CONVERSATION_CONTEXT_INPUT_MISSING ' + missing.join(','));\n\nconst tenantId = String(input.tenantId);\nconst senderId = String(input.senderId).replace(/[^0-9]/g, '');\nconst timezone = 'America/Lima';\nconst now = new Date();\nconst store = $getWorkflowStaticData('global');\nstore.sessions = store.sessions || {};\nconst sessionKey = tenantId + ':' + senderId;\nconst session = store.sessions[sessionKey] || { step: 'idle' };\n\nconst currentDate = new Intl.DateTimeFormat('en-CA', {\n  timeZone: timezone,\n  year: 'numeric',\n  month: '2-digit',\n  day: '2-digit'\n}).format(now);\n\nreturn [{\n  json: {\n    ...input,\n    agentContext: {\n      currentDate,\n      timezone,\n      step: String(session.step || 'idle'),\n      known: {\n        requestType: String(session.requestType || ''),\n        customerReportedSummary: String(session.serviceSummary || ''),\n        vehicleOperationalState: String(session.vehicleOperationalState || 'unknown'),\n        plate: session.plate || ''\n      },\n      offeredSlots: Array.isArray(session.offeredSlots) ? session.offeredSlots.slice(0, 4) : [],\n      proposedSlot: String(session.proposedSlot || ''),\n      recentConversation: Array.isArray(session.history) ? session.history.slice(-8) : []\n    }\n  }\n}];"
+      },
+      "id": "case002-conversation-build-context",
+      "name": "Build CASE002 Conversation Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "notes": "Reads Receive-owned conversation state and builds bounded context for the stateless semantic interpreter. No side effects."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "case002GeminiInterpreterV1",
+          "mode": "id"
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "case002-conversation-run-gemini",
+      "name": "Run CASE002 Gemini Interpreter",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        680,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "Stateless semantic interpretation. Any model/subworkflow error must fall back to deterministic policy rather than fail the WhatsApp intake."
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst required = ['tenantId','providerPhoneNumberId','senderId','providerMessageId'];\nconst missing = required.filter((k) => input[k] === undefined || input[k] === null || input[k] === '');\nif (missing.length) throw new Error('CASE002_APPOINTMENT_AGENT_INPUT_MISSING ' + missing.join(','));\n\nconst text = String(input.text || '').trim();\nif (!text) return [];\n\nconst tenantId = String(input.tenantId);\nconst providerPhoneNumberId = String(input.providerPhoneNumberId);\nconst senderId = String(input.senderId).replace(/[^0-9]/g, '');\nconst providerMessageId = String(input.providerMessageId);\nconst traceId = String(input.providerEventId || providerMessageId);\nconst now = new Date();\nconst timezone = 'America/Lima';\n\nconst store = $getWorkflowStaticData('global');\nstore.sessions = store.sessions || {};\nstore.appointments = store.appointments || {};\nstore.processedMessages = store.processedMessages || {};\n\nif (store.processedMessages[providerMessageId]) return [];\n\nconst sessionKey = tenantId + ':' + senderId;\nlet session = store.sessions[sessionKey] || { step: 'idle' };\n\nfunction fold(value) {\n  return String(value || '').toLocaleLowerCase('es-PE')\n    .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\nconst lower = fold(text);\nconst interpretation = (\n  input.llmMeta && input.llmMeta.ok === true &&\n  input.llmInterpretation &&\n  input.llmInterpretation.mechanicalDiagnosisProduced === false\n) ? input.llmInterpretation : null;\n\nfunction interpretedIntent(name) {\n  return !!interpretation && interpretation.intent === name;\n}\n\nfunction trimProcessed() {\n  const entries = Object.entries(store.processedMessages);\n  if (entries.length <= 500) return;\n  entries.sort((a, b) => Number(a[1]) - Number(b[1]));\n  for (const entry of entries.slice(0, entries.length - 500)) delete store.processedMessages[entry[0]];\n}\n\nfunction response(body) {\n  store.processedMessages[providerMessageId] = Date.now();\n  trimProcessed();\n\n  session.history = Array.isArray(session.history) ? session.history : [];\n  session.history.push(\n    { role: 'user', content: text.slice(0, 1200) },\n    { role: 'assistant', content: String(body).slice(0, 1200) }\n  );\n  if (session.history.length > 10) session.history = session.history.slice(-10);\n  session.updatedAt = now.toISOString();\n  store.sessions[sessionKey] = session;\n\n  return [{\n    json: {\n      tenantId,\n      providerPhoneNumberId,\n      to: senderId,\n      text: body,\n      traceId,\n      businessActionId: 'case002-appointment-agent:' + providerMessageId,\n      idempotencyKey: 'case002-appointment-agent:' + providerPhoneNumberId + ':' + providerMessageId\n    }\n  }];\n}\n\nfunction save(nextStep) {\n  if (nextStep) session.step = nextStep;\n  session.updatedAt = now.toISOString();\n  store.sessions[sessionKey] = session;\n}\n\nfunction activeAppointments() {\n  return Object.values(store.appointments).filter((a) =>\n    a && a.tenantId === tenantId && a.senderId === senderId && a.status === 'booked'\n  );\n}\n\nfunction ymdInLima(date) {\n  const parts = new Intl.DateTimeFormat('en-CA', {\n    timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit'\n  }).formatToParts(date);\n  const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));\n  return map.year + '-' + map.month + '-' + map.day;\n}\n\nfunction weekdayIndexInLima(date) {\n  const label = new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'short' }).format(date);\n  return ({Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6})[label];\n}\n\nfunction slotLabel(iso) {\n  const label = new Intl.DateTimeFormat('es-PE', {\n    timeZone: timezone,\n    weekday: 'long',\n    day: '2-digit',\n    month: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false\n  }).format(new Date(iso));\n  return label.replace(',', ' a las');\n}\n\nfunction extractPlate(value) {\n  const upper = String(value || '').toUpperCase();\n  const candidates = upper.match(/[A-Z0-9]{3}[- ]?[A-Z0-9]{3}/g) || [];\n  for (const raw of candidates) {\n    const compact = raw.replace(/[^A-Z0-9]/g, '');\n    if (compact.length === 6 && /[A-Z]/.test(compact) && /[0-9]/.test(compact)) {\n      return compact.slice(0, 3) + '-' + compact.slice(3);\n    }\n  }\n\n  const candidate = String(interpretation?.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');\n  if (candidate.length === 6 && /[A-Z]/.test(candidate) && /[0-9]/.test(candidate)) {\n    return candidate.slice(0, 3) + '-' + candidate.slice(3);\n  }\n  return null;\n}\n\nfunction classifyRequest(value) {\n  const t = fold(value);\n  if (/\\b(garantia|repararon|misma falla|mismo ruido|volvio a fallar|comeback)\\b/.test(t)) return 'warranty_or_comeback';\n  if (/\\b(varado|varada|grua|no prende|inmovilizado|inmovilizada|auxilio)\\b/.test(t)) return 'roadside_assistance';\n  if (/\\b(mantenimiento|aceite|filtro|afinamiento|preventivo|kilometraje)\\b/.test(t)) return 'scheduled_maintenance';\n  if (/\\b(inspeccion|revision tecnica|revisar antes de viaje)\\b/.test(t)) return 'inspection_request';\n  if (/\\b(reparar|reparacion|cambiar|freno|pastilla|bateria|llanta)\\b/.test(t)) return 'repair_request';\n  if (/\\b(ruido|vibra|vibracion|check engine|testigo|fuga|humo|falla|jala|tironea|calienta)\\b/.test(t)) return 'diagnostic_request';\n\n  const allowed = new Set([\n    'scheduled_maintenance','diagnostic_request','repair_request','inspection_request',\n    'warranty_or_comeback','bodywork_or_collision','roadside_assistance','other'\n  ]);\n  const inferred = String(interpretation?.requestType || 'other');\n  return allowed.has(inferred) ? inferred : 'other';\n}\n\nfunction genericService(value) {\n  const t = fold(value).replace(/\\b(hola|buenas|quiero|quisiera|necesito|agendar|reservar|una|cita|para|mi|carro|auto|vehiculo|taller|mecanica|mecanico|por favor)\\b/g, ' ').replace(/\\s+/g, ' ').trim();\n  return !t || /^(mantenimiento|revision|servicio)$/.test(t);\n}\n\nfunction needsOperationalState(requestType) {\n  return requestType === 'diagnostic_request' || requestType === 'repair_request';\n}\n\nfunction detectOperationalState(value) {\n  const t = fold(value);\n  if (/\\b(no prende|no arranca|varado|varada|inmovilizado|inmovilizada|no puede circular|no circula|grua)\\b/.test(t)) return 'immobilized_reported';\n  if (/\\b(si|sí|normal|circula|anda|arranca|puede circular|puedo manejar|se mueve)\\b/.test(t)) return 'drivable_reported';\n\n  const inferred = String(interpretation?.vehicleOperationalState || 'unknown');\n  if (inferred === 'drivable_reported' || inferred === 'immobilized_reported') return inferred;\n  return null;\n}\n\nfunction parsePreference(value) {\n  const t = fold(value);\n  const pref = { recognized: false, targetYmd: null, daypart: null, exactHour: null };\n\n  const todayIndex = weekdayIndexInLima(now);\n  const isMorningPhrase = /\\b(por la|en la) manana\\b/.test(t) || /\\btemprano\\b/.test(t);\n  const isTomorrow = /\\bmanana\\b/.test(t) && !isMorningPhrase;\n\n  if (/\\bpasado manana\\b/.test(t)) {\n    pref.targetYmd = ymdInLima(new Date(now.getTime() + 2 * 86400000));\n    pref.recognized = true;\n  } else if (isTomorrow) {\n    pref.targetYmd = ymdInLima(new Date(now.getTime() + 86400000));\n    pref.recognized = true;\n  }\n\n  const weekdays = [\n    ['domingo',0],['lunes',1],['martes',2],['miercoles',3],['jueves',4],['viernes',5],['sabado',6]\n  ];\n  for (const pair of weekdays) {\n    if (t.includes(pair[0])) {\n      let ahead = (pair[1] - todayIndex + 7) % 7;\n      if (ahead === 0) ahead = 7;\n      pref.targetYmd = ymdInLima(new Date(now.getTime() + ahead * 86400000));\n      pref.recognized = true;\n      break;\n    }\n  }\n\n  const dateMatch = t.match(/\\b([0-3]?\\d)[\\/-]([01]?\\d)(?:[\\/-](20\\d{2}))?\\b/);\n  if (dateMatch) {\n    const year = dateMatch[3] || new Intl.DateTimeFormat('en-CA', {timeZone: timezone, year:'numeric'}).format(now);\n    pref.targetYmd = String(year) + '-' + String(dateMatch[2]).padStart(2,'0') + '-' + String(dateMatch[1]).padStart(2,'0');\n    pref.recognized = true;\n  }\n\n  if (isMorningPhrase) {\n    pref.daypart = 'morning';\n    pref.recognized = true;\n  }\n  if (/\\b(tarde|despues del almuerzo)\\b/.test(t)) {\n    pref.daypart = 'afternoon';\n    pref.recognized = true;\n  }\n\n  const pm = t.match(/\\b([1-4])\\s*(?:pm|p\\.m\\.)\\b/);\n  const am = t.match(/\\b(9|11)\\s*(?:am|a\\.m\\.)\\b/);\n  const h24 = t.match(/\\b(09|9|11|14|16)(?::00)?\\b/);\n  if (pm) {\n    const h = Number(pm[1]);\n    pref.exactHour = h === 1 ? 13 : h === 2 ? 14 : h === 3 ? 15 : 16;\n    pref.recognized = true;\n  } else if (am) {\n    pref.exactHour = Number(am[1]);\n    pref.recognized = true;\n  } else if (h24) {\n    pref.exactHour = Number(h24[1]);\n    pref.recognized = true;\n  }\n\n  if (!pref.recognized && interpretation?.schedulePreference?.recognized === true) {\n    const ai = interpretation.schedulePreference;\n    if (/^20\\d{2}-[01]\\d-[0-3]\\d$/.test(String(ai.targetDate || ''))) {\n      pref.targetYmd = String(ai.targetDate);\n      pref.recognized = true;\n    }\n\n    const weekdayMap = {\n      sunday:0, monday:1, tuesday:2, wednesday:3,\n      thursday:4, friday:5, saturday:6\n    };\n    const wantedDay = weekdayMap[String(ai.weekday || '')];\n    if (!pref.targetYmd && wantedDay !== undefined) {\n      let ahead = (wantedDay - todayIndex + 7) % 7;\n      if (ahead === 0) ahead = 7;\n      pref.targetYmd = ymdInLima(new Date(now.getTime() + ahead * 86400000));\n      pref.recognized = true;\n    }\n\n    if (ai.daypart === 'morning' || ai.daypart === 'afternoon') {\n      pref.daypart = ai.daypart;\n      pref.recognized = true;\n    }\n\n    const exact = String(ai.exactTime || '').match(/^(\\d{2}):(\\d{2})$/);\n    if (exact) {\n      pref.exactHour = Number(exact[1]);\n      pref.recognized = true;\n    }\n  }\n\n  return pref;\n}\n\nfunction availableSlots(pref, limit) {\n  pref = pref || {};\n  limit = limit || 4;\n  const slots = [];\n  const occupied = new Set(\n    Object.values(store.appointments)\n      .filter((a) => a && a.tenantId === tenantId && a.status === 'booked')\n      .map((a) => a.startsAt)\n  );\n\n  for (let dayOffset = 1; dayOffset <= 14 && slots.length < limit; dayOffset++) {\n    const cursor = new Date(now.getTime() + dayOffset * 86400000);\n    const weekday = weekdayIndexInLima(cursor);\n    if (weekday === 0 || weekday === 6) continue;\n    const ymd = ymdInLima(cursor);\n    if (pref.targetYmd && ymd !== pref.targetYmd) continue;\n\n    for (const hour of [9,11,14,16]) {\n      if (pref.daypart === 'morning' && hour >= 12) continue;\n      if (pref.daypart === 'afternoon' && hour < 12) continue;\n      if (pref.exactHour !== null && pref.exactHour !== undefined && hour !== pref.exactHour) continue;\n      const startsAt = ymd + 'T' + String(hour).padStart(2,'0') + ':00:00-05:00';\n      if (!occupied.has(startsAt)) slots.push(startsAt);\n      if (slots.length >= limit) break;\n    }\n  }\n  return slots;\n}\n\nfunction slotChoices(slots) {\n  return slots.map((slot, i) => String(i + 1) + ') ' + slotLabel(slot)).join('\\n');\n}\n\nfunction selectionIndex(value, offeredSlots) {\n  const t = fold(value);\n  const direct = t.match(/^\\s*([1-4])\\s*$/);\n  if (direct) return Number(direct[1]) - 1;\n  const words = { primero:0, primera:0, segundo:1, segunda:1, tercero:2, tercera:2, cuarto:3, cuarta:3 };\n  for (const key of Object.keys(words)) if (new RegExp('\\\\b' + key + '\\\\b').test(t)) return words[key];\n\n  const hour = t.match(/\\b(9|09|11|14|16)(?::00)?\\b/);\n  if (hour) {\n    const wanted = Number(hour[1]);\n    const idx = (offeredSlots || []).findIndex((slot) => Number(new Intl.DateTimeFormat('en-US', {\n      timeZone: timezone, hour:'2-digit', hour12:false\n    }).format(new Date(slot))) === wanted);\n    if (idx >= 0) return idx;\n  }\n\n  const aiRef = fold(interpretation?.selectedSlotReference || '');\n  if (aiRef) {\n    const ordinals = { first:0, primero:0, primera:0, second:1, segundo:1, segunda:1, third:2, tercero:2, tercera:2, fourth:3, cuarto:3, cuarta:3 };\n    if (Object.prototype.hasOwnProperty.call(ordinals, aiRef)) return ordinals[aiRef];\n\n    const aiHour = aiRef.match(/\\b(09|9|11|14|16)(?::00)?\\b/);\n    if (aiHour) {\n      const wanted = Number(aiHour[1]);\n      const idx = (offeredSlots || []).findIndex((slot) => Number(new Intl.DateTimeFormat('en-US', {\n        timeZone: timezone, hour:'2-digit', hour12:false\n      }).format(new Date(slot))) === wanted);\n      if (idx >= 0) return idx;\n    }\n  }\n\n  return null;\n}\n\nfunction isYes(value) {\n  return /\\b(si|sí|confirmo|confirmar|dale|ok|okay|correcto|reservalo|reserva)\\b/.test(fold(value))\n    || (interpretedIntent('confirm') && interpretation.explicitConfirmation === true);\n}\n\nfunction isNoOrChange(value) {\n  return /\\b(no|cambiar|cambio|otra hora|otro horario|otra fecha|mejor otro)\\b/.test(fold(value))\n    || interpretedIntent('change_preference');\n}\n\nfunction askPlate() {\n  save('awaiting_plate');\n  return response('Perfecto. ¿Cuál es la placa del vehículo? Puedes escribirla como ABC-123. Si no la tienes a mano, dime \"no tengo\".');\n}\n\nfunction askPreference() {\n  save('awaiting_preference');\n  return response('¿Qué día y horario te acomoda? Puedes responder de forma natural, por ejemplo: \"mañana por la tarde\", \"viernes a las 11\" o \"el lunes temprano\".');\n}\n\nfunction routeAfterService() {\n  if (session.requestType === 'roadside_assistance') {\n    session.step = 'human_review';\n    session.reason = 'urgent_assistance';\n    save();\n    return response('Por lo que me cuentas, esto requiere atención humana o auxilio y no una cita automática. No voy a asumir un diagnóstico ni que sea seguro conducir el vehículo.');\n  }\n  if (session.requestType === 'warranty_or_comeback') {\n    session.step = 'human_review';\n    session.reason = 'warranty_or_comeback';\n    save();\n    return response('Como parece estar relacionado con un trabajo previo o garantía, prefiero que un asesor revise el historial antes de crear una cita automática.');\n  }\n  if (needsOperationalState(session.requestType) && !session.vehicleOperationalState) {\n    save('awaiting_operational_state');\n    return response('Antes de seguir: ¿el vehículo puede circular por sus propios medios? Respóndeme como te salga, por ejemplo \"sí, anda normal\" o \"no, está varado\".');\n  }\n  return askPlate();\n}\n\nif (/\\b(reiniciar|empezar de nuevo|reset)\\b/.test(lower) || interpretedIntent('restart')) {\n  session = { step: 'idle', startedAt: now.toISOString() };\n  store.sessions[sessionKey] = session;\n  return response('Listo, empezamos de nuevo. Cuéntame qué necesitas hacerle al vehículo o qué estás notando.');\n}\n\nif (/\\b(hablar con (una )?(persona|asesor)|asesor humano|atencion humana)\\b/.test(lower) || interpretation?.humanHelpRequested === true || interpretedIntent('human_help')) {\n  session.step = 'human_review';\n  session.reason = 'customer_requested_human';\n  save();\n  return response('De acuerdo. Dejo la conversación marcada para atención humana.');\n}\n\nif (/\\b(mis citas|mi cita|ver cita)\\b/.test(lower) || interpretedIntent('list_appointments')) {\n  const active = activeAppointments();\n  if (!active.length) return response('No tengo una cita activa registrada en este piloto para este número.');\n  const lines = active.slice(-3).map((a, i) =>\n    String(i + 1) + '. ' + slotLabel(a.startsAt) + ' — ' + a.serviceSummary + (a.plate ? ' — placa ' + a.plate : '')\n  );\n  return response('Tus citas activas del piloto:\\n' + lines.join('\\n') + '\\n\\nPuedes decirme \"cancela mi cita\" si deseas anular la más reciente.');\n}\n\nif (/\\b(cancelar cita|anular cita|cancelar mi cita)\\b/.test(lower) || interpretedIntent('cancel')) {\n  const active = activeAppointments().sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));\n  if (!active.length) return response('No encuentro una cita activa para cancelar en este piloto.');\n  const appointment = active[active.length - 1];\n  appointment.status = 'cancelled';\n  appointment.cancelledAt = now.toISOString();\n  session = { step: 'idle', lastAppointmentId: appointment.id, updatedAt: now.toISOString() };\n  store.sessions[sessionKey] = session;\n  return response('Listo, cancelé la cita del piloto del ' + slotLabel(appointment.startsAt) + '. Si quieres otra, cuéntame qué necesitas.');\n}\n\nif (session.step === 'human_review') {\n  return response('Este caso quedó marcado para revisión humana. Si quieres iniciar otro caso distinto, escribe REINICIAR.');\n}\n\nif (session.step === 'idle') {\n  const bookingIntent = /\\b(cita|agend|reserv|taller|mecanic|mantenimiento|revision|freno|aceite|check engine|vibr|ruido|fuga|falla|inspeccion)\\b/.test(lower)\n    || (!!interpretation && (interpretation.intent !== 'other' || interpretation.requestType !== 'other'));\n  if (!bookingIntent) {\n    session = { step: 'awaiting_service', startedAt: now.toISOString(), updatedAt: now.toISOString() };\n    store.sessions[sessionKey] = session;\n    return response('Hola. Cuéntame con tus palabras qué necesitas hacerle al vehículo o qué estás notando. Puedo ayudarte a organizar una cita, pero no voy a inventar un diagnóstico.');\n  }\n\n  session = {\n    step: 'idle',\n    serviceSummary: String(interpretation?.customerReportedSummary || text).trim() || text,\n    requestType: classifyRequest(text),\n    startedAt: now.toISOString(),\n    updatedAt: now.toISOString()\n  };\n\n  const plate = extractPlate(text);\n  if (plate) session.plate = plate;\n\n  const operational = detectOperationalState(text);\n  if (operational) session.vehicleOperationalState = operational;\n\n  if (genericService(text)) {\n    save('awaiting_service_detail');\n    return response('Claro. Para dejar bien registrada la cita, cuéntame un poco más: ¿es un mantenimiento periódico como aceite/filtros, o hay algo específico que quieras revisar?');\n  }\n\n  if (session.plate && (!needsOperationalState(session.requestType) || session.vehicleOperationalState)) {\n    return askPreference();\n  }\n  return routeAfterService();\n}\n\nif (session.step === 'awaiting_service') {\n  session.serviceSummary = String(interpretation?.customerReportedSummary || text).trim() || text;\n  session.requestType = classifyRequest(text);\n  const plate = extractPlate(text);\n  if (plate) session.plate = plate;\n  const operational = detectOperationalState(text);\n  if (operational) session.vehicleOperationalState = operational;\n\n  if (genericService(text)) {\n    save('awaiting_service_detail');\n    return response('Entiendo. ¿Qué tipo de mantenimiento o revisión quieres hacer? Por ejemplo aceite y filtros, frenos, una inspección antes de viaje, o revisar algún ruido o testigo.');\n  }\n  if (session.plate && (!needsOperationalState(session.requestType) || session.vehicleOperationalState)) return askPreference();\n  return routeAfterService();\n}\n\nif (session.step === 'awaiting_service_detail') {\n  const detailSummary = String(interpretation?.customerReportedSummary || text).trim() || text;\n  session.serviceSummary = (session.serviceSummary ? session.serviceSummary + ' | ' : '') + detailSummary;\n  session.requestType = classifyRequest(session.serviceSummary);\n  const operational = detectOperationalState(text);\n  if (operational) session.vehicleOperationalState = operational;\n  const plate = extractPlate(text);\n  if (plate) session.plate = plate;\n\n  if (session.plate && (!needsOperationalState(session.requestType) || session.vehicleOperationalState)) return askPreference();\n  return routeAfterService();\n}\n\nif (session.step === 'awaiting_operational_state') {\n  const operational = detectOperationalState(text);\n  if (!operational) {\n    return response('Solo necesito confirmar esto para enrutar bien el caso: ¿el vehículo puede circular por sus propios medios, sí o no?');\n  }\n  session.vehicleOperationalState = operational;\n  if (operational === 'immobilized_reported') {\n    session.step = 'human_review';\n    session.reason = 'urgent_assistance';\n    save();\n    return response('Gracias. Como indicas que el vehículo no puede circular, no voy a crear una cita normal: dejo el caso para atención humana/auxilio.');\n  }\n  const plate = extractPlate(text);\n  if (plate) session.plate = plate;\n  if (session.plate) return askPreference();\n  return askPlate();\n}\n\nif (session.step === 'awaiting_plate') {\n  const noPlate = /\\b(no tengo|sin placa|no la tengo)\\b/.test(lower);\n  const plate = extractPlate(text);\n  if (!noPlate && !plate) {\n    return response('No pude reconocer la placa. Puedes enviarla como ABC-123, o decirme \"no tengo\" para continuar.');\n  }\n  session.plate = noPlate ? null : plate;\n\n  const pref = parsePreference(text);\n  if (pref.recognized) {\n    session.preference = pref;\n    const slots = availableSlots(pref, 4);\n    if (slots.length) {\n      session.offeredSlots = slots;\n      save('awaiting_slot');\n      return response('Perfecto. Para ese horario tengo estas opciones:\\n\\n' + slotChoices(slots) + '\\n\\nPuedes decir \"el segundo\", \"el de las 11\" o simplemente 1, 2, 3 o 4.');\n    }\n  }\n  return askPreference();\n}\n\nif (session.step === 'awaiting_preference') {\n  const pref = parsePreference(text);\n  if (!pref.recognized) {\n    return response('Dime cuándo te conviene de forma natural. Por ejemplo: \"mañana por la tarde\", \"viernes a las 11\" o \"lunes temprano\".');\n  }\n\n  session.preference = pref;\n  let slots = availableSlots(pref, 4);\n  let prefix = 'Encontré estas opciones que coinciden con lo que pediste:';\n  if (!slots.length) {\n    slots = availableSlots({}, 4);\n    prefix = 'No tengo un espacio que coincida exactamente con eso. Lo más próximo disponible es:';\n  }\n  if (!slots.length) {\n    session.step = 'human_review';\n    session.reason = 'no_test_slots';\n    save();\n    return response('No encuentro horarios disponibles en el calendario de prueba. Dejo el caso para revisión humana.');\n  }\n  session.offeredSlots = slots;\n  save('awaiting_slot');\n  return response(prefix + '\\n\\n' + slotChoices(slots) + '\\n\\nPuedes responder \"el primero\", \"el de las 11\" o con 1, 2, 3 o 4.');\n}\n\nif (session.step === 'awaiting_slot') {\n  const pref = parsePreference(text);\n  if (pref.recognized && !/^\\s*[1-4]\\s*$/.test(text)) {\n    session.preference = pref;\n    const revised = availableSlots(pref, 4);\n    if (revised.length) {\n      session.offeredSlots = revised;\n      save();\n      return response('Claro, ajusté la búsqueda. Tengo:\\n\\n' + slotChoices(revised) + '\\n\\n¿Cuál te conviene?');\n    }\n  }\n\n  const idx = selectionIndex(text, session.offeredSlots || []);\n  if (idx === null || idx < 0 || idx >= (session.offeredSlots || []).length) {\n    return response('No identifiqué cuál horario prefieres. Puedes decir \"el segundo\", \"el de las 11\" o elegir 1, 2, 3 o 4:\\n\\n' + slotChoices(session.offeredSlots || []));\n  }\n\n  const chosen = session.offeredSlots[idx];\n  const alreadyTaken = Object.values(store.appointments).some((a) =>\n    a && a.tenantId === tenantId && a.status === 'booked' && a.startsAt === chosen\n  );\n  if (alreadyTaken) {\n    const refreshed = availableSlots(session.preference || {}, 4);\n    session.offeredSlots = refreshed;\n    save();\n    return response('Ese horario acaba de ocuparse. Te actualizo las opciones:\\n\\n' + slotChoices(refreshed) + '\\n\\n¿Cuál prefieres?');\n  }\n\n  session.proposedSlot = chosen;\n  save('awaiting_confirmation');\n  const plateText = session.plate ? ' Placa: ' + session.plate + '.' : '';\n  return response('Antes de reservar, confirmo lo que entendí:\\n\\n• Motivo: ' + session.serviceSummary + '\\n• Horario: ' + slotLabel(chosen) + '.' + plateText + '\\n\\n¿Lo confirmo? Puedes responder \"sí\", o decirme \"otra hora\" si quieres cambiarlo.');\n}\n\nif (session.step === 'awaiting_confirmation') {\n  const correctedPlate = extractPlate(text);\n  if (correctedPlate && correctedPlate !== session.plate) {\n    session.plate = correctedPlate;\n    save();\n    return response('Listo, actualicé la placa a ' + correctedPlate + '. La propuesta sigue siendo ' + slotLabel(session.proposedSlot) + '. ¿Confirmo la reserva?');\n  }\n\n  if (isNoOrChange(text)) {\n    return askPreference();\n  }\n  if (!isYes(text)) {\n    const pref = parsePreference(text);\n    if (pref.recognized) {\n      session.preference = pref;\n      const revised = availableSlots(pref, 4);\n      if (revised.length) {\n        session.offeredSlots = revised;\n        save('awaiting_slot');\n        return response('Entendido. Busqué ese nuevo horario y tengo:\\n\\n' + slotChoices(revised) + '\\n\\n¿Cuál prefieres?');\n      }\n    }\n    return response('¿Confirmo la cita propuesta para ' + slotLabel(session.proposedSlot) + '? Puedes decir \"sí\" o \"otra hora\".');\n  }\n\n  const chosen = session.proposedSlot;\n  if (!chosen) throw new Error('CASE002_APPOINTMENT_PROPOSED_SLOT_MISSING');\n\n  const alreadyTaken = Object.values(store.appointments).some((a) =>\n    a && a.tenantId === tenantId && a.status === 'booked' && a.startsAt === chosen\n  );\n  if (alreadyTaken) {\n    const refreshed = availableSlots(session.preference || {}, 4);\n    session.offeredSlots = refreshed;\n    save('awaiting_slot');\n    return response('Justo antes de confirmar, ese horario se ocupó. Estas son las opciones actualizadas:\\n\\n' + slotChoices(refreshed) + '\\n\\n¿Cuál te conviene?');\n  }\n\n  const appointmentId = 'case002_apt_' + Date.now() + '_' + senderId.slice(-4);\n  const appointment = {\n    id: appointmentId,\n    tenantId,\n    senderId,\n    requestType: session.requestType || 'other',\n    serviceSummary: String(session.serviceSummary || 'revisión de taller'),\n    vehicleOperationalState: session.vehicleOperationalState || 'unknown',\n    plate: session.plate || null,\n    provider: 'case002-level2-internal',\n    providerEventId: 'sandbox:' + appointmentId,\n    startsAt: chosen,\n    endsAt: new Date(new Date(chosen).getTime() + 60 * 60 * 1000).toISOString(),\n    timezone,\n    status: 'booked',\n    sourceMessageId: providerMessageId,\n    createdAt: now.toISOString()\n  };\n  store.appointments[appointmentId] = appointment;\n  session.step = 'booked';\n  session.lastAppointmentId = appointmentId;\n  session.updatedAt = now.toISOString();\n  store.sessions[sessionKey] = session;\n\n  return response('Listo, quedó reservada en el piloto para ' + slotLabel(chosen) + '. Motivo: ' + appointment.serviceSummary + (appointment.plate ? '. Placa: ' + appointment.plate : '') + '.\\n\\nLa reserva está persistida en el calendario interno Level-2; todavía no es un evento de Google Calendar. Puedes preguntarme \"¿cuándo es mi cita?\" o decir \"cancela mi cita\".');\n}\n\nif (session.step === 'booked') {\n  const appointment = session.lastAppointmentId ? store.appointments[session.lastAppointmentId] : null;\n  if (appointment && appointment.status === 'booked') {\n    if (/\\b(otra cita|nueva cita|otro vehiculo)\\b/.test(lower)) {\n      session = { step: 'idle', startedAt: now.toISOString() };\n      store.sessions[sessionKey] = session;\n      return response('Claro. Cuéntame qué necesitas hacerle al otro vehículo o qué estás notando.');\n    }\n    return response('Tu cita del piloto está reservada para ' + slotLabel(appointment.startsAt) + '. Si quieres, puedo recordarte el motivo, cancelar la cita o empezar otra reserva.');\n  }\n  session = { step: 'idle', updatedAt: now.toISOString() };\n  store.sessions[sessionKey] = session;\n  return response('No encuentro una cita activa. Cuéntame qué necesitas y empezamos.');\n}\n\nthrow new Error('CASE002_APPOINTMENT_AGENT_UNKNOWN_STATE ' + session.step);"
+      },
+      "id": "case002-appointment-state-machine",
+      "name": "Conversation Appointment State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        300
+      ],
+      "notes": "LEVEL-2 PoC. Gemini may interpret language, but this deterministic state/policy node remains the only scheduling/triage authority. No mechanical diagnosis authority and no external calendar claim."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "kapsoMessageSendV1",
+          "mode": "id"
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "case002-appointment-send",
+      "name": "Send Appointment Agent Reply",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        300
+      ],
+      "notes": "Uses hardened KAPSO_MESSAGE_SEND@1.0. Fail closed on provider error."
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json || {};\nif (result.status !== 'accepted_by_provider') throw new Error('CASE002_APPOINTMENT_REPLY_NOT_ACCEPTED');\nif (!result.providerMessageId) throw new Error('CASE002_APPOINTMENT_REPLY_PROVIDER_MESSAGE_ID_MISSING');\nreturn [{ json: {\n  ok: true,\n  status: result.status,\n  providerMessageId: String(result.providerMessageId),\n  businessActionId: String(result.businessActionId || '')\n} }];"
+      },
+      "id": "case002-appointment-verify-send",
+      "name": "Verify Appointment Agent Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Build CASE002 Conversation Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build CASE002 Conversation Context": {
+      "main": [
+        [
+          {
+            "node": "Run CASE002 Gemini Interpreter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run CASE002 Gemini Interpreter": {
+      "main": [
+        [
+          {
+            "node": "Conversation Appointment State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Appointment State": {
+      "main": [
+        [
+          {
+            "node": "Send Appointment Agent Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Appointment Agent Reply": {
+      "main": [
+        [
+          {
+            "node": "Verify Appointment Agent Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "candidateKey": "CASE002_LEVEL2_CONVERSATION_AGENT",
+    "candidateVersion": "2.0.0",
+    "stage": "CASE_HARNESS",
+    "origin": "CASE002_SYNTHESIS",
+    "artifactClass": "CASE_COMPOSITION",
+    "languageLayer": "CASE002_GEMINI_INTERPRETER@1.0",
+    "policyAuthority": "deterministic",
+    "calendarAuthority": "case002-level2-internal"
+  },
+  "tags": [
+    {
+      "name": "case-002"
+    },
+    {
+      "name": "level-2"
+    },
+    {
+      "name": "appointment"
+    },
+    {
+      "name": "whatsapp"
+    },
+    {
+      "name": "gemini"
+    },
+    {
+      "name": "hybrid-agent"
+    }
+  ]
+}
