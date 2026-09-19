@@ -1,0 +1,31 @@
+name: CASE-003 Contract Gate
+
+on:
+  push:
+    branches:
+      - case-003/s4hana-report-supplier-self-service
+    paths:
+      - "cases/CASE-003-S4HANA-SUPPLIER-SELF-SERVICE.md"
+      - "cases/case-003/**"
+      - "architecture/CASE-003-ADAPTER-CONTRACTS.md"
+      - ".github/workflows/case-003-contract-gate.yml"
+  pull_request:
+    paths:
+      - "cases/CASE-003-S4HANA-SUPPLIER-SELF-SERVICE.md"
+      - "cases/case-003/**"
+      - "architecture/CASE-003-ADAPTER-CONTRACTS.md"
+
+permissions:
+  contents: read
+
+jobs:
+  g0-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate CASE-003 G0
+        run: python cases/case-003/validate_case003.py

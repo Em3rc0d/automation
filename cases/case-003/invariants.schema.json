@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "case-003-invariants.schema.json",
+  "title": "CASE-003 Certification Invariants",
+  "type": "object",
+  "required": ["caseId", "version", "invariants"],
+  "properties": {
+    "caseId": { "const": "CASE-003" },
+    "version": { "type": "integer", "minimum": 1 },
+    "invariants": {
+      "type": "array",
+      "minItems": 18,
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "gate", "testClass"],
+        "properties": {
+          "id": { "pattern": "^C3-I(0[1-9]|1[0-8])$" },
+          "statement": { "type": "string", "minLength": 10 },
+          "gate": { "enum": ["G0", "G1", "G2", "G3", "G4", "G5", "G6"] },
+          "testClass": { "enum": ["contract", "fixture", "security", "database", "integration", "e2e"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

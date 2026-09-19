@@ -1,0 +1,24 @@
+{
+  "caseId": "CASE-003",
+  "version": 1,
+  "invariants": [
+    {"id":"C3-I01","statement":"No published snapshot without successful import batch.","gate":"G4","testClass":"database"},
+    {"id":"C3-I02","statement":"No batch approval without required validations.","gate":"G2","testClass":"fixture"},
+    {"id":"C3-I03","statement":"No publication without approval.","gate":"G4","testClass":"database"},
+    {"id":"C3-I04","statement":"At most one ACTIVE snapshot exists per tenant and dataset type.","gate":"G4","testClass":"database"},
+    {"id":"C3-I05","statement":"Every financial fact references its source snapshot.","gate":"G4","testClass":"database"},
+    {"id":"C3-I06","statement":"Every snapshot references its import batch.","gate":"G4","testClass":"database"},
+    {"id":"C3-I07","statement":"Every batch traces to immutable file SHA-256 and import profile version.","gate":"G2","testClass":"fixture"},
+    {"id":"C3-I08","statement":"No sensitive financial query without active membership.","gate":"G3","testClass":"security"},
+    {"id":"C3-I09","statement":"No sensitive financial query without required permission.","gate":"G3","testClass":"security"},
+    {"id":"C3-I10","statement":"No response when resource ownership does not match authorized supplier.","gate":"G3","testClass":"security"},
+    {"id":"C3-I11","statement":"No cross-tenant traversal is permitted.","gate":"G3","testClass":"security"},
+    {"id":"C3-I12","statement":"Enrollment denial approval company change and sensitive query are audited.","gate":"G6","testClass":"e2e"},
+    {"id":"C3-I13","statement":"Unknown SAP status is never inferred.","gate":"G2","testClass":"fixture"},
+    {"id":"C3-I14","statement":"Snapshot data is never represented as real-time SAP data.","gate":"G6","testClass":"e2e"},
+    {"id":"C3-I15","statement":"Failed publication never partially replaces active snapshot.","gate":"G4","testClass":"database"},
+    {"id":"C3-I16","statement":"RUC alone never creates an ACTIVE membership.","gate":"G3","testClass":"security"},
+    {"id":"C3-I17","statement":"A user-supplied new contact destination is not automatically trusted.","gate":"G3","testClass":"security"},
+    {"id":"C3-I18","statement":"Duplicate file and import side effects are idempotent.","gate":"G2","testClass":"fixture"}
+  ]
+}
