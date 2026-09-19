@@ -125,7 +125,7 @@ Storage paths are tenant-scoped. Domain tables keep `storageReference`, never ra
 
 ## NormalizedDataset boundary
 
-Until a real anonymized S/4HANA report is supplied, only the envelope is frozen:
+Representative QQVA/SCIV/FBL1N evidence was received on 2026-09-19. The normalized envelope and source record kinds are now structurally frozen; raw SAP codes remain raw where no source legend exists.
 
 ```ts
 export interface NormalizedDataset {
@@ -134,16 +134,59 @@ export interface NormalizedDataset {
   datasetType: "supplier_ap";
   source: {
     kind: "sap_s4hana_manual_report";
+    sourceDataset: "qqva" | "sciv" | "fbl1n";
     importFileId: string;
     importProfileId: string;
     importProfileVersion: number;
     sha256: string;
   };
-  records: unknown[]; // G1 blocks production field contract
+  records: Array<SupplierCanonical | InvoiceCanonical | FinancialItemCanonical>;
+}
+
+export interface SupplierCanonical {
+  kind: "supplier";
+  companyCode: string;
+  sapVendorId: string;
+  displayName: string;
+  taxId?: string;
+  trustedContactEmail?: string;
+}
+
+export interface InvoiceCanonical {
+  kind: "invoice";
+  companyCode: string;
+  sapVendorId: string;
+  invoiceReference: string;
+  documentDate: string;
+  receiptDate: string;
+  currency: string;
+  grossAmount: number;
+  dueDate: string;
+  fiDocumentNumber?: string;
+  fiscalYear?: string;
+  invoiceUniqueId?: string;
+  technicalStatusRaw?: string;
+  invoiceStatusRaw?: string;
+}
+
+export interface FinancialItemCanonical {
+  kind: "financial_item";
+  companyCode: string;
+  documentNumber: string;
+  fiscalYear: string; // derived from postingDate for FBL1N v1
+  documentTypeRaw: string;
+  invoiceReference?: string;
+  postingDate: string;
+  netDueDate: string;
+  documentAmount: number;
+  currency: string;
+  clearingDate?: string;
+  clearingDocumentNumber?: string;
+  paymentDateRaw?: string;
 }
 ```
 
-The shape of `records` MUST NOT be invented before G1. It is frozen only after mapping the client's representative anonymized report.
+The complete evidence-derived mapping and join rules live in `cases/case-003/S4HANA-REPORT-CONTRACT-v1.md` and `cases/case-003/import-profile.v1.json`.
 
 ## Error normalization
 
