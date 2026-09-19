@@ -35,7 +35,7 @@ CASE-002 deterministic policy = business authority
 connector/provider = external side-effect authority
 ```
 
-Gemini may extract intent, customer-reported facts, missing information, plate text, reported mobility state, scheduling preference, slot reference and explicit confirmation.
+Gemini may extract intent, customer-reported facts, missing information, plate text, reported mobility state, scheduling preference, slot reference and explicit confirmation. Final confirmation is only valid while deterministic state is `awaiting_confirmation`; selecting an offered slot is not itself a booking confirmation.
 
 Gemini never owns:
 
@@ -130,3 +130,8 @@ This PoC does not close:
 - robust multi-replica/concurrent state handling.
 
 The sandbox calendar remains `case002-level2-internal`.
+
+
+## Conversation tone
+
+CASE-002 may speak in a warm, feminine, natural and personable workshop-assistant voice to make WhatsApp feel human rather than form-like. Tone never changes business authority: dates, slots, confirmations, safety routing and provider receipts remain deterministic facts.

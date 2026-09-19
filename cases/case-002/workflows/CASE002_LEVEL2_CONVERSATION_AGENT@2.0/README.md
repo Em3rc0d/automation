@@ -63,3 +63,12 @@ Conversation and sandbox appointments still use n8n workflow static data for thi
 ## Calendar boundary
 
 Appointments remain `provider=case002-level2-internal`. This workflow does not claim Google Calendar, Cal.com or Microsoft Calendar authority.
+
+
+## v2.1 conversational behavior
+
+The agent preserves scheduling preferences mentioned before the plate is collected. A customer can therefore provide symptom + mobility + day/time in one message, then provide only the plate on the next turn without being asked for the schedule again.
+
+When the conversation is in `awaiting_slot`, selecting an already offered time has precedence over interpreting the same words as a new search preference. Final booking confirmation is accepted only in `awaiting_confirmation`.
+
+The customer-facing tone for this PoC is **warm, feminine, natural and personable** in the style of a personable workshop scheduling assistant. It may use natural Peruvian Spanish and an occasional neutral emoji, but should avoid flirting, cutesy language, forced slang, or overacting a persona. It must remain professional: no manipulative language, no altered appointment facts, and no relaxation of CASE-002 safety/authority boundaries.
