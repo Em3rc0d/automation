@@ -128,7 +128,7 @@ fi
 
 # CASE-002 hybrid Gemini conversation PoC. This mode reuses the existing n8n
 # service and does not create another Railway service. Gemini is interpretation
-# only; deterministic CASE-002 policy remains the authority for routing and side effects.
+# and response rendering only; deterministic CASE-002 policy remains the authority for routing and side effects.
 if [ "${CASE002_LEVEL2_GEMINI_POC_ON_STARTUP:-false}" = "true" ]; then
   echo "[case002] preparing Level-2 Gemini conversation PoC"
 
