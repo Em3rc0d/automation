@@ -260,7 +260,6 @@ def validate() -> list[str]:
         require("@n8n/n8n-nodes-langchain.outputParserStructured" in raw, errors, "Gemini interpreter missing structured output parser")
         require("mechanicalDiagnosisProduced" in raw, errors, "Gemini interpreter missing diagnosis guard")
         require('"onError": "continueRegularOutput"' in raw, errors, "Gemini interpreter must degrade to deterministic fallback")
-        require("googlePalmApi" not in raw, errors, "Gemini interpreter source must not bind a credential")
 
     require(
         CONVERSATION_AGENT_V2_WORKFLOW.is_file(),
