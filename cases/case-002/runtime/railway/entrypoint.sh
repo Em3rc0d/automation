@@ -126,5 +126,54 @@ if [ "${CASE002_LEVEL2_APPOINTMENT_AGENT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case002] Level-2 workshop appointment agent prepared"
 fi
 
+# CASE-002 hybrid Gemini conversation PoC. This mode reuses the existing n8n
+# service and does not create another Railway service. Gemini is interpretation
+# only; deterministic CASE-002 policy remains the authority for routing and side effects.
+if [ "${CASE002_LEVEL2_GEMINI_POC_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case002] preparing Level-2 Gemini conversation PoC"
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-poc-bind-send
+  node /opt/case002/prepare-level2-reply-test.js bind-send
+  node /opt/case002/backup-n8n-state.js post-gemini-poc-bind-send
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-poc-publish-send
+  n8n publish:workflow --id=kapsoMessageSendV1
+  node /opt/case002/backup-n8n-state.js post-gemini-poc-publish-send
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-poc-base-overlay
+  node /opt/case002/prepare-level2-reply-test.js overlay-receive
+  node /opt/case002/backup-n8n-state.js post-gemini-poc-base-overlay
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-interpreter-import
+  n8n import:workflow --input=/opt/case002/gemini-interpreter.json
+  node /opt/case002/backup-n8n-state.js post-gemini-interpreter-import
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-credential-bind
+  node /opt/case002/prepare-level2-gemini-poc.js bind-gemini
+  node /opt/case002/backup-n8n-state.js post-gemini-credential-bind
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-interpreter-publish
+  n8n publish:workflow --id=case002GeminiInterpreterV1
+  node /opt/case002/backup-n8n-state.js post-gemini-interpreter-publish
+
+  node /opt/case002/backup-n8n-state.js pre-conversation-agent-v2-import
+  n8n import:workflow --input=/opt/case002/conversation-agent-v2.json
+  node /opt/case002/backup-n8n-state.js post-conversation-agent-v2-import
+
+  node /opt/case002/backup-n8n-state.js pre-conversation-agent-v2-publish
+  n8n publish:workflow --id=case002Level2ConversationAgentV2
+  node /opt/case002/backup-n8n-state.js post-conversation-agent-v2-publish
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-poc-receive-overlay
+  node /opt/case002/prepare-level2-gemini-poc.js overlay-receive
+  node /opt/case002/backup-n8n-state.js post-gemini-poc-receive-overlay
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-poc-publish-receive
+  n8n publish:workflow --id=kapsoMessageReceiveV1
+  node /opt/case002/backup-n8n-state.js post-gemini-poc-publish-receive
+
+  echo "[case002] Level-2 Gemini conversation PoC prepared"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
