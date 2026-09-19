@@ -1,0 +1,22 @@
+name: CASE-003 G2 Build Gate
+on:
+  push:
+    branches: [case-003/s4hana-report-supplier-self-service]
+    paths: ["cases/case-003/build/**"]
+  pull_request:
+    paths: ["cases/case-003/build/**"]
+permissions:
+  contents: read
+jobs:
+  g2-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test canonical normalization and due-date projection
+        run: node cases/case-003/build/test-g2.js
+      - name: Validate n8n workflow JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('cases/case-003/build/n8n-due-date-workflow.json','utf8')); console.log('PASS n8n JSON')"
