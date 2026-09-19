@@ -274,7 +274,7 @@ def validate() -> list[str]:
             "Gemini conversation agent v2 has unexpected workflow id",
         )
         meta = conversation_v2.get("meta") or {}
-        require(meta.get("candidateVersion") == "2.0.0", errors, "Gemini conversation agent v2 version mismatch")
+        require(meta.get("candidateVersion") == "2.1.0", errors, "Gemini conversation agent v2 version mismatch")
         require(meta.get("policyAuthority") == "deterministic", errors, "Gemini conversation agent must preserve deterministic policy authority")
         require(meta.get("calendarAuthority") == "case002-level2-internal", errors, "Gemini conversation agent must preserve sandbox calendar boundary")
 
@@ -301,6 +301,10 @@ def validate() -> list[str]:
         require("case002-level2-internal" in raw, errors, "Gemini conversation agent must not claim external calendar authority")
         require("mechanicalDiagnosisProduced" in raw, errors, "Gemini conversation agent missing diagnosis boundary")
         require("pasado manana" in raw, errors, "Gemini conversation agent missing Spanish relative-date handling")
+        require("looksLikeSelection" in raw, errors, "Gemini conversation agent missing slot-selection precedence fix")
+        require("session.preference && session.preference.recognized" in raw, errors, "Gemini conversation agent missing remembered scheduling preference")
+        require("session.step === 'awaiting_confirmation'" in raw, errors, "Gemini conversation agent missing confirmation-state guard")
+        require("toneProfile" in json.dumps(meta), errors, "Gemini conversation agent missing tone profile metadata")
 
     require(
         GEMINI_POC_HELPER.is_file(),
