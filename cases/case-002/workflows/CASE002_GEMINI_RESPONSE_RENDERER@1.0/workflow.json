@@ -1,0 +1,188 @@
+{
+  "id": "case002GeminiResponseRendererV1",
+  "name": "CASE002 - GEMINI RESPONSE RENDERER@1.0",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "case002-renderer-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst plan = input.responsePlan || {};\nconst fallbackText = String(input.fallbackText || input.text || '').trim();\n\nif (!fallbackText) throw new Error('CASE002_RESPONSE_RENDERER_FALLBACK_MISSING');\n\nconst sourceInput = {\n  tenantId: String(input.tenantId || ''),\n  providerPhoneNumberId: String(input.providerPhoneNumberId || ''),\n  senderId: String(input.senderId || ''),\n  providerMessageId: String(input.providerMessageId || ''),\n  traceId: String(input.traceId || input.providerEventId || input.providerMessageId || ''),\n  businessActionId: String(input.businessActionId || ''),\n  idempotencyKey: String(input.idempotencyKey || ''),\n  fallbackText,\n  responsePlan: plan\n};\n\nconst policy = [\n  'You render customer-facing WhatsApp replies for CASE-002, an automotive workshop intake flow in Peru.',\n  'Business decisions are already made by deterministic policy. You are a language renderer only.',\n  'Rewrite the supplied fallbackText so it sounds natural, warm, feminine, attentive and confident, like a real workshop receptionist on WhatsApp.',\n  'Do not explicitly state a gender. Do not force femininity through stereotypes, flirtation, cutesy diminutives, pet names, hearts, wink emojis, or exaggerated slang.',\n  'Use clear natural Spanish suitable for Peru. Prefer neutral everyday wording over forced slang such as \"buenazo\" or \"no caché\".',\n  'Keep it concise and conversational. Usually 1 to 5 short lines.',\n  'Do not invent, remove, reinterpret or change any business fact, appointment status, availability, date, time, plate, price, safety statement or requested action.',\n  'Every string in protectedFacts MUST appear verbatim in the reply when protectedFacts is non-empty.',\n  'Do not mention internal implementation terms such as piloto, Level-2, sandbox, workflow, Gemini, internal calendar, provider, node, model or API.',\n  'Do not diagnose mechanical problems or say a vehicle is safe to drive.',\n  'Do not add emojis by default. Use none unless the fallback meaning clearly benefits from one; never use flirtatious emojis.',\n  'Return only the structure requested by the output parser.'\n].join('\\n');\n\nconst prompt = policy + '\\n\\nRESPONSE_PLAN_JSON:\\n' + JSON.stringify({\n  action: String(plan.action || 'reply'),\n  fallbackText,\n  protectedFacts: Array.isArray(plan.protectedFacts) ? plan.protectedFacts : [],\n  forbiddenTerms: Array.isArray(plan.forbiddenTerms) ? plan.forbiddenTerms : []\n});\n\nreturn [{ json: { sourceInput, prompt } }];"
+      },
+      "id": "case002-renderer-build-prompt",
+      "name": "Build Gemini Response Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "notes": "Builds a bounded, secret-free response plan for language rendering. Business facts remain deterministic."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "hasOutputParser": true,
+        "batching": {},
+        "options": {}
+      },
+      "id": "case002-renderer-chain",
+      "name": "Render Conversation Reply with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        680,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "maxOutputTokens": 512,
+          "temperature": 0.35,
+          "topK": 30,
+          "topP": 0.9
+        }
+      },
+      "id": "case002-renderer-model",
+      "name": "CASE002 Gemini Response Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        680,
+        520
+      ],
+      "notes": "Source JSON intentionally contains no credential binding."
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"schemaVersion\",\n    \"text\"\n  ],\n  \"properties\": {\n    \"schemaVersion\": {\n      \"type\": \"integer\",\n      \"enum\": [\n        1\n      ]\n    },\n    \"text\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"maxLength\": 1200\n    }\n  }\n}",
+        "autoFix": false
+      },
+      "id": "case002-renderer-parser",
+      "name": "CASE002 Response Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        900,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $('Build Gemini Response Prompt').first().json.sourceInput || {};\nconst current = $input.first().json || {};\n\nif (current.error) {\n  return [{ json: { ...source, rendererMeta: { ok: false, provider: 'gemini', error: String(current.error).slice(0, 500) } } }];\n}\n\nconst parsed = current.output && typeof current.output === 'object' ? current.output : current;\nconst rendered = String(parsed?.text || '').trim();\nif (!rendered || rendered.length > 1200) {\n  return [{ json: { ...source, rendererMeta: { ok: false, provider: 'gemini', error: 'INVALID_RENDERED_REPLY' } } }];\n}\n\nreturn [{\n  json: {\n    ...source,\n    renderedReply: rendered,\n    rendererMeta: {\n      ok: true,\n      provider: 'gemini',\n      model: 'models/gemini-2.5-flash'\n    }\n  }\n}];"
+      },
+      "id": "case002-renderer-normalize",
+      "name": "Normalize Gemini Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Build Gemini Response Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Gemini Response Prompt": {
+      "main": [
+        [
+          {
+            "node": "Render Conversation Reply with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CASE002 Gemini Response Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Render Conversation Reply with Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CASE002 Response Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Render Conversation Reply with Gemini",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Conversation Reply with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Normalize Gemini Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "candidateKey": "CASE002_GEMINI_RESPONSE_RENDERER",
+    "candidateVersion": "1.0.0",
+    "stage": "CASE_HARNESS",
+    "origin": "CASE002_SYNTHESIS",
+    "artifactClass": "CASE_COMPOSITION",
+    "provider": "Google Gemini",
+    "sideEffectAuthority": false,
+    "businessAuthority": false,
+    "toneProfile": "warm-feminine-natural"
+  },
+  "tags": [
+    {
+      "name": "case-002"
+    },
+    {
+      "name": "level-2"
+    },
+    {
+      "name": "whatsapp"
+    },
+    {
+      "name": "gemini"
+    },
+    {
+      "name": "language-renderer"
+    }
+  ]
+}
