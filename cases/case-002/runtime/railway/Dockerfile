@@ -8,6 +8,7 @@ COPY quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MEDIA_DOWNLOA
 COPY quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_SEND@1.0/workflow.json /opt/case002/kapso-send.json
 COPY cases/case-002/workflows/CASE002_LEVEL2_APPOINTMENT_AGENT@1.0/workflow.json /opt/case002/appointment-agent.json
 COPY cases/case-002/workflows/CASE002_GEMINI_INTERPRETER@1.0/workflow.json /opt/case002/gemini-interpreter.json
+COPY cases/case-002/workflows/CASE002_GEMINI_RESPONSE_RENDERER@1.0/workflow.json /opt/case002/gemini-response-renderer.json
 COPY cases/case-002/workflows/CASE002_LEVEL2_CONVERSATION_AGENT@2.0/workflow.json /opt/case002/conversation-agent-v2.json
 COPY cases/case-002/runtime/case002-acceptance-probe.json /opt/case002/acceptance-probe.json
 COPY cases/case-002/runtime/live/control-plane-stub.json /opt/case002/control-plane-stub.json
