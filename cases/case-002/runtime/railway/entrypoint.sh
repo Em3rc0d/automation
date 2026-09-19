@@ -128,7 +128,7 @@ fi
 
 # CASE-002 hybrid Gemini conversation PoC. This mode reuses the existing n8n
 # service and does not create another Railway service. Gemini is interpretation
-# only; deterministic CASE-002 policy remains the authority for routing and side effects.
+# and response rendering only; deterministic CASE-002 policy remains the authority for routing and side effects.
 if [ "${CASE002_LEVEL2_GEMINI_POC_ON_STARTUP:-false}" = "true" ]; then
   echo "[case002] preparing Level-2 Gemini conversation PoC"
 
@@ -148,6 +148,10 @@ if [ "${CASE002_LEVEL2_GEMINI_POC_ON_STARTUP:-false}" = "true" ]; then
   n8n import:workflow --input=/opt/case002/gemini-interpreter.json
   node /opt/case002/backup-n8n-state.js post-gemini-interpreter-import
 
+  node /opt/case002/backup-n8n-state.js pre-gemini-response-renderer-import
+  n8n import:workflow --input=/opt/case002/gemini-response-renderer.json
+  node /opt/case002/backup-n8n-state.js post-gemini-response-renderer-import
+
   node /opt/case002/backup-n8n-state.js pre-gemini-credential-bind
   node /opt/case002/prepare-level2-gemini-poc.js bind-gemini
   node /opt/case002/backup-n8n-state.js post-gemini-credential-bind
@@ -155,6 +159,10 @@ if [ "${CASE002_LEVEL2_GEMINI_POC_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js pre-gemini-interpreter-publish
   n8n publish:workflow --id=case002GeminiInterpreterV1
   node /opt/case002/backup-n8n-state.js post-gemini-interpreter-publish
+
+  node /opt/case002/backup-n8n-state.js pre-gemini-response-renderer-publish
+  n8n publish:workflow --id=case002GeminiResponseRendererV1
+  node /opt/case002/backup-n8n-state.js post-gemini-response-renderer-publish
 
   node /opt/case002/backup-n8n-state.js pre-conversation-agent-v2-import
   n8n import:workflow --input=/opt/case002/conversation-agent-v2.json

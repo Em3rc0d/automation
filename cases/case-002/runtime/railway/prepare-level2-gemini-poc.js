@@ -13,6 +13,7 @@ const sqlite3 = requireFromN8n('sqlite3');
 const N8N = '/usr/local/lib/node_modules/n8n/bin/n8n';
 const DB = process.env.DB_SQLITE_DATABASE || '/home/node/.n8n/database.sqlite';
 const INTERPRETER_SOURCE = '/opt/case002/gemini-interpreter.json';
+const RENDERER_SOURCE = '/opt/case002/gemini-response-renderer.json';
 const CONVERSATION_SOURCE = '/opt/case002/conversation-agent-v2.json';
 const GEMINI_CREDENTIAL_NAME = 'CASE002 Gemini API';
 const GEMINI_MODEL = process.env.CASE002_GEMINI_MODEL || 'models/gemini-2.5-flash';
@@ -114,33 +115,40 @@ async function bindGemini() {
   const credential = rows[0];
   await preflightGeminiCredential(credential);
 
-  const exported = tempFile('interpreter-export');
-  const patched = tempFile('interpreter-patched');
+  const targets = [
+    { workflowId: 'case002GeminiInterpreterV1', modelNodeName: 'CASE002 Gemini Chat Model', label: 'interpreter' },
+    { workflowId: 'case002GeminiResponseRendererV1', modelNodeName: 'CASE002 Gemini Response Model', label: 'renderer' },
+  ];
 
-  try {
-    const current = exportWorkflow('case002GeminiInterpreterV1', exported);
-    const modelNode = current.workflow.nodes.find((item) => item.name === 'CASE002 Gemini Chat Model');
-    if (!modelNode) fail('CASE002 Gemini Chat Model node missing');
+  for (const target of targets) {
+    const exported = tempFile(target.label + '-export');
+    const patched = tempFile(target.label + '-patched');
 
-    modelNode.parameters = modelNode.parameters || {};
-    modelNode.parameters.modelName = GEMINI_MODEL;
-    modelNode.credentials = {
-      ...(modelNode.credentials || {}),
-      googlePalmApi: { id: credential.id, name: credential.name },
-    };
+    try {
+      const current = exportWorkflow(target.workflowId, exported);
+      const modelNode = current.workflow.nodes.find((item) => item.name === target.modelNodeName);
+      if (!modelNode) fail(`${target.modelNodeName} node missing`);
 
-    importWorkflow(current.parsed, current.list, current.workflow, patched);
+      modelNode.parameters = modelNode.parameters || {};
+      modelNode.parameters.modelName = GEMINI_MODEL;
+      modelNode.credentials = {
+        ...(modelNode.credentials || {}),
+        googlePalmApi: { id: credential.id, name: credential.name },
+      };
 
-    const verify = exportWorkflow('case002GeminiInterpreterV1', exported);
-    const verifyNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Gemini Chat Model');
-    const binding = verifyNode?.credentials?.googlePalmApi;
-    if (!binding || binding.id !== credential.id) fail('Gemini credential binding verification failed');
-    if (verifyNode?.parameters?.modelName !== GEMINI_MODEL) fail('Gemini model binding verification failed');
+      importWorkflow(current.parsed, current.list, current.workflow, patched);
 
-    console.log(`[case002-gemini-poc] Gemini binding PASS id=${credential.id} name=${credential.name} model=${GEMINI_MODEL}`);
-  } finally {
-    for (const file of [exported, patched]) {
-      try { fs.unlinkSync(file); } catch (_) {}
+      const verify = exportWorkflow(target.workflowId, exported);
+      const verifyNode = verify.workflow.nodes.find((item) => item.name === target.modelNodeName);
+      const binding = verifyNode?.credentials?.googlePalmApi;
+      if (!binding || binding.id !== credential.id) fail(`Gemini credential binding verification failed for ${target.workflowId}`);
+      if (verifyNode?.parameters?.modelName !== GEMINI_MODEL) fail(`Gemini model binding verification failed for ${target.workflowId}`);
+
+      console.log(`[case002-gemini-poc] Gemini binding PASS workflow=${target.workflowId} id=${credential.id} name=${credential.name} model=${GEMINI_MODEL}`);
+    } finally {
+      for (const file of [exported, patched]) {
+        try { fs.unlinkSync(file); } catch (_) {}
+      }
     }
   }
 }
@@ -177,15 +185,25 @@ function loadInlineNodes() {
       name: 'CASE002 Conversation Policy State',
       position: [2980, 340]
     },
+    'Render CASE002 Conversation Reply': {
+      id: 'case002-conversation-inline-render',
+      name: 'CASE002 Conversation Language Render',
+      position: [3240, 340]
+    },
+    'Verify CASE002 Rendered Reply': {
+      id: 'case002-conversation-inline-render-verify',
+      name: 'CASE002 Conversation Language Verify',
+      position: [3500, 340]
+    },
     'Send Appointment Agent Reply': {
       id: 'case002-conversation-inline-send',
       name: 'CASE002 Conversation Send Reply',
-      position: [3240, 340]
+      position: [3760, 340]
     },
     'Verify Appointment Agent Reply': {
       id: 'case002-conversation-inline-verify',
       name: 'CASE002 Conversation Verify Reply',
-      position: [3500, 340]
+      position: [4020, 340]
     }
   };
 
@@ -201,7 +219,9 @@ function loadInlineNodes() {
 
   const contextCode = cloned['Build CASE002 Conversation Context']?.parameters?.jsCode || '';
   const policyCode = cloned['Conversation Appointment State']?.parameters?.jsCode || '';
+  const validatorCode = cloned['Verify CASE002 Rendered Reply']?.parameters?.jsCode || '';
   const interpreter = cloned['Run CASE002 Gemini Interpreter'];
+  const renderer = cloned['Render CASE002 Conversation Reply'];
 
   if (!contextCode.includes("$getWorkflowStaticData('global')")) {
     fail('conversation context must read Receive-owned workflow static data');
@@ -209,11 +229,20 @@ function loadInlineNodes() {
   if (!policyCode.includes("$getWorkflowStaticData('global')")) {
     fail('conversation policy must own Receive workflow static data');
   }
+  if (!validatorCode.includes("$getWorkflowStaticData('global')")) {
+    fail('response validator must update Receive-owned conversation history');
+  }
   if (interpreter?.parameters?.workflowId?.value !== 'case002GeminiInterpreterV1') {
     fail('conversation source points to unexpected semantic interpreter');
   }
   if (interpreter?.onError !== 'continueRegularOutput') {
     fail('Gemini interpreter must fail open to deterministic fallback');
+  }
+  if (renderer?.parameters?.workflowId?.value !== 'case002GeminiResponseRendererV1') {
+    fail('conversation source points to unexpected response renderer');
+  }
+  if (renderer?.onError !== 'continueRegularOutput') {
+    fail('Gemini response renderer must fail open to deterministic text fallback');
   }
 
   return cloned;
@@ -247,6 +276,8 @@ async function overlayReceive() {
       'case002-conversation-inline-context',
       'case002-conversation-inline-gemini',
       'case002-conversation-inline-policy',
+      'case002-conversation-inline-render',
+      'case002-conversation-inline-render-verify',
       'case002-conversation-inline-send',
       'case002-conversation-inline-verify'
     ]);
@@ -257,6 +288,8 @@ async function overlayReceive() {
       inline['Build CASE002 Conversation Context'],
       inline['Run CASE002 Gemini Interpreter'],
       inline['Conversation Appointment State'],
+      inline['Render CASE002 Conversation Reply'],
+      inline['Verify CASE002 Rendered Reply'],
       inline['Send Appointment Agent Reply'],
       inline['Verify Appointment Agent Reply']
     );
@@ -275,6 +308,12 @@ async function overlayReceive() {
       main: [[{ node: 'CASE002 Conversation Policy State', type: 'main', index: 0 }]]
     };
     workflow.connections['CASE002 Conversation Policy State'] = {
+      main: [[{ node: 'CASE002 Conversation Language Render', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Language Render'] = {
+      main: [[{ node: 'CASE002 Conversation Language Verify', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Language Verify'] = {
       main: [[{ node: 'CASE002 Conversation Send Reply', type: 'main', index: 0 }]]
     };
     workflow.connections['CASE002 Conversation Send Reply'] = {
@@ -287,11 +326,38 @@ async function overlayReceive() {
       'CASE002 Appointment Send Reply',
       'CASE002 Appointment Verify Reply',
       'Run CASE002 Appointment Agent',
+      'CASE002 Conversation Language Render',
+      'CASE002 Conversation Language Verify',
+      'CASE002 Conversation Send Reply',
       'CASE002 Conversation Verify Reply'
     ]) {
-      if (oldName !== 'CASE002 Conversation Verify Reply') delete workflow.connections[oldName];
+      delete workflow.connections[oldName];
     }
-    delete workflow.connections['CASE002 Conversation Verify Reply'];
+
+    workflow.connections['Acknowledge Kapso Webhook'] = {
+      main: [[{ node: 'Build CASE002 Conversation Agent Input', type: 'main', index: 0 }]]
+    };
+    workflow.connections['Build CASE002 Conversation Agent Input'] = {
+      main: [[{ node: 'CASE002 Conversation Context', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Context'] = {
+      main: [[{ node: 'CASE002 Gemini Interpretation', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Gemini Interpretation'] = {
+      main: [[{ node: 'CASE002 Conversation Policy State', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Policy State'] = {
+      main: [[{ node: 'CASE002 Conversation Language Render', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Language Render'] = {
+      main: [[{ node: 'CASE002 Conversation Language Verify', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Language Verify'] = {
+      main: [[{ node: 'CASE002 Conversation Send Reply', type: 'main', index: 0 }]]
+    };
+    workflow.connections['CASE002 Conversation Send Reply'] = {
+      main: [[{ node: 'CASE002 Conversation Verify Reply', type: 'main', index: 0 }]]
+    };
 
     importWorkflow(current.parsed, current.list, workflow, patched);
 
@@ -302,12 +368,16 @@ async function overlayReceive() {
     const contextNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Conversation Context');
     const interpreterNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Gemini Interpretation');
     const policyNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Conversation Policy State');
+    const rendererNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Conversation Language Render');
+    const renderVerifyNode = verify.workflow.nodes.find((item) => item.name === 'CASE002 Conversation Language Verify');
 
     const requiredIds = [
       'case002-conversation-build-input',
       'case002-conversation-inline-context',
       'case002-conversation-inline-gemini',
       'case002-conversation-inline-policy',
+      'case002-conversation-inline-render',
+      'case002-conversation-inline-render-verify',
       'case002-conversation-inline-send',
       'case002-conversation-inline-verify'
     ];
@@ -316,10 +386,13 @@ async function overlayReceive() {
     if (!verifyPost?.credentials?.httpHeaderAuth) fail('Receive control-plane binding lost during Gemini overlay');
     if (!(contextNode?.parameters?.jsCode || '').includes("$getWorkflowStaticData('global')")) fail('Receive-owned context state missing');
     if (!(policyNode?.parameters?.jsCode || '').includes("$getWorkflowStaticData('global')")) fail('Receive-owned policy state missing');
+    if (!(renderVerifyNode?.parameters?.jsCode || '').includes("$getWorkflowStaticData('global')")) fail('Receive-owned rendered history update missing');
     if (interpreterNode?.parameters?.workflowId?.value !== 'case002GeminiInterpreterV1') fail('Gemini child workflow binding missing');
     if (interpreterNode?.onError !== 'continueRegularOutput') fail('Gemini child must preserve deterministic fallback');
+    if (rendererNode?.parameters?.workflowId?.value !== 'case002GeminiResponseRendererV1') fail('Gemini response renderer binding missing');
+    if (rendererNode?.onError !== 'continueRegularOutput') fail('Gemini response renderer must preserve deterministic text fallback');
 
-    console.log('[case002-gemini-poc] receive overlay PASS state-owner=receive model-fallback=deterministic fail-closed-send=true');
+    console.log('[case002-gemini-poc] receive overlay PASS state-owner=receive interpretation-fallback=deterministic render-fallback=deterministic render-guard=true fail-closed-send=true');
   } finally {
     for (const file of [exported, patched]) {
       try { fs.unlinkSync(file); } catch (_) {}

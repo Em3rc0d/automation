@@ -28,6 +28,7 @@ CONTRACTS = [
     "visual-assessment.schema.json",
     "triage-decision.schema.json",
     "conversation-interpretation.schema.json",
+    "conversation-response-plan.schema.json",
 ]
 
 KAPSO_PACKAGES = [
@@ -54,6 +55,9 @@ APPOINTMENT_OVERLAY_HELPER = (
 )
 GEMINI_INTERPRETER_WORKFLOW = (
     CASE / "workflows/CASE002_GEMINI_INTERPRETER@1.0/workflow.json"
+)
+GEMINI_RESPONSE_RENDERER_WORKFLOW = (
+    CASE / "workflows/CASE002_GEMINI_RESPONSE_RENDERER@1.0/workflow.json"
 )
 CONVERSATION_AGENT_V2_WORKFLOW = (
     CASE / "workflows/CASE002_LEVEL2_CONVERSATION_AGENT@2.0/workflow.json"
@@ -262,6 +266,47 @@ def validate() -> list[str]:
         require('"onError": "continueRegularOutput"' in raw, errors, "Gemini interpreter must degrade to deterministic fallback")
 
     require(
+        GEMINI_RESPONSE_RENDERER_WORKFLOW.is_file(),
+        errors,
+        f"missing Gemini response renderer workflow: {GEMINI_RESPONSE_RENDERER_WORKFLOW.relative_to(ROOT)}",
+    )
+    gemini_renderer = load_json(GEMINI_RESPONSE_RENDERER_WORKFLOW, errors) if GEMINI_RESPONSE_RENDERER_WORKFLOW.is_file() else None
+    if gemini_renderer:
+        require(
+            gemini_renderer.get("id") == "case002GeminiResponseRendererV1",
+            errors,
+            "Gemini response renderer has unexpected workflow id",
+        )
+        meta = gemini_renderer.get("meta") or {}
+        require(meta.get("stage") == "CASE_HARNESS", errors, "Gemini response renderer stage mismatch")
+        require(meta.get("sideEffectAuthority") is False, errors, "Gemini response renderer must not have side-effect authority")
+        require(meta.get("businessAuthority") is False, errors, "Gemini response renderer must not have business authority")
+        require(meta.get("toneProfile") == "warm-feminine-natural", errors, "Gemini response renderer tone profile mismatch")
+
+        nodes = gemini_renderer.get("nodes") or []
+        names = {node.get("name") for node in nodes}
+        require(
+            {
+                "Build Gemini Response Prompt",
+                "Render Conversation Reply with Gemini",
+                "CASE002 Gemini Response Model",
+                "CASE002 Response Output Parser",
+                "Normalize Gemini Response",
+            }.issubset(names),
+            errors,
+            "Gemini response renderer missing required nodes",
+        )
+        for node in nodes:
+            require(not node.get("credentials"), errors, f"Gemini response renderer has bound credential on node {node.get('name')}")
+
+        raw = GEMINI_RESPONSE_RENDERER_WORKFLOW.read_text(encoding="utf-8")
+        require("@n8n/n8n-nodes-langchain.lmChatGoogleGemini" in raw, errors, "Gemini response renderer missing native Gemini chat model")
+        require("@n8n/n8n-nodes-langchain.outputParserStructured" in raw, errors, "Gemini response renderer missing structured output parser")
+        require("protectedFacts" in raw, errors, "Gemini response renderer missing protected-fact instruction")
+        require("Business decisions are already made by deterministic policy" in raw, errors, "Gemini response renderer missing authority boundary")
+        require('"onError": "continueRegularOutput"' in raw, errors, "Gemini response renderer must degrade to deterministic text fallback")
+
+    require(
         CONVERSATION_AGENT_V2_WORKFLOW.is_file(),
         errors,
         f"missing Gemini conversation agent v2: {CONVERSATION_AGENT_V2_WORKFLOW.relative_to(ROOT)}",
@@ -274,7 +319,7 @@ def validate() -> list[str]:
             "Gemini conversation agent v2 has unexpected workflow id",
         )
         meta = conversation_v2.get("meta") or {}
-        require(meta.get("candidateVersion") == "2.1.0", errors, "Gemini conversation agent v2 version mismatch")
+        require(meta.get("candidateVersion") == "2.2.0", errors, "Gemini conversation agent v2 version mismatch")
         require(meta.get("policyAuthority") == "deterministic", errors, "Gemini conversation agent must preserve deterministic policy authority")
         require(meta.get("calendarAuthority") == "case002-level2-internal", errors, "Gemini conversation agent must preserve sandbox calendar boundary")
 
@@ -285,6 +330,8 @@ def validate() -> list[str]:
                 "Build CASE002 Conversation Context",
                 "Run CASE002 Gemini Interpreter",
                 "Conversation Appointment State",
+                "Render CASE002 Conversation Reply",
+                "Verify CASE002 Rendered Reply",
                 "Send Appointment Agent Reply",
                 "Verify Appointment Agent Reply",
             }.issubset(names),
@@ -296,6 +343,11 @@ def validate() -> list[str]:
 
         raw = CONVERSATION_AGENT_V2_WORKFLOW.read_text(encoding="utf-8")
         require("case002GeminiInterpreterV1" in raw, errors, "Gemini conversation agent does not call interpreter child")
+        require("case002GeminiResponseRendererV1" in raw, errors, "Gemini conversation agent does not call response renderer child")
+        require("responsePlan" in raw and "protectedFacts" in raw, errors, "Gemini conversation agent missing deterministic response plan")
+        require("renderValidation" in raw, errors, "Gemini conversation agent missing deterministic rendered-response validation")
+        require("starts > now.getTime()" in raw, errors, "Gemini conversation agent must exclude past appointments from active list")
+        require("map.weekday + ' ' + map.day + '/' + map.month + ' a las '" in raw, errors, "Gemini conversation agent slot label format mismatch")
         require('"onError": "continueRegularOutput"' in raw, errors, "Gemini conversation agent must preserve deterministic model fallback")
         require("$getWorkflowStaticData('global')" in raw, errors, "Gemini conversation agent must preserve Receive-owned state source")
         require("case002-level2-internal" in raw, errors, "Gemini conversation agent must not claim external calendar authority")
@@ -316,7 +368,9 @@ def validate() -> list[str]:
         require("CASE002 Gemini API" in helper_raw, errors, "Gemini PoC helper credential name mismatch")
         require("googlePalmApi" in helper_raw, errors, "Gemini PoC helper credential type mismatch")
         require("state-owner=receive" in helper_raw, errors, "Gemini PoC overlay does not assert Receive-owned state")
-        require("model-fallback=deterministic" in helper_raw, errors, "Gemini PoC overlay does not assert deterministic fallback")
+        require("interpretation-fallback=deterministic" in helper_raw, errors, "Gemini PoC overlay does not assert deterministic interpretation fallback")
+        require("render-fallback=deterministic" in helper_raw, errors, "Gemini PoC overlay does not assert deterministic render fallback")
+        require("render-guard=true" in helper_raw, errors, "Gemini PoC overlay does not assert rendered-response guard")
         require("v1beta/models" in helper_raw, errors, "Gemini PoC helper missing credential/model preflight")
         require("apiKey" in helper_raw, errors, "Gemini PoC helper missing API-key credential validation")
 
@@ -361,6 +415,7 @@ def main() -> int:
     print("Level-2 media evidence composition source: PASS")
     print("Level-2 appointment agent source: PASS")
     print("Gemini semantic interpreter source: PASS")
+    print("Gemini response renderer source: PASS")
     print("Hybrid Gemini conversation agent v2 source: PASS")
     print("Provider-neutral case contracts: PASS")
     print("No bound adapter credentials / no base64 workflow serialization: PASS")
