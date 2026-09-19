@@ -1,6 +1,6 @@
 # CASE-003 — Supplier Self-Service from SAP S/4HANA Report Snapshots
 
-Status: **DESIGN BASELINE — IMPLEMENTATION GATED BY REAL REPORT SAMPLE**
+Status: **G1 REPORT CONTRACT FROZEN — READY FOR IMPORTER BUILD**
 Updated: 2026-09-17
 
 ## 1. Purpose
@@ -289,7 +289,7 @@ response
 
 **G0 Contract gate**: this document + machine-readable invariants validate.
 
-**G1 Report gate**: anonymized real S/4HANA XLSX/CSV sample received; columns and business keys mapped; ImportProfile v1 frozen.
+**G1 Report gate — PASSED STRUCTURALLY (2026-09-19)**: representative XLSX evidence received; QQVA/SCIV/FBL1N columns, composite keys, joins and ImportProfile v1 frozen in `cases/case-003/S4HANA-REPORT-CONTRACT-v1.md` and `import-profile.v1.json`. SAP code semantics not present in the files remain explicit pilot gaps.
 
 **G2 Import gate**: good, malformed, duplicate, incomplete and anomalous fixtures pass expected outcomes.
 
@@ -312,6 +312,6 @@ response
 - arbitrary PDF/OCR/LLM report interpretation;
 - automatic access based only on RUC.
 
-## 13. Open blocking input
+## 13. Remaining pilot inputs
 
-A representative anonymized XLSX/CSV export from the client's actual SAP S/4HANA process is required before G1 can pass. Until then, no production mapping of Supplier/Invoice/Payment fields is certified.
+The representative XLSX evidence required for structural G1 has been received. Before production pilot, the client/SAP owner must confirm the status-code dictionary, QQVA version-resolution policy, authoritative RUC/contact fields, and expected export frequency/freshness. These gaps do not block importer implementation.
