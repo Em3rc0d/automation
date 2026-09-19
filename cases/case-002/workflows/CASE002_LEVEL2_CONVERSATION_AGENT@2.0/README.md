@@ -72,3 +72,23 @@ The agent preserves scheduling preferences mentioned before the plate is collect
 When the conversation is in `awaiting_slot`, selecting an already offered time has precedence over interpreting the same words as a new search preference. Final booking confirmation is accepted only in `awaiting_confirmation`.
 
 The customer-facing tone for this PoC is **warm, feminine, natural and personable** in the style of a personable workshop scheduling assistant. It may use natural Peruvian Spanish and an occasional neutral emoji, but should avoid flirting, cutesy language, forced slang, or overacting a persona. It must remain professional: no manipulative language, no altered appointment facts, and no relaxation of CASE-002 safety/authority boundaries.
+
+
+## v2.2 response rendering
+
+The deterministic policy now emits a `ConversationResponsePlan` with deterministic `fallbackText`, protected business facts, and forbidden internal terminology.
+
+The customer-facing path is:
+
+```text
+Gemini semantic interpretation
+-> deterministic CASE-002 policy/state
+-> response plan
+-> Gemini language renderer
+-> deterministic rendered-response validator
+-> hardened Kapso send
+```
+
+The renderer may change phrasing only. It cannot change business decisions. The validator rejects any rendered message that drops protected facts, introduces an unknown date/time/plate/price, or exposes implementation terminology; when rejected, the deterministic fallback is sent.
+
+Appointment listings now exclude appointments whose start time is already in the past, and customer-facing slot labels use the form `viernes 25/09 a las 14:00`.
