@@ -1,0 +1,91 @@
+{
+  "name": "CASE-003 Due Date Evaluation",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT tenant_id, snapshot_id, invoice_id, supplier_id, invoice_reference, canonical_due_date, due_date_source, due_date_conflict, days_to_due, overdue_days, payment_status_evidence, published_at FROM case003.invoice_projection WHERE canonical_due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days' AND payment_status_evidence <> 'SETTLEMENT_EVIDENCE';"
+      },
+      "id": "query",
+      "name": "Query Active Due Invoices",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "case003PostgresV1",
+          "name": "CASE003 PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => ({json:{...item.json,notificationKey:[item.json.tenant_id,item.json.invoice_id,'due_3d',item.json.canonical_due_date,item.json.snapshot_id].join(':')}}));"
+      },
+      "id": "key",
+      "name": "Build Idempotency Key",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Query Active Due Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Active Due Invoices": {
+      "main": [
+        [
+          {
+            "node": "Build Idempotency Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "caseId": "CASE-003",
+    "purpose": "Portable direct-PostgreSQL Gate-2 adapter. Uses dedicated case003PostgresV1 credential; remains inactive and has no delivery node."
+  },
+  "id": "case003DueDateEvaluationV1"
+}
