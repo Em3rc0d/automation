@@ -258,7 +258,7 @@ The database core has been smoke-tested through wrong-code rejection, successful
 
 ## Gate 10 — native n8n email delivery
 
-Gate 10 deliberately uses n8n's native mail transport boundary rather than adding a CASE-specific external delivery service. Preferred transport is the Gmail node with OAuth2; the n8n `Send Email` SMTP node is the fallback.
+Gate 10 deliberately uses n8n's native mail transport boundary rather than adding a CASE-specific external delivery service. The selected transport is the n8n `Send Email` node with a dedicated SMTP credential.
 
 The database remains authoritative for challenge lifecycle, attempts, expiry and verification. n8n receives the internal delivery payload, sends the email, then calls `case003_mark_verification_delivery_json` with the provider result. The OTP must never be logged, committed, or returned to WhatsApp before verification.
 
