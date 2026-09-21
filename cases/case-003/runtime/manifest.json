@@ -47,5 +47,15 @@
       "credentialType": "httpHeaderAuth",
       "header": "x-case003-token"
     }
-  }
+  },
+  "executionValidation": {
+    "mode": "persisted-n8n-execution-data",
+    "cliMode": "n8n execute",
+    "requiresNewExecutionId": true,
+    "expectedSmokeInvoiceId": "30000000-0000-0000-0000-000000000100"
+  },
+  "evidence": [
+    "evidence/gate1-railway-2026-09-21.md",
+    "evidence/gate2-railway-2026-09-21.md"
+  ]
 }
