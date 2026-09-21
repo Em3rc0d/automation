@@ -178,6 +178,27 @@ The certified source version produces 2 suppliers, 531 invoices, 991 financial i
 
 The n8n proof remains inactive and outbound-free. A fresh Gate-4 rule executes twice against the real snapshot: first run `reserved=true`, second run `reserved=false`, with the duplicate blocked before payload construction.
 
+## Trigger split for n8n 2.38.7 UI stability
+
+During Gate 4 UI testing, n8n 2.38.7 intermittently failed manual partial executions with `Cannot read properties of null` while resolving either `Manual Gate Test` or `Daily Schedule` in a workflow where both triggers converged into the same downstream node.
+
+The portable runtime therefore isolates the triggers:
+
+```text
+CASE-003 Due Date Evaluation
+Manual Trigger -> reservation path
+
+CASE-003 Due Date Schedule
+Schedule Trigger -> reservation path
+```
+
+Both workflows remain inactive by default, share the same canonical reservation API and idempotency rule, and reuse the same CASE-003 credential. This avoids relying on multi-trigger partial-execution behavior in the editor while preserving scheduled production orchestration.
+
+Artifacts:
+
+- `n8n/case003-due-date-reservation-manual.template.json`
+- `n8n/case003-due-date-reservation-schedule.template.json`
+
 ## Railway
 
 Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
