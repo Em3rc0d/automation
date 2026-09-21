@@ -1,0 +1,25 @@
+services:
+  control-plane:
+    build:
+      context: ../../../..
+      dockerfile: cases/case-002/runtime/control-plane/Dockerfile
+    restart: unless-stopped
+
+  n8n:
+    build:
+      context: ../../../..
+      dockerfile: cases/case-002/runtime/railway/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AUTOMATION_CONTROL_PLANE_URL: http://control-plane:8080
+    ports:
+      - "${N8N_PUBLIC_PORT:-5678}:5678"
+    volumes:
+      - case002_n8n_data:/home/node/.n8n
+    depends_on:
+      - control-plane
+
+volumes:
+  case002_n8n_data:
