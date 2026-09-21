@@ -128,13 +128,19 @@ For the synthetic fixture, the validator requires the known smoke invoice, FBL1N
 
 ## Gate 3 — durable reservation and duplicate suppression
 
-Gate 3 moves idempotency into the real n8n execution path. Apply:
+Gate 3 moves idempotency into the real n8n execution path. The portable PostgreSQL core is:
+
+```text
+../build/gate3-reservation-core.sql
+```
+
+For Supabase/PostgREST, apply the wrapper after the core:
 
 ```text
 ../build/gate3-reservation-rpc.sql
 ```
 
-The runtime-independent core is `case003.reserve_due_candidates(integer,text)`. It selects ACTIVE-snapshot due candidates and calls `case003.reserve_due_notification(...)` for each candidate. The returned `reserved` flag is the delivery gate.
+The runtime-independent core is `case003.reserve_due_candidates(integer,text)`. The bundled Docker Compose PostgreSQL initializes this core automatically; it does not require Supabase roles or PostgREST. It selects ACTIVE-snapshot due candidates and calls `case003.reserve_due_notification(...)` for each candidate. The returned `reserved` flag is the delivery gate.
 
 For Supabase/PostgREST, configure the reservation workflow using the existing Gate-2 RPC credential:
 
