@@ -14,7 +14,16 @@ if(!/^https:\/\//.test(url)||!key||!token||!bundleKey) fail('runtime configurati
 if(!Number.isInteger(count)||count<1||count>20) fail('invalid bundle part count');
 
 let text='';
-for(let i=1;i<=count;i++){const p=process.env['CASE003_GATE4_BUNDLE_PART_'+i];if(!p) fail('missing bundle part '+i);text+=p;}
+for(let i=1;i<=count;i++){
+  let p=process.env['CASE003_GATE4_BUNDLE_PART_'+i];
+  if(!p && i===13){
+    const a=process.env.CASE003_GATE4_BUNDLE_PART_13A;
+    const b=process.env.CASE003_GATE4_BUNDLE_PART_13B;
+    if(a&&b) p=a+b;
+  }
+  if(!p) fail('missing bundle part '+i);
+  text+=p;
+}
 const env=JSON.parse(text);
 if(env.v!==2||env.alg!=='AES-256-GCM'||env.compression!=='brotli') fail('unsupported bundle envelope');
 
