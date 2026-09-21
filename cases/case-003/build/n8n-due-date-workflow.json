@@ -80,5 +80,6 @@
   "meta": {
     "caseId": "CASE-003",
     "purpose": "Read-only due-date evaluation against ACTIVE canonical snapshot. Delivery intentionally deferred until channel/idempotency persistence is wired."
-  }
+  },
+  "id": "case003DueDateEvaluationV1"
 }
