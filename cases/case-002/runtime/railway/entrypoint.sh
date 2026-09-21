@@ -340,5 +340,20 @@ if [ "${CASE003_GATE4_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate4-test] PASS real snapshot first reserved=true; second reserved=false; duplicate blocked"
 fi
 
+# CASE-003 UI hardening: isolate manual and schedule triggers into separate
+# workflows to avoid n8n 2.38.7 partial-execution null-state failures when two
+# triggers converge into one downstream path.
+if [ "${CASE003_TRIGGER_SPLIT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-split] guarded trigger split requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-trigger-split
+  node /opt/case002/verify-case003-trigger-split.js pre
+  n8n import:workflow --input=/opt/case002/case003-due-date-reservation-gate4-manual.json
+  n8n import:workflow --input=/opt/case002/case003-due-date-reservation-gate4-schedule.json
+  node /opt/case002/verify-case003-trigger-split.js post
+  node /opt/case002/backup-n8n-state.js post-case003-trigger-split
+  rm -f /tmp/case003-trigger-split-pre.json
+  echo "[case003-split] split complete; both workflows inactive; credentials unchanged"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
