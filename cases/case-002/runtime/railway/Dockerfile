@@ -12,6 +12,7 @@ COPY cases/case-002/workflows/CASE002_GEMINI_RESPONSE_RENDERER@1.0/workflow.json
 COPY cases/case-002/workflows/CASE002_LEVEL2_CONVERSATION_AGENT@2.0/workflow.json /opt/case002/conversation-agent-v2.json
 COPY cases/case-002/runtime/case002-acceptance-probe.json /opt/case002/acceptance-probe.json
 COPY cases/case-002/runtime/live/control-plane-stub.json /opt/case002/control-plane-stub.json
+COPY cases/case-002/runtime/case003/due-date-evaluation.json /opt/case002/case003-due-date-evaluation.json
 COPY cases/case-002/runtime/railway/recover-workflows.js /opt/case002/recover-workflows.js
 COPY cases/case-002/runtime/railway/backup-n8n-state.js /opt/case002/backup-n8n-state.js
 COPY cases/case-002/runtime/railway/prepare-level2-reply-test.js /opt/case002/prepare-level2-reply-test.js
