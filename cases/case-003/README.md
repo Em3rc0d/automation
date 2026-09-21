@@ -44,3 +44,16 @@ channel delivery (later gate)
 Business truth lives in PostgreSQL/Supabase. n8n remains an execution/orchestration engine.
 
 See `runtime/README.md` for reproducible Linux deployment instructions.
+
+
+### Gate 9 verification
+
+Gate 9 turns the Gate-8 `AUTH_REQUIRED` boundary into an auditable identity-verification state machine. The source RUC identifies a candidate supplier only; trusted-contact proof or operator approval is required before creating a verified channel identity and `invoice.read` membership.
+
+See:
+
+- `build/gate9-verification-core.sql`
+- `build/gate9-verification-rpc.sql`
+- `build/gate9-provider-verification-core.sql`
+- `build/gate9-provider-verification-rpc.sql`
+- `runtime/gate9-verification.md`
