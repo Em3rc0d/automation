@@ -54,6 +54,14 @@ const close=db=>new Promise(resolve=>db.close(()=>resolve()));
    const t=workflows.find(w=>w.id===targetId); if(!t) throw new Error('Gate-9 target missing');
    if(!(t.active===0||t.active===false||t.active==='0')) throw new Error('Gate-9 target must import inactive');
    const nodes=JSON.parse(t.nodes);
+   if(t.nodes.includes('__CASE003_')) throw new Error('Gate-9 unresolved template placeholder');
+   for(const n of nodes.filter(n=>['process-provider','verify-provider-code'].includes(n.id))){
+     const url=String(n.parameters?.url||'');
+     if(!/^https:\/\//.test(url)) throw new Error('Gate-9 invalid RPC URL:'+n.id);
+     const headers=n.parameters?.headerParameters?.parameters||[];
+     const apiKey=String(headers.find(h=>h.name==='apikey')?.value||'');
+     if(!apiKey || apiKey.includes('__CASE003_')) throw new Error('Gate-9 missing publishable key:'+n.id);
+   }
    if(nodes.filter(n=>String(n.type||'').includes('webhook')).length!==1) throw new Error('Gate-9 webhook invariant failed');
    if(nodes.find(n=>n.id==='kapso-hmac')?.credentials?.crypto?.id!==before.sourceHmacId) throw new Error('Gate-9 HMAC binding does not reuse source credential');
    for(const id of ['process-provider','verify-provider-code']){
