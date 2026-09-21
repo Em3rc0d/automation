@@ -123,7 +123,8 @@
     "evidence/gate5-railway-2026-09-21.md",
     "evidence/gate6-railway-2026-09-21.md",
     "evidence/gate7-railway-2026-09-21.md",
-    "evidence/gate8-real-whatsapp-2026-09-21.md"
+    "evidence/gate8-real-whatsapp-2026-09-21.md",
+    "evidence/gate9-verification-2026-09-21.md"
   ],
   "scripts": {
     "gate1Import": "scripts/import-workflow.sh",
@@ -329,6 +330,14 @@
     "databaseSmokeCertified": true,
     "smokeRealInvoiceReference": "01-FM01-0096939",
     "smokeResult": "FOUND",
-    "syntheticAccessCleaned": true
+    "syntheticAccessCleaned": true,
+    "certifiedImportDeployment": "8e69b29b-cbc2-4528-be5c-d7bc384459b2",
+    "providerPrepareDeployment": "95d20ff4-4ead-4a60-aeb9-fd3eb65510f6",
+    "finalCleanDeployment": "9a5550a4-9a85-441a-8aca-ec5dda11b9c5",
+    "preparedKapsoWebhookId": "c792d89d-ade2-4def-a208-f82c9c7f7458",
+    "preparedKapsoWebhookActive": false,
+    "n8nWorkflowActive": false,
+    "workflowCount": 15,
+    "credentialCount": 5
   }
 }
