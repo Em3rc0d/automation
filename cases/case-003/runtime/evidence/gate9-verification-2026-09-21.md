@@ -392,3 +392,85 @@ post-arm backup   = sha256:4599d6e532a5254b9930abc7051d0eec5d2ae54cd6740a4fb7951
 All Gate-9 one-shot variables were reset to `false` without another deployment. The running Gate-9 workflow/webhook remains armed for the next explicit real-provider attempt.
 
 The real verification-init proof remains pending; neither failed attempt is counted as certification.
+
+
+## Third real-provider attempt — verification-init proof passed
+
+The user sent the same real WhatsApp request for the third time after the parser and runtime-endpoint hotfixes.
+
+Observed provider/runtime path:
+
+```text
+2026-09-21T22:31:59Z
+POST /webhook/adapters/kapso/whatsapp/messages
+HTTP 200
+
+2026-09-21T22:32:09Z
+POST /webhook/case003/adapters/kapso/whatsapp/verification
+HTTP 200
+```
+
+Durable CASE-003 result:
+
+```text
+decision              = VERIFICATION_REQUIRED
+invoice_reference     = 01-FM01-0096939
+candidate_vendor_id   = 100800070
+claimed_tax_id        = 20511914125
+verification_request  = a583893e-2545-45d5-aa2f-86b9a7f61257
+status                = pending
+trusted_contact       = m***************z@soltrak.com.pe
+```
+
+A real email-code challenge was then created through the Gate-9 core:
+
+```text
+decision              = VERIFICATION_DELIVERY_REQUIRED
+challenge status      = pending
+method                = email_code
+attempts              = 0 / 5
+delivery status       = pending
+destination           = m***************z@soltrak.com.pe
+event                 = CHALLENGE_CREATED
+```
+
+The generated verification code and full trusted email are intentionally excluded from repository evidence and channel responses.
+
+### Resume-context gap found and fixed
+
+The third real attempt exposed a separate correctness gap: although `channel_message.invoice_reference` was correct, the Gate-6 request creation path did not persist it into `verification_request.requested_invoice_reference`. That would have forced the supplier to repeat the invoice reference after successful verification.
+
+The live function was repaired so every new verification request now persists the triggering `p_invoice_reference`. The active real request was repaired in place to:
+
+```text
+requested_invoice_reference = 01-FM01-0096939
+```
+
+Portable migration:
+
+```text
+build/gate9-request-resume-hotfix.sql
+commit = 6692c845a57051bfb8624b37c865d75f292a130f
+```
+
+### Certification boundary
+
+The following are now certified with real WhatsApp/provider traffic:
+
+- Kapso real ingress and HMAC/provider webhook path.
+- RUC used only to identify a candidate supplier.
+- Unknown WhatsApp identity is not authorized by RUC alone.
+- Durable `VERIFICATION_REQUIRED` creation.
+- Trusted-contact masking.
+- Real challenge creation and attempt/expiry state.
+- Invoice reference preserved for post-verification resume.
+
+Still intentionally **not certified** in this proof:
+
+- actual outbound email transport,
+- receipt of the code by the trusted contact,
+- real code submission over WhatsApp,
+- creation of the verified external identity/membership from that real code,
+- post-verification invoice result returned to the WhatsApp user.
+
+Those require the next controlled delivery/verification gate.
