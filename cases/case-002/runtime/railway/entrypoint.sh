@@ -525,5 +525,13 @@ if [ "${CASE003_GATE7_HTTP_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate7-http] PASS signed Kapso ingress + replay + connector binding + signature rejection; outbound disabled"
 fi
 
+# CASE-003: one-shot READ-ONLY Kapso account discovery.
+# Uses the existing KAPSO API credential, lists phone-number/webhook metadata,
+# logs no credential secret values, performs no provider mutation.
+if [ "${CASE003_KAPSO_DISCOVERY_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-kapso-discovery] read-only discovery requested"
+  node /opt/case002/inspect-case003-kapso-account.js
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
