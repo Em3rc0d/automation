@@ -1,6 +1,8 @@
--- CASE-003 Gate 7: provider adapter tenant binding + provider-neutral ingress.
--- The provider payload never supplies tenant_id. Tenant scope is resolved from
--- a persisted connector/channel binding before Gate-6 business processing.
+-- CASE-003 Gate 7 combined Supabase deployment convenience file.
+-- For vanilla PostgreSQL use gate7-provider-ingress-core.sql only.
+
+-- CASE-003 Gate 7 portable PostgreSQL core.
+-- Prerequisites: Gate-6 channel ingress core.
 
 create table if not exists case003.channel_connector_binding (
   id uuid primary key default gen_random_uuid(),
@@ -84,8 +86,8 @@ begin
 end;
 $$;
 
-revoke all on function case003.process_provider_channel_message(text,text,text,text,text,text,text,text)
-  from public,anon,authenticated;
+-- CASE-003 Gate 7 Supabase/PostgREST adapter.
+-- Prerequisites: Gate-2 integration secret + Gate-7 provider ingress core.
 
 create or replace function public.case003_provider_channel_message_json(
   p_provider text,
