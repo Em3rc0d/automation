@@ -97,7 +97,20 @@ docker compose up -d n8n
 
 Required environment values are the Supabase URL/publishable key plus Gate-5 tenant, invoice, company, FI document and snapshot identifiers. The dedicated `case003RpcAuthV1` credential carries the additional integration token and must be created securely outside Git.
 
-For vanilla PostgreSQL, use `case003.supplier_invoice_query_direct(...)` from the portable core with a least-privilege database credential. The SQL core has no Supabase role dependency.
+For vanilla PostgreSQL, the bundled n8n adapter uses `case003.supplier_invoice_query_direct(...)` with the existing `case003PostgresV1` credential:
+
+```bash
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/configure-gate5-postgres.sh
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/test-gate5.sh
+docker compose up -d n8n
+```
+
+Direct-PostgreSQL artifact:
+
+`n8n/case003-supplier-query-gate5-postgres.template.json`
+
+The local Compose database initializes `gate5-supplier-query-core.sql` and `sql/020-gate5-access-smoke.sql` automatically. The SQL core has no Supabase role dependency.
 
 ## Boundary
 
