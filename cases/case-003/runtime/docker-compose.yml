@@ -13,9 +13,11 @@ services:
       - ../build/gate3-reservation-core.sql:/docker-entrypoint-initdb.d/003-gate3-reservation-core.sql:ro
       - ../build/gate5-supplier-query-core.sql:/docker-entrypoint-initdb.d/004-gate5-supplier-query-core.sql:ro
       - ../build/gate6-channel-ingress-core.sql:/docker-entrypoint-initdb.d/005-gate6-channel-ingress-core.sql:ro
+      - ../build/gate7-provider-ingress-core.sql:/docker-entrypoint-initdb.d/006-gate7-provider-ingress-core.sql:ro
       - ./sql/010-synthetic-smoke.sql:/docker-entrypoint-initdb.d/010-synthetic-smoke.sql:ro
       - ./sql/020-gate5-access-smoke.sql:/docker-entrypoint-initdb.d/020-gate5-access-smoke.sql:ro
       - ./gate6-synthetic-channel-fixture.sql:/docker-entrypoint-initdb.d/030-gate6-channel-smoke.sql:ro
+      - ./gate7-synthetic-kapso-fixture.sql:/docker-entrypoint-initdb.d/040-gate7-kapso-smoke.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -57,6 +59,13 @@ services:
       CASE003_GATE6_INVOICE_REFERENCE: ${CASE003_GATE6_INVOICE_REFERENCE:-F001-100}
       CASE003_GATE6_TAX_ID: ${CASE003_GATE6_TAX_ID:-20000000001}
       CASE003_GATE6_VERIFIED_SUBJECT: ${CASE003_GATE6_VERIFIED_SUBJECT:-gate6-whatsapp-authorized-v1}
+      CASE003_KAPSO_HMAC_CREDENTIAL_ID: ${CASE003_KAPSO_HMAC_CREDENTIAL_ID:-}
+      CASE003_KAPSO_HMAC_CREDENTIAL_NAME: ${CASE003_KAPSO_HMAC_CREDENTIAL_NAME:-CASE003 Kapso HMAC}
+      CASE003_KAPSO_WEBHOOK_SECRET: ${CASE003_KAPSO_WEBHOOK_SECRET:-}
+      CASE003_GATE7_PHONE_NUMBER_ID: ${CASE003_GATE7_PHONE_NUMBER_ID:-999000111222333}
+      CASE003_GATE7_VERIFIED_SENDER: ${CASE003_GATE7_VERIFIED_SENDER:-51999900001}
+      CASE003_GATE7_UNKNOWN_SENDER: ${CASE003_GATE7_UNKNOWN_SENDER:-51999900002}
+      CASE003_GATE7_INVOICE_REFERENCE: ${CASE003_GATE7_INVOICE_REFERENCE:-F001-100}
     ports:
       - "5678:5678"
     volumes:
