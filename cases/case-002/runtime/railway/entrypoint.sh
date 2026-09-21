@@ -286,5 +286,16 @@ if [ "${CASE003_GATE3_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate3-test] PASS first reserved=true; second reserved=false; duplicate blocked before payload"
 fi
 
+# CASE-003 Gate 4 real SAP-report loader. The encrypted payload is supplied
+# only through temporary Railway variables and is never committed in plaintext.
+# This gate does not mutate n8n workflows or credentials.
+if [ "${CASE003_GATE4_IMPORT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate4] guarded real-data load requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate4-load
+  node /opt/case002/load-case003-gate4.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate4-load
+  echo "[case003-gate4] load complete; snapshot remains candidate until control-plane publication"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
