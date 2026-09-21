@@ -27,6 +27,7 @@ COPY cases/case-002/runtime/railway/verify-case003-gate2.js /opt/case002/verify-
 COPY cases/case-002/runtime/railway/validate-case003-gate2-execution.js /opt/case002/validate-case003-gate2-execution.js
 COPY cases/case-002/runtime/railway/verify-case003-gate3.js /opt/case002/verify-case003-gate3.js
 COPY cases/case-002/runtime/railway/validate-case003-gate3-execution.js /opt/case002/validate-case003-gate3-execution.js
+COPY cases/case-002/runtime/railway/import-case003-gate4.js /opt/case002/import-case003-gate4.js
 COPY cases/case-002/runtime/railway/load-case003-gate4.js /opt/case002/load-case003-gate4.js
 COPY cases/case-002/runtime/railway/load-case003-gate4-v2.js /opt/case002/load-case003-gate4-v2.js
 COPY cases/case-002/runtime/railway/validate-case003-gate4-execution.js /opt/case002/validate-case003-gate4-execution.js
