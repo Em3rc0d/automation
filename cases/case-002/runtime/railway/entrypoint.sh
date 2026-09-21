@@ -226,10 +226,18 @@ fi
 if [ "${CASE003_GATE2_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate2-test] guarded CLI execution requested"
   node /opt/case002/backup-n8n-state.js pre-case003-gate2-test
-  rm -f /tmp/case003-gate2-execution.json
-  n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate2-execution.json
-  node /opt/case002/validate-case003-gate2-execution.js /tmp/case003-gate2-execution.json
-  rm -f /tmp/case003-gate2-execution.json
+  node /opt/case002/validate-case003-gate2-execution.js pre
+  rm -f /tmp/case003-gate2-cli.log
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate2-cli.log 2>&1
+  CASE003_CLI_RC=$?
+  set -e
+  node /opt/case002/validate-case003-gate2-execution.js post
+  rm -f /tmp/case003-gate2-cli.log /tmp/case003-gate2-execution-pre.json
+  if [ "$CASE003_CLI_RC" -ne 0 ]; then
+    echo "[case003-gate2-test] CLI returned non-zero after persisted-result validation: $CASE003_CLI_RC"
+    exit "$CASE003_CLI_RC"
+  fi
   node /opt/case002/backup-n8n-state.js post-case003-gate2-test
   echo "[case003-gate2-test] execution proof complete"
 fi
