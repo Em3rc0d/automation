@@ -188,7 +188,9 @@ fi
 if [ "${CASE003_DUE_DATE_IMPORT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003] additive inactive due-date workflow import requested"
   node /opt/case002/backup-n8n-state.js pre-case003-import
+  node /opt/case002/verify-case003-import.js pre
   n8n import:workflow --input=/opt/case002/case003-due-date-evaluation.json
+  node /opt/case002/verify-case003-import.js post
   node /opt/case002/backup-n8n-state.js post-case003-import
   echo "[case003] import complete; workflow remains inactive and credentials untouched"
 fi
