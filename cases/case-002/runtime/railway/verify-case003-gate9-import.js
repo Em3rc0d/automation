@@ -29,21 +29,25 @@ const close=db=>new Promise(resolve=>db.close(()=>resolve()));
  if(!sourceHmac?.id) throw new Error('source Kapso HMAC binding missing');
 
  if(mode==='pre'){
-   if(workflows.find(w=>w.id===targetId)) throw new Error('Gate-9 workflow already exists');
+   const existingTarget=workflows.find(w=>w.id===targetId);
+   const replaceExisting=Boolean(existingTarget);
+   if(existingTarget && !(existingTarget.active===0||existingTarget.active===false||existingTarget.active==='0')) throw new Error('Gate-9 existing workflow must be inactive before replacement');
    if(!credentials.find(c=>c.id===sourceHmac.id&&c.type==='crypto')) throw new Error('source crypto credential metadata missing');
    if(!credentials.find(c=>c.id==='case003RpcAuthV1'&&c.type==='httpHeaderAuth')) throw new Error('CASE-003 RPC credential missing');
    fs.writeFileSync(checkpoint,JSON.stringify({
      workflowCount:workflows.length,credentialCount:credentials.length,
+     replaceExisting,
      sourceActive:source.active,sourceHash:sha(source.nodes)+'|'+sha(source.connections),
      sourceHmacId:sourceHmac.id,
-     workflows:workflows.map(w=>({id:w.id,name:w.name,active:w.active,nodesHash:sha(w.nodes),connectionsHash:sha(w.connections),settingsHash:sha(w.settings)})),
+     workflows:workflows.filter(w=>w.id!==targetId).map(w=>({id:w.id,name:w.name,active:w.active,nodesHash:sha(w.nodes),connectionsHash:sha(w.connections),settingsHash:sha(w.settings)})),
      credentials:credentials.map(c=>({id:c.id,name:c.name,type:c.type,dataHash:sha(c.data)}))
    },null,2)+'\n',{mode:0o600});
-   console.log('[case003-gate9] PRE PASS workflows='+workflows.length+' credentials='+credentials.length+' sourceActive='+source.active+' target=absent');
+   console.log('[case003-gate9] PRE PASS workflows='+workflows.length+' credentials='+credentials.length+' sourceActive='+source.active+' target='+(replaceExisting?'replace-inactive':'absent'));
  }else{
    if(!fs.existsSync(checkpoint)) throw new Error('Gate-9 checkpoint missing');
    const before=JSON.parse(fs.readFileSync(checkpoint,'utf8'));
-   if(workflows.length!==before.workflowCount+1) throw new Error('workflow count mismatch');
+   const expectedWorkflowCount=before.workflowCount+(before.replaceExisting?0:1);
+   if(workflows.length!==expectedWorkflowCount) throw new Error('workflow count mismatch');
    if(credentials.length!==before.credentialCount) throw new Error('credential count changed');
    for(const old of before.credentials){const now=credentials.find(c=>c.id===old.id);if(!now||now.name!==old.name||now.type!==old.type||sha(now.data)!==old.dataHash)throw new Error('credential changed:'+old.id);}
    for(const old of before.workflows){const now=workflows.find(w=>w.id===old.id);if(!now||now.name!==old.name||now.active!==old.active||sha(now.nodes)!==old.nodesHash||sha(now.connections)!==old.connectionsHash||sha(now.settings)!==old.settingsHash)throw new Error('existing workflow changed:'+old.id);}
