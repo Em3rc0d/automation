@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.6.0-gate7",
+  "runtimeVersion": "1.7.0-gate8",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -70,7 +70,11 @@
     "Gate 7 reuses existing HMAC and CASE-003 RPC credentials without editing credential payloads",
     "Gate 7 rejects invalid signatures before canonical data access",
     "Gate 7 fails closed with CONNECTOR_NOT_BOUND for unknown provider channel bindings",
-    "Gate 7 preserves provider message replay safety and has no outbound messaging node"
+    "Gate 7 preserves provider message replay safety and has no outbound messaging node",
+    "Gate 8 proves a real user-originated WhatsApp message delivered by Kapso Cloud to CASE-003",
+    "Gate 8 keeps CASE-002 live and unchanged while CASE-003 receives the same provider event in parallel",
+    "Gate 8 returns AUTH_REQUIRED for an unverified real sender and does not disclose invoice data",
+    "Gate 8 keeps CASE-003 outbound messaging disabled"
   ],
   "targets": [
     "local-linux",
@@ -107,7 +111,8 @@
     "evidence/gate4-railway-2026-09-21.md",
     "evidence/gate5-railway-2026-09-21.md",
     "evidence/gate6-railway-2026-09-21.md",
-    "evidence/gate7-railway-2026-09-21.md"
+    "evidence/gate7-railway-2026-09-21.md",
+    "evidence/gate8-real-whatsapp-2026-09-21.md"
   ],
   "scripts": {
     "gate1Import": "scripts/import-workflow.sh",
@@ -264,5 +269,20 @@
     "certifiedImportDeployment": "d66bcf8b-d44f-4037-b297-71ca1ff9265f",
     "certifiedHttpDeployment": "25b5000a-3094-44af-af5e-702f9369c1e2",
     "finalCleanDeployment": "059810af-94c0-4f7e-a234-449f983b1708"
+  },
+  "gate8": {
+    "evidence": "evidence/gate8-real-whatsapp-2026-09-21.md",
+    "provider": "kapso",
+    "channel": "whatsapp",
+    "providerPhoneNumberId": "597907523413541",
+    "realProviderMessageIdObserved": true,
+    "realWhatsAppOriginCertified": true,
+    "realN8nExecutionId": "139",
+    "decision": "AUTH_REQUIRED",
+    "case002ParallelExecutionId": "138",
+    "case002ContinuityCertified": true,
+    "credentialPayloadsEdited": false,
+    "outboundDelivery": false,
+    "armDeployment": "472f62f8-e93a-42be-8984-1879d627ab32"
   }
 }
