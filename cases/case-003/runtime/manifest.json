@@ -359,6 +359,18 @@
     "hotfixArmPostBackupSha256": "23e9423f443e286677a94311b9c0587eeddec099bc0762cbb6bc9298aabfcaf4",
     "hotfixReadyForRealRetry": true,
     "portableRenderer": "scripts/render-gate9-verification-workflow.js",
-    "requiresResolvedRuntimePlaceholders": true
+    "requiresResolvedRuntimePlaceholders": true,
+    "secondRealProviderAttemptAt": "2026-09-21T22:12:23Z",
+    "secondRealProviderAttemptResult": "FAILED_BEFORE_DATABASE",
+    "secondRealProviderHttpStatus": 500,
+    "secondRealProviderError": "unresolved __CASE003_SUPABASE_URL__ in imported n8n workflow",
+    "runtimeRendererCommit": "b404c5a47e2a2cec3cc8dab0da1a51fc3e0d5148",
+    "runtimeRendererVerifierCommit": "8ec7e7704c3c23191f895b1a07e8fa3758796352",
+    "portableRendererCommit": "ce7783c54206d9c5b23bb4f819bca77af5f16ca5",
+    "renderedWorkflowImportDeployment": "2ad10104-21bc-4da4-9749-28bdd141f8c3",
+    "renderedWorkflowPostImportBackupSha256": "68fc665084c0b2b844e62a0601793f5048e68b2de72bdf54ddb0e982d417803b",
+    "latestArmDeployment": "563dadc7-d2a7-49b9-93da-9c2d9733f43c",
+    "latestArmPostBackupSha256": "4599d6e532a5254b9930abc7051d0eec5d2ae54cd6740a4fb7951fda1a3028d4",
+    "readyForThirdRealProviderAttempt": true
   }
 }
