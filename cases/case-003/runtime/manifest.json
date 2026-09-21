@@ -57,5 +57,15 @@
   "evidence": [
     "evidence/gate1-railway-2026-09-21.md",
     "evidence/gate2-railway-2026-09-21.md"
-  ]
+  ],
+  "scripts": {
+    "gate1Import": "scripts/import-workflow.sh",
+    "gate2ConfigureRpc": "scripts/configure-gate2-rpc.sh",
+    "gate2BindingVerifier": "scripts/verify-gate2-binding.js",
+    "gate2ExecutionTest": "scripts/test-gate2.sh",
+    "gate2ExecutionValidator": "scripts/validate-gate2-execution.js",
+    "rpcCredentialGenerator": "scripts/prepare-rpc-credential.js",
+    "rpcWorkflowRenderer": "scripts/render-supabase-rpc-workflow.js",
+    "rpcSecretRegistrationRenderer": "scripts/render-rpc-secret-registration.sh"
+  }
 }
