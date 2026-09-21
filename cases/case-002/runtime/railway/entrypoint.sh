@@ -201,5 +201,25 @@ if [ "${CASE003_INSPECT_CREDENTIALS_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/inspect-case003-credentials.js
 fi
 
+# CASE-003 Gate 2: create one dedicated RPC credential and replace only the
+# CASE-003 workflow definition with the authenticated Supabase RPC overlay.
+# Existing credentials and all non-CASE003 workflows are hashed before/after.
+if [ "${CASE003_GATE2_RPC_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate2] guarded RPC credential + workflow binding requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate2
+  node /opt/case002/verify-case003-gate2.js pre
+
+  trap 'rm -f /tmp/case003-rpc-credential.json' EXIT
+  node /opt/case002/prepare-case003-gate2.js
+  n8n import:credentials --input=/tmp/case003-rpc-credential.json --projectId="${CASE003_N8N_PROJECT_ID:-Fwp74WQHXQLWzgU2}"
+  rm -f /tmp/case003-rpc-credential.json
+  trap - EXIT
+
+  n8n import:workflow --input=/opt/case002/case003-due-date-evaluation-rpc.json
+  node /opt/case002/verify-case003-gate2.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate2
+  echo "[case003-gate2] binding complete; CASE-003 remains inactive and existing state verified unchanged"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
