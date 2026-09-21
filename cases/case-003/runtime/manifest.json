@@ -165,6 +165,9 @@
     "positiveInvoice": "01-FM01-0096939",
     "positiveSnapshot": "b1ea19f1-ed7d-54b5-9009-10759dd6126d",
     "outboundDelivery": false,
-    "certifiedExecutionId": 128
+    "certifiedExecutionId": 128,
+    "postgresWorkflow": "n8n/case003-supplier-query-gate5-postgres.template.json",
+    "postgresConfigureScript": "scripts/configure-gate5-postgres.sh",
+    "localAccessFixture": "sql/020-gate5-access-smoke.sql"
   }
 }
