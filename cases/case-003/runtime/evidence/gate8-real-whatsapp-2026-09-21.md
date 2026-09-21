@@ -171,3 +171,53 @@ REAL WhatsApp user message
 This is the first CASE-003 gate proven with an actual user-originated WhatsApp message delivered by Kapso Cloud, rather than a synthetic local HTTP request.
 
 Gate 8 does not yet certify the identity-verification conversation or a CASE-003 outbound WhatsApp response.
+
+## Post-proof cleanup
+
+After certification, CASE-003 was returned to a non-listening state while CASE-002 remained live.
+
+Cleanup deployment:
+
+`1a855396-b399-40c3-9961-f23b5e50359e`
+
+Cleanup assertions:
+
+```text
+CASE-002 webhook active   = true
+CASE-003 webhook active   = false
+CASE-003 workflow active  = false
+CASE-002 unchanged        = true
+workflows                 = 14
+credentials               = 5
+```
+
+Post-cleanup backup:
+
+`/home/node/.n8n/backups/snapshot-2026-09-21T21-00-37-815Z-post-case003-gate8-disarm`
+
+SHA-256:
+
+`256041ed190bfdaf6cadf309c5b3daf079a49ca4766889be5298dd1d16a7d5ad`
+
+All Gate-8 one-shot variables were then reset to false.
+
+Final clean deployment:
+
+`622c0aa2-7db9-4d84-9ae8-0a63360f16fe`
+
+Terminal status: `SUCCESS`.
+
+Final startup evidence:
+
+```text
+sha256=256041ed190bfdaf6cadf309c5b3daf079a49ca4766889be5298dd1d16a7d5ad
+workflows=14
+credentials=5
+users=1
+workflow seed import skipped
+bootstrap complete
+```
+
+No Gate-8 prepare, arm, or disarm block executed during the final clean startup.
+
+During cleanup packaging, two intermediate Railway builds failed because a Dockerfile line contained a literal escaped newline. Those builds never deployed and therefore did not mutate live n8n or provider state. The Dockerfile was corrected, cleanup then completed successfully, and the final clean deployment above replaced the temporary proof state.
