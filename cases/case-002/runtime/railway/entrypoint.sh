@@ -297,5 +297,34 @@ if [ "${CASE003_GATE4_IMPORT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate4] load complete; snapshot remains candidate until control-plane publication"
 fi
 
+# CASE-003 Gate 4 execution proof on the published real SAP-report snapshot.
+# The workflow remains inactive and contains no outbound channel node.
+if [ "${CASE003_GATE4_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate4-test] guarded real-data double execution requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate4-test
+  node /opt/case002/validate-case003-gate4-execution.js pre
+
+  rm -f /tmp/case003-gate4-first.log /tmp/case003-gate4-second.log
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate4-first.log 2>&1
+  CASE003_GATE4_FIRST_RC=$?
+  set -e
+  node /opt/case002/validate-case003-gate4-execution.js first
+
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate4-second.log 2>&1
+  CASE003_GATE4_SECOND_RC=$?
+  set -e
+  node /opt/case002/validate-case003-gate4-execution.js second
+
+  rm -f /tmp/case003-gate4-first.log /tmp/case003-gate4-second.log /tmp/case003-gate4-execution.json
+  if [ "$CASE003_GATE4_FIRST_RC" -ne 0 ] || [ "$CASE003_GATE4_SECOND_RC" -ne 0 ]; then
+    echo "[case003-gate4-test] CLI non-zero first=$CASE003_GATE4_FIRST_RC second=$CASE003_GATE4_SECOND_RC"
+    exit 1
+  fi
+  node /opt/case002/backup-n8n-state.js post-case003-gate4-test
+  echo "[case003-gate4-test] PASS real snapshot first reserved=true; second reserved=false; duplicate blocked"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
