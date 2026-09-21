@@ -541,6 +541,15 @@ if [ "${CASE003_GATE9_IMPORT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate9] import complete; target inactive; existing state unchanged"
 fi
 
+# CASE-003 Gate 9 provider preparation: create an isolated inactive
+# Kapso webhook for the verification workflow. CASE-002 stays active.
+if [ "${CASE003_GATE9_PREPARE_KAPSO_WEBHOOK_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate9-webhook] guarded inactive Kapso webhook preparation requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate9-webhook-prepare
+  node /opt/case002/prepare-case003-gate9-kapso-webhook.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate9-webhook-prepare
+fi
+
 # CASE-003: one-shot READ-ONLY Kapso account discovery.
 # Uses the existing KAPSO API credential, lists phone-number/webhook metadata,
 # logs no credential secret values, performs no provider mutation.
