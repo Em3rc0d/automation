@@ -169,6 +169,16 @@ credentials=5
 
 This confirms the one-shot Gate-3 test is disabled and the persistent state survived restart.
 
+## Post-proof database hardening
+
+After the execution proof:
+
+- the search path of `case003.reserve_due_notification(...)` was pinned to `pg_catalog, case003, extensions`;
+- unnecessary `authenticated` execution grants were revoked from the two CASE-003 public RPC functions; the Railway path uses the publishable/anon API role plus the independent `x-case003-token` guard;
+- covering indexes were added for `notification_delivery.invoice_id` and `notification_delivery.snapshot_id`.
+
+Supabase performance advisor no longer reports unindexed foreign keys for CASE-003 notification delivery. The remaining CASE-003 security-advisor warning is the intentional anonymous-callable `SECURITY DEFINER` RPC surface; both CASE-003 RPC functions independently validate the additional integration token before returning or reserving data.
+
 ## Certification boundary
 
 Gate 3 certifies:
