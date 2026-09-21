@@ -21,19 +21,16 @@ real WhatsApp request
 
 ## Transport choice
 
-Preferred:
+Selected transport:
 
 ```text
-n8n Gmail node + OAuth2
+n8n Send Email node
+credential type = smtp
+node type       = n8n-nodes-base.emailSend
+node version    = 2.1
 ```
 
-Fallback:
-
-```text
-n8n Send Email node + SMTP credential
-```
-
-The repository does not require Resend or another CASE-specific mail SDK. Mail transport is an adapter; the verification state machine remains in PostgreSQL.
+This keeps the delivery path native to n8n and avoids introducing a CASE-specific external mail SDK. The verification state machine remains in PostgreSQL.
 
 ## Security boundary
 
@@ -53,21 +50,14 @@ The full test email is supplied only to the guarded RPC at delivery time and is 
 
 ## Required n8n credential
 
-Exactly one mail credential must be added to the existing n8n instance:
-
-Preferred credential type:
+Create exactly one dedicated SMTP credential in the existing n8n instance:
 
 ```text
-Gmail OAuth2
+credential name = CASE003 SMTP OTP
+credential type = smtp
 ```
 
-Alternative:
-
-```text
-SMTP
-```
-
-Do not reuse the Kapso, Supabase, Gemini, or control-plane credentials.
+Do not reuse the Kapso, Supabase, Gemini, or control-plane credentials. SMTP username/password or app-password values belong only in the n8n encrypted credential store and must never be committed to GitHub or pasted into CASE-003 evidence.
 
 ## Delivery workflow contract
 
@@ -106,6 +96,6 @@ Until those conditions pass, Gate 10 remains prepared but not certified.
 
 ## Current live status — 2026-09-21
 
-The live n8n instance contains 15 workflows and 5 credentials. Credential metadata inspection found no Gmail OAuth2 or SMTP credential. Therefore no email transport is currently armed.
+The live n8n instance contains 15 workflows and 5 credentials. Credential metadata inspection found no SMTP credential. Therefore no Gate-10 email transport is currently armed.
 
-The earlier Resend prototype was intentionally removed from the canonical runtime. The next runtime mutation is only the addition of a native n8n mail credential and the isolated Gate-10 mail workflow.
+The earlier Resend prototype was intentionally removed from the canonical runtime. Gmail OAuth2 is also not required for the selected design. The next runtime mutation is only the addition of the dedicated `CASE003 SMTP OTP` credential and the isolated Gate-10 mail workflow.
