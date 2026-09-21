@@ -124,3 +124,15 @@ HARDENED
 ```
 
 The business stages still marked `NEEDS_SYNTHESIS`, `IN_CERTIFICATION` or `CASE_POLICY` in `assembly.yaml` are exercised through the case test harness for acceptance purposes; that harness does not silently promote them into certified reusable baselines.
+
+## Portable replication bundle
+
+The current n8n/Gemini PoC can be reconstructed on Railway, a VPS, or local Docker from repository source. See:
+
+- `cases/case-002/portable/workflow-index.json` — canonical workflow IDs and JSON source paths;
+- `cases/case-002/portable/docker-compose.yml` — local/VPS stack;
+- `cases/case-002/portable/.env.example` — environment template with no secrets;
+- `cases/case-002/portable/README.md` — bootstrap, credential binding, one-shot composition and portability notes;
+- `cases/case-002/portable/REPLICATION-CHECKLIST.md` — post-clone verification checklist.
+
+Secrets, live credential IDs and persistent SQLite data are intentionally not committed.
