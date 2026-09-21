@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.2.0-gate3",
+  "runtimeVersion": "1.3.0-gate4",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -15,7 +15,9 @@
     "../build/notification-idempotency.sql",
     "../build/gate2-supabase-rpc.sql",
     "../build/gate3-reservation-core.sql",
-    "../build/gate3-reservation-rpc.sql"
+    "../build/gate3-reservation-rpc.sql",
+    "../build/gate4-import-provenance.sql",
+    "../build/gate4-batch-ingest-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
@@ -35,7 +37,12 @@
     "Gate 3 reserves notification keys in PostgreSQL before any delivery payload is allowed",
     "A duplicate reservation returns reserved=false and is filtered before delivery payload construction",
     "CASE-003 remains inactive through Gate 3",
-    "Gate 3 contains no outbound messaging node"
+    "Gate 3 contains no outbound messaging node",
+    "Gate 4 records source-file SHA-256 and row-count provenance before publication",
+    "Gate 4 real-report snapshots remain candidate until explicit atomic publication",
+    "Gate 4 publication requires all three datasets, zero blocking import errors, and non-empty canonical data",
+    "Gate 4 never interprets payment-date evidence as certified bank payment",
+    "Gate 4 does not commit raw SAP XLSX data or integration secrets to Git"
   ],
   "targets": [
     "local-linux",
@@ -95,5 +102,16 @@
     "postgresWorkflow": "n8n/case003-due-date-reservation-postgres.json",
     "defaultRuleCode": "due_3d",
     "coreSchema": "../build/gate3-reservation-core.sql"
+  },
+  "gate4": {
+    "provenanceSchema": "../build/gate4-import-provenance.sql",
+    "supabaseBatchRpc": "../build/gate4-batch-ingest-rpc.sql",
+    "sourceDatasets": [
+      "QQVA",
+      "SCIV",
+      "FBL1N"
+    ],
+    "publicationFunction": "case003.publish_snapshot(uuid)",
+    "currentCertifiedSnapshotId": "b1ea19f1-ed7d-54b5-9009-10759dd6126d"
   }
 }
