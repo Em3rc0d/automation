@@ -266,3 +266,28 @@ jobs:
           }
           console.log('PASS Gate-8 real WhatsApp evidence');
           NODE
+
+      - name: Validate Gate-9 verification artifacts
+        run: |
+          node --check cases/case-003/runtime/n8n/case003-kapso-verification-gate9.template.json >/dev/null 2>&1 || true
+          grep -q "prepare_email_verification" cases/case-003/build/gate9-verification-core.sql
+          grep -q "verify_email_code" cases/case-003/build/gate9-verification-core.sql
+          grep -q "operator_approve_verification" cases/case-003/build/gate9-verification-core.sql
+          grep -q "verify_provider_email_code" cases/case-003/build/gate9-provider-verification-core.sql
+          grep -q "case003_verify_provider_email_code_json" cases/case-003/build/gate9-provider-verification-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const w=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-kapso-verification-gate9.template.json','utf8'));
+          if(w.id!=='case003KapsoVerificationGate9V1'||w.active!==false) throw new Error('Gate-9 workflow identity/active invariant failed');
+          for(const id of ['kapso-webhook','kapso-hmac','verify-kapso-envelope','kapso-security-gate','normalize','has-verification-code','verify-provider-code','process-provider','assert-verification']) {
+            if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-9 node '+id);
+          }
+          if(w.nodes.some(n=>/kapso send|send message|whatsapp send|email send|smtp/i.test(String(n.name||'')))) throw new Error('Gate-9 outbound node detected');
+          if(w.settings?.saveDataSuccessExecution!=='none'||w.settings?.saveDataErrorExecution!=='none') throw new Error('Gate-9 must not persist verification execution payloads');
+          const raw=JSON.stringify(w);
+          if(!raw.includes('__CASE003_SUPABASE_URL__')||!raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')) throw new Error('Gate-9 portable placeholders missing');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.8.0-gate9') throw new Error('manifest not pinned to Gate 9');
+          if(m.gate9?.taxIdAuthenticates!==false||m.gate9?.autoBindFromTaxId!==false||m.gate9?.rawCodePersisted!==false||m.gate9?.whatsappOutboundDelivery!==false) throw new Error('Gate-9 trust invariant failed');
+          console.log('PASS Gate-9 verification artifacts');
+          NODE
