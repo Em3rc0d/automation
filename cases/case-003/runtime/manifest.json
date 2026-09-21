@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.8.1-gate9-hotfix",
+  "runtimeVersion": "1.8.2-gate9-hotfix",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -157,7 +157,8 @@
     "gate7ImportVerifier": "scripts/verify-gate7-import.js",
     "gate7HttpTest": "scripts/test-gate7-http.sh",
     "gate7HttpClient": "scripts/test-gate7-http.js",
-    "gate7TestStateVerifier": "scripts/verify-gate7-test-state.js"
+    "gate7TestStateVerifier": "scripts/verify-gate7-test-state.js",
+    "gate9Renderer": "scripts/render-gate9-verification-workflow.js"
   },
   "gate3": {
     "coreFunction": "case003.reserve_due_candidates(integer,text)",
@@ -356,6 +357,8 @@
     "hotfixImportDeployment": "612b059f-26ef-468f-b006-1143d99f26dd",
     "hotfixArmDeployment": "be7c8c99-e35a-47cc-b267-1c020ab8e8a6",
     "hotfixArmPostBackupSha256": "23e9423f443e286677a94311b9c0587eeddec099bc0762cbb6bc9298aabfcaf4",
-    "hotfixReadyForRealRetry": true
+    "hotfixReadyForRealRetry": true,
+    "portableRenderer": "scripts/render-gate9-verification-workflow.js",
+    "requiresResolvedRuntimePlaceholders": true
   }
 }
