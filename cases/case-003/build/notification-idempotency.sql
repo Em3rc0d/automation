@@ -1,6 +1,7 @@
 -- CASE-003 G2.1 notification idempotency ledger.
 -- Additive only: no existing CASE-002/n8n state is touched.
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists case003.notification_delivery (
   id uuid primary key default gen_random_uuid(),
