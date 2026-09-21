@@ -68,3 +68,26 @@ Verifier evidence:
 The environment variable `CASE003_DUE_DATE_IMPORT_ON_STARTUP` was set to `true` only for this import deployment and then immediately reset to `false`.
 
 This evidence certifies Gate 1 only: additive inactive workflow import with unchanged credential count and consistent before/after SQLite backups. It does not certify database connectivity or workflow execution.
+
+## Gate reset verification
+
+After the successful one-shot import, `CASE003_DUE_DATE_IMPORT_ON_STARTUP` was reset to `false`.
+
+Reset deployment: `c65282e1-0617-4378-a10a-95cc037e885e`
+
+Terminal status: `SUCCESS`
+
+Startup evidence after reset:
+
+```text
+workflows=10
+credentials=4
+users=1
+[case002] skipping workflow import; preserving persisted n8n state
+```
+
+Startup backup SHA-256:
+
+`f456ef7f036499855eb23942546a8c39acc9235ed29bebd2ec2a070e8399d0b1`
+
+This confirms the persistent post-import database survived the restart and the one-shot CASE-003 gate was no longer executed.
