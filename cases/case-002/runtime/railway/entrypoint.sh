@@ -525,6 +525,22 @@ if [ "${CASE003_GATE7_HTTP_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate7-http] PASS signed Kapso ingress + replay + connector binding + signature rejection; outbound disabled"
 fi
 
+# CASE-003 Gate 9: additive verified-identity provider workflow.
+# Imported inactive, reuses existing HMAC + CASE-003 RPC credentials, and
+# contains no WhatsApp/email outbound node.
+if [ "${CASE003_GATE9_IMPORT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate9] guarded additive verification workflow import requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate9-import
+  node /opt/case002/verify-case003-gate9-import.js pre
+  node /opt/case002/prepare-case003-gate9.js
+  n8n import:workflow --input=/tmp/case003-kapso-verification-gate9.json
+  rm -f /tmp/case003-kapso-verification-gate9.json
+  node /opt/case002/verify-case003-gate9-import.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate9-import
+  rm -f /tmp/case003-gate9-pre.json
+  echo "[case003-gate9] import complete; target inactive; existing state unchanged"
+fi
+
 # CASE-003: one-shot READ-ONLY Kapso account discovery.
 # Uses the existing KAPSO API credential, lists phone-number/webhook metadata,
 # logs no credential secret values, performs no provider mutation.
