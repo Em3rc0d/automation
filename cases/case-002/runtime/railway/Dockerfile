@@ -16,6 +16,8 @@ COPY cases/case-002/runtime/case003/due-date-evaluation.json /opt/case002/case00
 COPY cases/case-002/runtime/case003/due-date-evaluation-supabase-rpc.json /opt/case002/case003-due-date-evaluation-rpc.json
 COPY cases/case-002/runtime/case003/due-date-reservation-gate3.json /opt/case002/case003-due-date-reservation-gate3.json
 COPY cases/case-002/runtime/case003/due-date-reservation-gate4.json /opt/case002/case003-due-date-reservation-gate4.json
+COPY cases/case-002/runtime/case003/due-date-reservation-gate4-manual.json /opt/case002/case003-due-date-reservation-gate4-manual.json
+COPY cases/case-002/runtime/case003/due-date-reservation-gate4-schedule.json /opt/case002/case003-due-date-reservation-gate4-schedule.json
 COPY cases/case-002/runtime/railway/recover-workflows.js /opt/case002/recover-workflows.js
 COPY cases/case-002/runtime/railway/backup-n8n-state.js /opt/case002/backup-n8n-state.js
 COPY cases/case-002/runtime/railway/prepare-level2-reply-test.js /opt/case002/prepare-level2-reply-test.js
@@ -32,8 +34,9 @@ COPY cases/case-002/runtime/railway/import-case003-gate4.js /opt/case002/import-
 COPY cases/case-002/runtime/railway/load-case003-gate4.js /opt/case002/load-case003-gate4.js
 COPY cases/case-002/runtime/railway/load-case003-gate4-v2.js /opt/case002/load-case003-gate4-v2.js
 COPY cases/case-002/runtime/railway/validate-case003-gate4-execution.js /opt/case002/validate-case003-gate4-execution.js
+COPY cases/case-002/runtime/railway/verify-case003-trigger-split.js /opt/case002/verify-case003-trigger-split.js
 COPY cases/case-002/runtime/railway/entrypoint.sh /opt/case002/entrypoint.sh
-RUN chmod 755 /opt/case002/entrypoint.sh /opt/case002/recover-workflows.js /opt/case002/backup-n8n-state.js /opt/case002/prepare-level2-reply-test.js /opt/case002/prepare-level2-appointment-agent.js /opt/case002/prepare-level2-gemini-poc.js /opt/case002/verify-case003-import.js /opt/case002/inspect-case003-credentials.js /opt/case002/prepare-case003-gate2.js /opt/case002/verify-case003-gate2.js /opt/case002/validate-case003-gate2-execution.js /opt/case002/verify-case003-gate3.js /opt/case002/validate-case003-gate3-execution.js /opt/case002/load-case003-gate4.js /opt/case002/load-case003-gate4-v2.js /opt/case002/validate-case003-gate4-execution.js && chown -R node:node /opt/case002
+RUN chmod 755 /opt/case002/entrypoint.sh /opt/case002/recover-workflows.js /opt/case002/backup-n8n-state.js /opt/case002/prepare-level2-reply-test.js /opt/case002/prepare-level2-appointment-agent.js /opt/case002/prepare-level2-gemini-poc.js /opt/case002/verify-case003-import.js /opt/case002/inspect-case003-credentials.js /opt/case002/prepare-case003-gate2.js /opt/case002/verify-case003-gate2.js /opt/case002/validate-case003-gate2-execution.js /opt/case002/verify-case003-gate3.js /opt/case002/validate-case003-gate3-execution.js /opt/case002/load-case003-gate4.js /opt/case002/load-case003-gate4-v2.js /opt/case002/validate-case003-gate4-execution.js /opt/case002/verify-case003-trigger-split.js && chown -R node:node /opt/case002
 USER node
 
 ENTRYPOINT ["/opt/case002/entrypoint.sh"]
