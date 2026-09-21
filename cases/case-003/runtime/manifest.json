@@ -38,14 +38,18 @@
   ],
   "adapters": {
     "directPostgres": {
-      "workflow": "n8n/case003-due-date-evaluation.json",
-      "credentialType": "postgres"
+      "workflow": "n8n/case003-due-date-evaluation-postgres.json",
+      "credentialId": "case003PostgresV1",
+      "credentialName": "CASE003 PostgreSQL",
+      "credentialType": "postgres",
+      "configurator": "scripts/configure-gate2-postgres.sh"
     },
     "supabaseRpc": {
       "workflowTemplate": "n8n/case003-due-date-evaluation-supabase-rpc.template.json",
       "credentialId": "case003RpcAuthV1",
       "credentialType": "httpHeaderAuth",
-      "header": "x-case003-token"
+      "header": "x-case003-token",
+      "configurator": "scripts/configure-gate2-rpc.sh"
     }
   },
   "executionValidation": {
@@ -66,6 +70,8 @@
     "gate2ExecutionValidator": "scripts/validate-gate2-execution.js",
     "rpcCredentialGenerator": "scripts/prepare-rpc-credential.js",
     "rpcWorkflowRenderer": "scripts/render-supabase-rpc-workflow.js",
-    "rpcSecretRegistrationRenderer": "scripts/render-rpc-secret-registration.sh"
+    "rpcSecretRegistrationRenderer": "scripts/render-rpc-secret-registration.sh",
+    "gate2ConfigurePostgres": "scripts/configure-gate2-postgres.sh",
+    "postgresCredentialGenerator": "scripts/prepare-postgres-credential.js"
   }
 }
