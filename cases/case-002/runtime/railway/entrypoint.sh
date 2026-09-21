@@ -552,5 +552,14 @@ if [ "${CASE003_GATE8_ARM_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js post-case003-gate8-arm
 fi
 
+# CASE-003 Gate 8 post-proof cleanup: deactivate only the isolated
+# CASE-003 provider webhook/workflow; keep CASE-002 live.
+if [ "${CASE003_GATE8_DISARM_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate8-disarm] guarded post-proof cleanup requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate8-disarm
+  node /opt/case002/disarm-case003-gate8.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate8-disarm
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
