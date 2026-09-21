@@ -1,51 +1,96 @@
-# CASE-003 on Railway (reuse existing n8n)
+# CASE-003 on Railway — reuse the existing n8n service
 
-This target intentionally reuses an existing Linux n8n service and persistent volume. It does not create a new Railway project or service.
+This target reuses an existing Linux n8n service and its persistent volume. It intentionally does **not** create another Railway project or service.
 
-## Required live-runtime assets
+## Gate 1 — additive inactive workflow
 
-The n8n image must contain:
+Required live image assets:
 
-- `/opt/case002/case003-due-date-evaluation.json`
-- `/opt/case002/verify-case003-import.js`
-- `/opt/case002/backup-n8n-state.js`
+```text
+/opt/case002/case003-due-date-evaluation.json
+/opt/case002/verify-case003-import.js
+/opt/case002/backup-n8n-state.js
+```
 
-The startup entrypoint owns the one-shot gate.
-
-## Gate 1
-
-Set only:
+One-shot variable:
 
 ```text
 CASE003_DUE_DATE_IMPORT_ON_STARTUP=true
-CASE003_EXPECTED_PRE_WORKFLOWS=9
-CASE003_EXPECTED_PRE_CREDENTIALS=4
 ```
 
-For the current production environment the expected values are embedded as safe defaults in the verifier. Explicit variables are recommended when reproducing in another existing n8n instance.
-
-Expected startup evidence:
+The startup gate performs:
 
 ```text
-[case002-backup] ... workflows=9 credentials=4
-[case003-verify] PRE PASS workflows=9 credentials=4 target=absent
-...
-[case003-verify] POST PASS workflows=10 credentials=4 target=case003DueDateEvaluationV1 active=false
-[case002-backup] ... workflows=10 credentials=4
+consistent backup
+ -> verify baseline and CASE-003 absent
+ -> import exactly one workflow
+ -> verify workflow count +1
+ -> verify credential count unchanged
+ -> verify CASE-003 active=false
+ -> consistent backup
 ```
 
-After terminal deployment status `SUCCESS`, immediately set:
+After terminal deployment status `SUCCESS`, immediately reset the variable to `false` and verify the reset deployment also reaches `SUCCESS`.
+
+## Gate 2 — authenticated canonical query
+
+Before choosing a connector, inspect credential metadata only. Do not read secret payloads. If no existing credential is dedicated to CASE-003 PostgreSQL, do not repurpose one.
+
+The certified Railway path uses the Supabase RPC adapter and creates one new credential:
 
 ```text
-CASE003_DUE_DATE_IMPORT_ON_STARTUP=false
+id   = case003RpcAuthV1
+name = CASE003 Supabase RPC Token
+type = httpHeaderAuth
 ```
 
-and verify the subsequent deployment reaches `SUCCESS`. The verifier intentionally refuses a second additive import because the workflow ID already exists.
+The live startup verifier hashes the encrypted `data` of every pre-existing credential plus the nodes/connections of every non-CASE003 workflow. After the mutation it requires:
 
-## Recovery
+```text
+workflow count unchanged
+credential count +1
+all previous credential hashes unchanged
+all non-CASE003 workflow hashes unchanged
+CASE-003 active=false
+CASE-003 RPC node bound to case003RpcAuthV1
+```
 
-If Gate 1 fails, do not delete or edit existing workflows/credentials. Use the most recent `pre-case003-import` backup for investigation/recovery.
+The plaintext RPC token is supplied only as a temporary Railway secret for credential creation, is encrypted by n8n into credential storage, and is then cleared from the Railway service variable. PostgreSQL stores only its SHA-256 in `case003.integration_secret`.
+
+## Gate-2 execution proof
+
+The workflow remains inactive. A one-shot startup test runs:
+
+```text
+backup
+ -> checkpoint latest CASE-003 CLI execution ID
+ -> n8n execute --id=case003DueDateEvaluationV1
+ -> read the newly persisted execution from SQLite
+ -> parse n8n flatted run data
+ -> validate canonical result
+ -> backup
+```
+
+The validator does not depend on CLI log formatting and never prints credential payloads. The workflow contains no WhatsApp/channel-send node.
+
+One-shot variable:
+
+```text
+CASE003_GATE2_TEST_ON_STARTUP=true
+```
+
+After the test deployment reaches terminal `SUCCESS`, reset it to `false` and verify another `SUCCESS`.
+
+## Recovery law
+
+If any gate fails:
+
+1. Disable the one-shot gate before further investigation.
+2. Do not delete/edit existing workflows or credentials.
+3. Use the immediately preceding consistent backup as the rollback checkpoint.
+4. Correct the gate/verifier in the repository first.
+5. Retry only after the corrected image reaches `SUCCESS` with the gate disabled.
 
 ## Secrets
 
-No database passwords, Supabase service-role keys, n8n encryption keys, or credential payloads belong in this repository.
+No database password, Supabase service-role key, n8n encryption key, RPC plaintext token, or n8n credential payload belongs in Git. Portable files contain only schemas, placeholders, IDs and non-secret configuration.
