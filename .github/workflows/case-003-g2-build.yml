@@ -22,28 +22,74 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+
       - name: Test canonical normalization and due-date projection
         run: node cases/case-003/build/test-g2.js
-      - name: Validate n8n workflow JSON and portable mirror
+
+      - name: Validate Gate-1 n8n workflow mirror
         run: |
           node - <<'NODE'
           const fs=require('fs');
           const source=JSON.parse(fs.readFileSync('cases/case-003/build/n8n-due-date-workflow.json','utf8'));
           const portable=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-due-date-evaluation.json','utf8'));
           if(source.id!=='case003DueDateEvaluationV1') throw new Error('source workflow ID not pinned');
-          if(source.active!==false || portable.active!==false) throw new Error('Gate-1 workflow must be inactive');
-          if(JSON.stringify(source)!==JSON.stringify(portable)) throw new Error('portable workflow drifted from source workflow');
-          console.log('PASS n8n workflow mirror');
+          if(source.active!==false || portable.active!==false) throw new Error('workflow must remain inactive');
+          if(JSON.stringify(source)!==JSON.stringify(portable)) throw new Error('portable Gate-1 workflow drifted from source');
+          console.log('PASS Gate-1 n8n workflow mirror');
           NODE
+
+      - name: Validate Gate-2 Supabase RPC template
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-due-date-evaluation-supabase-rpc.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003DueDateEvaluationV1') throw new Error('Gate-2 workflow ID mismatch');
+          if(w.active!==false) throw new Error('Gate-2 workflow must remain inactive');
+          const rpc=w.nodes.find(n=>n.id==='query-rpc');
+          if(!rpc) throw new Error('RPC node missing');
+          if(rpc.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('dedicated Gate-2 credential binding missing');
+          if(!raw.includes('__CASE003_SUPABASE_URL__') || !raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')) throw new Error('portable placeholders missing');
+          if(raw.includes('zqcwlnshtsectitagkca')) throw new Error('environment-specific Supabase project leaked into portable template');
+          if(/whatsapp|\/messages/i.test(raw)) throw new Error('channel delivery must not exist in Gate 2');
+          console.log('PASS Gate-2 Supabase RPC template');
+          NODE
+
+      - name: Validate portable Gate-2 schema and scripts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-supabase-rpc-workflow.js
+          node --check cases/case-003/runtime/scripts/prepare-rpc-credential.js
+          node --check cases/case-003/runtime/scripts/validate-gate2-execution.js
+          sh -n cases/case-003/runtime/scripts/render-rpc-secret-registration.sh
+          sh -n cases/case-003/runtime/scripts/test-gate2.sh
+          grep -q "case003_due_candidates" cases/case-003/build/gate2-supabase-rpc.sql
+          grep -q "integration_secret" cases/case-003/build/gate2-supabase-rpc.sql
+          if grep -q "59d8928d605eee85f2cffa72cb3861e2b68d15867d7ca55166c291b525d7a953" cases/case-003/build/gate2-supabase-rpc.sql; then
+            echo "production Gate-2 secret hash must not be committed"
+            exit 1
+          fi
+
       - name: Validate portable runtime manifest
         run: |
           node - <<'NODE'
           const fs=require('fs');
           const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
           if(m.caseId!=='CASE-003') throw new Error('wrong caseId');
+          if(m.runtimeVersion!=='1.1.0-gate2') throw new Error('runtime manifest not pinned to Gate 2');
           if(m.workflow.id!=='case003DueDateEvaluationV1' || m.workflow.active!==false) throw new Error('workflow manifest invariant failed');
-          for(const p of ['cases/case-003/build/canonical-model.sql','cases/case-003/build/notification-idempotency.sql','cases/case-003/runtime/docker-compose.yml','cases/case-003/runtime/scripts/import-workflow.sh']) {
+          if(!m.schemas.includes('../build/gate2-supabase-rpc.sql')) throw new Error('Gate-2 RPC schema absent from manifest');
+          if(m.adapters?.supabaseRpc?.credentialId!=='case003RpcAuthV1') throw new Error('Gate-2 credential manifest mismatch');
+          for(const p of [
+            'cases/case-003/build/canonical-model.sql',
+            'cases/case-003/build/notification-idempotency.sql',
+            'cases/case-003/build/gate2-supabase-rpc.sql',
+            'cases/case-003/runtime/docker-compose.yml',
+            'cases/case-003/runtime/scripts/import-workflow.sh',
+            'cases/case-003/runtime/scripts/test-gate2.sh',
+            'cases/case-003/runtime/scripts/validate-gate2-execution.js'
+          ]) {
             if(!fs.existsSync(p)) throw new Error('missing runtime artifact: '+p);
           }
-          console.log('PASS portable runtime manifest');
+          console.log('PASS portable Gate-2 runtime manifest');
           NODE
