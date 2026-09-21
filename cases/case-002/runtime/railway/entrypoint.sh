@@ -297,6 +297,20 @@ if [ "${CASE003_GATE4_IMPORT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate4] load complete; snapshot remains candidate until control-plane publication"
 fi
 
+# CASE-003 Gate 4 binding: replace only CASE-003 with a fresh probe-rule
+# workflow for the published real SAP snapshot. Reuses the existing CASE-003
+# credential and the Gate-3 state verifier; all non-CASE003 state is immutable.
+if [ "${CASE003_GATE4_BIND_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate4] guarded real-SAP workflow binding requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate4-bind
+  node /opt/case002/verify-case003-gate3.js pre
+  n8n import:workflow --input=/opt/case002/case003-due-date-reservation-gate4.json
+  node /opt/case002/verify-case003-gate3.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate4-bind
+  rm -f /tmp/case003-gate3-pre.json
+  echo "[case003-gate4] binding complete; CASE-003 inactive; credentials unchanged"
+fi
+
 # CASE-003 Gate 4 execution proof on the published real SAP-report snapshot.
 # The workflow remains inactive and contains no outbound channel node.
 if [ "${CASE003_GATE4_TEST_ON_STARTUP:-false}" = "true" ]; then
