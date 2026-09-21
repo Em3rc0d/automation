@@ -195,5 +195,11 @@ if [ "${CASE003_DUE_DATE_IMPORT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003] import complete; workflow remains inactive and credentials untouched"
 fi
 
+# CASE-003 read-only credential metadata inspection. Secret payloads are never read.
+if [ "${CASE003_INSPECT_CREDENTIALS_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003] read-only credential metadata inspection requested"
+  node /opt/case002/inspect-case003-credentials.js
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
