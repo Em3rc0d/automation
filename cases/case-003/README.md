@@ -45,7 +45,7 @@ idempotent notification reservation
 trusted-contact verification
         |
         v
-email delivery adapter (Gate 10; Gmail OAuth2 preferred)
+email delivery adapter (Gate 10; SMTP via n8n Send Email)
 ```
 
 Business truth lives in PostgreSQL/Supabase. n8n remains an execution/orchestration engine.
@@ -70,6 +70,6 @@ See:
 
 Gate 10 is the transport boundary for the email verification code. The identity core remains provider-neutral: PostgreSQL creates and hashes the challenge; n8n delivers it through a mail connector and records delivery outcome.
 
-For the controlled real test, the repository keeps the SAP trusted-contact data unchanged and uses a short-lived test override whose database representation is only SHA-256 + masked destination. The preferred runtime transport is the native n8n Gmail node with OAuth2; SMTP via n8n `Send Email` is the supported fallback. No Resend-specific runtime is part of the canonical design.
+For the controlled real test, the repository keeps the SAP trusted-contact data unchanged and uses a short-lived test override whose database representation is only SHA-256 + masked destination. The selected runtime transport is the native n8n `Send Email` node using an SMTP credential. No Gmail OAuth2 or Resend-specific runtime is required by the canonical design.
 
 See `runtime/gate10-email-delivery.md`.
