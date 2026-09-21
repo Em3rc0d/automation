@@ -257,3 +257,75 @@ Post-arm backup: `/home/node/.n8n/backups/snapshot-2026-09-21T21-32-31-465Z-post
 Post-arm SHA-256: `bf53882c442e8bac8756e2e6b666f157221435ab4fda143e99d9421e2ebae383`
 
 The one-shot arm variable was reset to false without triggering another deployment. The running Gate-9 path remains armed only for the explicit real test; future unrelated deployments will not re-run the arm mutation automatically.
+
+
+## First real-provider attempt — defect found and repaired
+
+The user sent the real WhatsApp message:
+
+```text
+RUC 20511914125 FACTURA 01-FM01-0096939
+```
+
+CASE-002 continued normally and its existing webhook returned HTTP 200 at approximately `2026-09-21T21:44:43Z`.
+
+The isolated Gate-9 webhook also received the provider delivery, but the first real execution exposed a workflow-source defect before any database RPC was called:
+
+```text
+POST /webhook/case003/adapters/kapso/whatsapp/verification
+21:44:51Z -> HTTP 500
+21:45:02Z -> HTTP 500
+21:45:42Z -> HTTP 500
+
+Normalize Kapso Message
+SyntaxError: Invalid or unexpected token
+```
+
+The malformed source contained a literal escaped newline inside the Code-node program. The same node also referenced `verificationCode` before defining it. Because execution failed in the normalization node, no new `channel_message`, `verification_request`, or `verification_challenge` row was created from this real attempt.
+
+The source was repaired in both the live Railway source branch and the canonical CASE-003 branch. The parser now:
+
+- contains real JavaScript newlines rather than literal `\\n` tokens,
+- explicitly extracts a 12-character hexadecimal code from `CODIGO/CÓDIGO/CODE/OTP` or a bare 12-character code,
+- defines `verificationCode` before it is used,
+- passes syntax validation for every Code node before repository update.
+
+Commits:
+
+```text
+live runtime parser fix  = 3692a37b38a34c5158fb7f41b8dd10bd14be4ecd
+canonical parser fix     = 530b578e30889dc1ed14abe35c5f67008bfdb34a
+guarded replacement fix  = 4525de492dcd517a3c9f084827c962104264896e
+```
+
+The existing broken Gate-9 workflow was first disarmed. A guarded replacement path was then added to the verifier: replacing an existing Gate-9 workflow is allowed only while that target is inactive; all other workflows and all credential payload hashes remain immutable.
+
+Certified hotfix replacement:
+
+```text
+deployment = 612b059f-26ef-468f-b006-1143d99f26dd
+status     = SUCCESS
+PRE        = target=replace-inactive
+POST       = workflows=15 credentials=5 target=inactive sourceUnchanged=true
+backup     = sha256:88ae515a6bc265f86b749a355ed7fe3ee2bdac927134a0729a9e17b1477f4290
+```
+
+Gate 9 was then armed again:
+
+```text
+deployment = be7c8c99-e35a-47cc-b267-1c020ab8e8a6
+status     = SUCCESS
+
+gate9WebhookActive=true
+gate9WorkflowActive=true
+case002Unchanged=true
+whatsappOutboundDisabled=true
+emailOutboundDisabled=true
+
+post-arm backup sha256 =
+23e9423f443e286677a94311b9c0587eeddec099bc0762cbb6bc9298aabfcaf4
+```
+
+The one-shot arm/import/disarm variables were reset to `false` without redeploying, so the currently running Gate-9 path stays armed for the explicit retry while unrelated future deployments will not repeat the mutation automatically.
+
+The real-provider verification-init proof therefore remains **pending one user resend** after this hotfix; it is not falsely marked as certified.
