@@ -6,6 +6,8 @@ CASE-003 proves a portable supplier/AP automation path from SAP report exports t
 
 - `build/canonical-model.sql` — PostgreSQL/Supabase canonical model.
 - `build/notification-idempotency.sql` — durable notification reservation ledger.
+- `build/gate3-reservation-core.sql` — portable PostgreSQL due-candidate reservation core.
+- `build/gate3-reservation-rpc.sql` — Supabase/PostgREST authenticated Gate-3 wrapper.
 - `build/normalize-and-reconcile.js` — QQVA/SCIV/FBL1N normalization and reconciliation logic.
 - `build/n8n-due-date-workflow.json` — source n8n workflow.
 - `build/synthetic-fixtures.json` — synthetic domain fixture.
