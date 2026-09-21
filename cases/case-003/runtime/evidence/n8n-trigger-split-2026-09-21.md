@@ -89,3 +89,49 @@ Startup backup SHA-256:
 ## Boundary
 
 This remediation addresses the editor partial-execution topology issue. It does not change the Gate-4 real SAP snapshot, reservation semantics, credential contents, or outbound-delivery boundary.
+
+
+## Post-split manual verification
+
+After the trigger split, executing the **entire** `CASE-003 Due Date Evaluation` workflow from the editor succeeds:
+
+```text
+Manual Gate Test               -> executed
+Reserve Due Notifications      -> 1 item
+Allow Newly Reserved           -> executed
+reserved=false                 -> 0 output items
+Build Notification Payload     -> not executed
+workflow                       -> SUCCESS
+```
+
+Observed real row:
+
+```text
+invoice_reference         = 01-FM01-0096939
+snapshot_id               = b1ea19f1-ed7d-54b5-9009-10759dd6126d
+canonical_due_date        = 2026-09-21
+due_date_source           = FBL1N
+payment_status_evidence   = PAYMENT_DATE_EVIDENCE
+reserved                  = false
+```
+
+This is the intended duplicate-suppression result.
+
+### Residual n8n editor limitation
+
+Using **Execute step** on a downstream node can still trigger n8n 2.38.7 partial-execution code and fail with:
+
+```text
+Cannot read properties of null (reading 'Manual Gate Test')
+```
+
+Railway logs place this residual failure in `runPartialWorkflow2` / `find-start-nodes.ts`.
+
+This does **not** affect complete workflow execution, the canonical query, or database idempotency. The certified operating rule for this pinned n8n version is:
+
+```text
+Use full workflow execution for CASE-003 certification/runtime tests.
+Do not use downstream "Execute step" as execution evidence.
+```
+
+A future n8n version upgrade should be tested separately before changing the pinned runtime.
