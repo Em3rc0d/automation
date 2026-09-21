@@ -1,0 +1,155 @@
+{
+  "id": "case003SupplierQueryGate5V1",
+  "name": "CASE-003 Supplier Invoice Query Gate 5",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Manual Gate 5 Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tenant='30000000-0000-0000-0000-000000000000';\nconst invoice='01-FM01-0096939';\nreturn [\n  {json:{trace_id:'gate5-positive',tenant_id:tenant,channel:'test',subject:'gate5-pe10-authorized-v1',invoice_reference:invoice,expected:'FOUND'}},\n  {json:{trace_id:'gate5-wrong-vendor',tenant_id:tenant,channel:'test',subject:'gate5-other-vendor-v1',invoice_reference:invoice,expected:'NOT_FOUND_OR_NOT_AUTHORIZED'}},\n  {json:{trace_id:'gate5-no-permission',tenant_id:tenant,channel:'test',subject:'gate5-no-permission-v1',invoice_reference:invoice,expected:'NOT_FOUND_OR_NOT_AUTHORIZED'}},\n  {json:{trace_id:'gate5-unknown',tenant_id:tenant,channel:'test',subject:'gate5-unknown-user-v1',invoice_reference:invoice,expected:'AUTH_REQUIRED'}}\n];"
+      },
+      "id": "cases",
+      "name": "Generate Access Cases",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zqcwlnshtsectitagkca.supabase.co/rest/v1/rpc/case003_supplier_invoice_query_json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_iWaIWQJ66b49OcT_lwaJ9Q_-Hi_DoqP"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({p_tenant_id:$json.tenant_id,p_channel:$json.channel,p_subject:$json.subject,p_invoice_reference:$json.invoice_reference,p_trace_id:$json.trace_id}) }}",
+        "options": {}
+      },
+      "id": "query",
+      "name": "Query Supplier Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "case003RpcAuthV1",
+          "name": "CASE003 Supabase RPC Token"
+        }
+      },
+      "notes": "Gate 5 authenticated supplier invoice query. Uses synthetic opaque test identities and the real Gate-4 canonical snapshot."
+    },
+    {
+      "parameters": {
+        "jsCode": "const expected={\n  'gate5-positive':'FOUND',\n  'gate5-wrong-vendor':'NOT_FOUND_OR_NOT_AUTHORIZED',\n  'gate5-no-permission':'NOT_FOUND_OR_NOT_AUTHORIZED',\n  'gate5-unknown':'AUTH_REQUIRED',\n};\nconst required=new Set(Object.keys(expected));\nfor (const item of items) {\n  const j=item.json;\n  if (!j || !required.has(j.trace_id)) throw new Error('Unexpected Gate-5 trace_id');\n  if (j.decision!==expected[j.trace_id]) throw new Error('Gate-5 decision mismatch for '+j.trace_id+': '+j.decision);\n  if (j.trace_id==='gate5-positive') {\n    if (j.invoice_reference!=='01-FM01-0096939') throw new Error('Positive invoice mismatch');\n    if (j.company_code!=='PE10') throw new Error('Positive company scope mismatch');\n    if (j.fi_document_number!=='5100028290') throw new Error('Positive FI document mismatch');\n    if (j.snapshot_id!=='b1ea19f1-ed7d-54b5-9009-10759dd6126d') throw new Error('Positive snapshot mismatch');\n  } else {\n    for (const k of ['invoice_reference','company_code','fi_document_number','snapshot_id']) {\n      if (j[k]!==null && j[k]!==undefined) throw new Error('Denied/auth-required case leaked '+k+' for '+j.trace_id);\n    }\n  }\n  required.delete(j.trace_id);\n}\nif (required.size) throw new Error('Missing Gate-5 decisions: '+[...required].join(','));\nreturn items.map(item=>({json:{...item.json,gate5Assertion:true}}));"
+      },
+      "id": "assert",
+      "name": "Assert Access Decisions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item=>{\n  const j=item.json;\n  if (j.decision==='FOUND') {\n    return {json:{\n      trace_id:j.trace_id,\n      decision:j.decision,\n      response_type:'invoice_status',\n      invoice_reference:j.invoice_reference,\n      company_code:j.company_code,\n      fi_document_number:j.fi_document_number,\n      canonical_due_date:j.canonical_due_date,\n      due_date_source:j.due_date_source,\n      due_date_conflict:j.due_date_conflict,\n      payment_status_evidence:j.payment_status_evidence,\n      days_to_due:j.days_to_due,\n      overdue_days:j.overdue_days,\n      published_at:j.published_at,\n      snapshot_id:j.snapshot_id,\n      safe_to_respond:true,\n      channel_delivery:'disabled'\n    }};\n  }\n  if (j.decision==='AUTH_REQUIRED') {\n    return {json:{trace_id:j.trace_id,decision:j.decision,response_type:'verification_required',safe_to_respond:true,channel_delivery:'disabled'}};\n  }\n  return {json:{trace_id:j.trace_id,decision:j.decision,response_type:'neutral_not_found_or_not_authorized',safe_to_respond:true,channel_delivery:'disabled'}};\n});"
+      },
+      "id": "response",
+      "name": "Build Safe Supplier Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Gate 5 Test": {
+      "main": [
+        [
+          {
+            "node": "Generate Access Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Access Cases": {
+      "main": [
+        [
+          {
+            "node": "Query Supplier Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Supplier Invoice": {
+      "main": [
+        [
+          {
+            "node": "Assert Access Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assert Access Decisions": {
+      "main": [
+        [
+          {
+            "node": "Build Safe Supplier Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "caseId": "CASE-003",
+    "purpose": "Gate-5 supplier identity/membership/permission/resource-ownership query proof. Inactive. No outbound delivery."
+  }
+}
