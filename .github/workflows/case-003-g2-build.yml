@@ -61,8 +61,12 @@ jobs:
           node --check cases/case-003/runtime/scripts/render-supabase-rpc-workflow.js
           node --check cases/case-003/runtime/scripts/prepare-rpc-credential.js
           node --check cases/case-003/runtime/scripts/validate-gate2-execution.js
+          node --check cases/case-003/runtime/scripts/verify-gate2-binding.js
           sh -n cases/case-003/runtime/scripts/render-rpc-secret-registration.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate2-rpc.sh
           sh -n cases/case-003/runtime/scripts/test-gate2.sh
+          grep -q "CASE003_SUPABASE_URL" cases/case-003/runtime/docker-compose.yml
+          grep -q "CASE003_RPC_TOKEN" cases/case-003/runtime/docker-compose.yml
           grep -q "case003_due_candidates" cases/case-003/build/gate2-supabase-rpc.sql
           grep -q "integration_secret" cases/case-003/build/gate2-supabase-rpc.sql
           if grep -q "59d8928d605eee85f2cffa72cb3861e2b68d15867d7ca55166c291b525d7a953" cases/case-003/build/gate2-supabase-rpc.sql; then
@@ -86,10 +90,13 @@ jobs:
             'cases/case-003/build/gate2-supabase-rpc.sql',
             'cases/case-003/runtime/docker-compose.yml',
             'cases/case-003/runtime/scripts/import-workflow.sh',
+            'cases/case-003/runtime/scripts/configure-gate2-rpc.sh',
+            'cases/case-003/runtime/scripts/verify-gate2-binding.js',
             'cases/case-003/runtime/scripts/test-gate2.sh',
             'cases/case-003/runtime/scripts/validate-gate2-execution.js'
           ]) {
             if(!fs.existsSync(p)) throw new Error('missing runtime artifact: '+p);
           }
+          if(m.scripts?.gate2ConfigureRpc!=='scripts/configure-gate2-rpc.sh') throw new Error('Gate-2 configurator absent from manifest');
           console.log('PASS portable Gate-2 runtime manifest');
           NODE
