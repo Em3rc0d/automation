@@ -51,6 +51,7 @@ COPY cases/case-002/runtime/railway/prepare-case003-gate9.js /opt/case002/prepar
 COPY cases/case-002/runtime/railway/prepare-case003-gate9-kapso-webhook.js /opt/case002/prepare-case003-gate9-kapso-webhook.js
 COPY cases/case-002/runtime/railway/arm-case003-gate9.js /opt/case002/arm-case003-gate9.js
 COPY cases/case-002/runtime/railway/disarm-case003-gate9.js /opt/case002/disarm-case003-gate9.js
+COPY cases/case-002/runtime/railway/gate10-resend-delivery.js /opt/case002/gate10-resend-delivery.js
 COPY cases/case-002/runtime/railway/verify-case003-gate9-import.js /opt/case002/verify-case003-gate9-import.js
 COPY cases/case-002/runtime/railway/inspect-case003-kapso-account.js /opt/case002/inspect-case003-kapso-account.js
 COPY cases/case-002/runtime/railway/prepare-case003-gate8-kapso-webhook.js /opt/case002/prepare-case003-gate8-kapso-webhook.js
