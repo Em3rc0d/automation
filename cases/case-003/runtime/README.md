@@ -199,6 +199,12 @@ Artifacts:
 - `n8n/case003-due-date-reservation-manual.template.json`
 - `n8n/case003-due-date-reservation-schedule.template.json`
 
+## Gate 5 — supplier access control
+
+Gate 5 proves `identity -> verified -> membership -> invoice.read -> ownership -> canonical invoice -> safe response -> audit` against the real Gate-4 snapshot. See `gate5-supplier-query.md`.
+
+The n8n proof is additive, inactive, manual-only and outbound-free. Four synthetic channel identities exercise positive access, wrong supplier scope, missing permission and unknown identity without storing any real supplier phone/email.
+
 ## Railway
 
 Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
