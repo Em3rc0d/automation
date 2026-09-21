@@ -31,9 +31,21 @@ async function rpc(name,body){
 
 function loadBundle(){
   if(!/^[A-Za-z0-9+/]+={0,2}$/.test(keyB64)) fail('CASE003_GATE4_KEY_B64 missing/invalid');
-  const files=fs.readdirSync(PAYLOAD_DIR).filter(x=>/^part-\d+\.txt$/.test(x)).sort();
-  if(files.length<1) fail('encrypted Gate-4 payload parts missing');
-  const outerB64=files.map(f=>fs.readFileSync(path.join(PAYLOAD_DIR,f),'utf8').trim()).join('');
+  let chunks=[];
+  if(fs.existsSync(PAYLOAD_DIR)){
+    const files=fs.readdirSync(PAYLOAD_DIR).filter(x=>/^part-\d+\.txt$/.test(x)).sort();
+    chunks=files.map(f=>fs.readFileSync(path.join(PAYLOAD_DIR,f),'utf8').trim());
+  }
+  if(chunks.length<1){
+    for(let i=1;i<=99;i++){
+      const key='CASE003_GATE4_BUNDLE_'+String(i).padStart(2,'0');
+      const value=String(process.env[key]||'').trim();
+      if(!value) break;
+      chunks.push(value);
+    }
+  }
+  if(chunks.length<1) fail('encrypted Gate-4 payload parts missing');
+  const outerB64=chunks.join('');
   const envelope=JSON.parse(Buffer.from(outerB64,'base64').toString('utf8'));
   if(envelope.v!==4||envelope.alg!=='AES-256-GCM'||envelope.compression!=='brotli') fail('unsupported Gate-4 envelope');
   const key=Buffer.from(keyB64,'base64');
