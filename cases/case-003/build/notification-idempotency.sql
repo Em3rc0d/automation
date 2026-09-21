@@ -25,7 +25,9 @@ drop function if exists case003.reserve_due_notification(uuid,uuid,text,date,uui
 create function case003.reserve_due_notification(
   p_tenant_id uuid,p_invoice_id uuid,p_rule_code text,p_canonical_due_date date,p_snapshot_id uuid
 ) returns table(notification_id uuid,out_idempotency_key text,reserved boolean)
-language plpgsql security invoker as $$
+language plpgsql security invoker
+set search_path = pg_catalog, case003, extensions
+as $
 declare v_key text; v_id uuid;
 begin
  v_key:=encode(digest(p_tenant_id::text||'|'||p_invoice_id::text||'|'||p_rule_code||'|'||coalesce(p_canonical_due_date::text,'')||'|'||p_snapshot_id::text,'sha256'),'hex');
