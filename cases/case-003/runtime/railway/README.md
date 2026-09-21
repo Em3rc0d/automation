@@ -81,6 +81,35 @@ CASE003_GATE2_TEST_ON_STARTUP=true
 
 After the test deployment reaches terminal `SUCCESS`, reset it to `false` and verify another `SUCCESS`.
 
+## Gate 3 — durable reservation and duplicate suppression
+
+The Gate-3 live image reuses `case003RpcAuthV1`; it does not create or edit credentials. A one-shot binding gate replaces only the inactive CASE-003 workflow with the reservation path and verifies all credential hashes and all non-CASE003 workflow hashes are unchanged.
+
+One-shot bind variable:
+
+```text
+CASE003_GATE3_BIND_ON_STARTUP=true
+```
+
+After the bind deployment reaches `SUCCESS`, reset it to `false`.
+
+The execution proof then runs the inactive workflow twice:
+
+```text
+first run  -> DB reservation -> reserved=true  -> payload allowed
+second run -> same DB key     -> reserved=false -> payload blocked
+```
+
+One-shot test variable:
+
+```text
+CASE003_GATE3_TEST_ON_STARTUP=true
+```
+
+The production-like shared test database uses the probe rule `due_3d_gate3_v1` so the proof does not delete or rewrite the historical `due_3d` reservation created during earlier G2.1 testing. The rule code is part of the idempotency key.
+
+After terminal `SUCCESS`, reset the test gate to `false` and verify a final clean `SUCCESS`.
+
 ## Recovery law
 
 If any gate fails:
