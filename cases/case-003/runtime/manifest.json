@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.1.0-gate2",
+  "runtimeVersion": "1.2.0-gate3",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -13,7 +13,8 @@
   "schemas": [
     "../build/canonical-model.sql",
     "../build/notification-idempotency.sql",
-    "../build/gate2-supabase-rpc.sql"
+    "../build/gate2-supabase-rpc.sql",
+    "../build/gate3-reservation-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
@@ -28,7 +29,12 @@
     "Gate 2 never edits pre-existing credentials",
     "Gate 2 never edits non-CASE003 workflows",
     "Supabase RPC stores only SHA-256 of the integration token",
-    "CASE-003 remains inactive through Gate 2"
+    "CASE-003 remains inactive through Gate 2",
+    "Gate 3 reuses the dedicated CASE-003 credential without editing credential payloads",
+    "Gate 3 reserves notification keys in PostgreSQL before any delivery payload is allowed",
+    "A duplicate reservation returns reserved=false and is filtered before delivery payload construction",
+    "CASE-003 remains inactive through Gate 3",
+    "Gate 3 contains no outbound messaging node"
   ],
   "targets": [
     "local-linux",
@@ -72,6 +78,19 @@
     "rpcWorkflowRenderer": "scripts/render-supabase-rpc-workflow.js",
     "rpcSecretRegistrationRenderer": "scripts/render-rpc-secret-registration.sh",
     "gate2ConfigurePostgres": "scripts/configure-gate2-postgres.sh",
-    "postgresCredentialGenerator": "scripts/prepare-postgres-credential.js"
+    "postgresCredentialGenerator": "scripts/prepare-postgres-credential.js",
+    "gate3ConfigureRpc": "scripts/configure-gate3-rpc.sh",
+    "gate3ConfigurePostgres": "scripts/configure-gate3-postgres.sh",
+    "gate3Renderer": "scripts/render-gate3-supabase-workflow.js",
+    "gate3BindingVerifier": "scripts/verify-gate3-binding.js",
+    "gate3ExecutionTest": "scripts/test-gate3.sh",
+    "gate3ExecutionValidator": "scripts/validate-gate3-execution.js"
+  },
+  "gate3": {
+    "coreFunction": "case003.reserve_due_candidates(integer,text)",
+    "supabaseRpc": "public.case003_reserve_due_candidates(integer,text)",
+    "supabaseWorkflowTemplate": "n8n/case003-due-date-reservation-supabase-rpc.template.json",
+    "postgresWorkflow": "n8n/case003-due-date-reservation-postgres.json",
+    "defaultRuleCode": "due_3d"
   }
 }
