@@ -31,7 +31,8 @@ create table if not exists case003.verification_request (
   expires_at timestamptz not null,
   created_at timestamptz not null default now(),
   approved_external_user_id uuid,
-  approved_membership_id uuid
+  approved_membership_id uuid,
+  requested_invoice_reference text
 );
 
 create index if not exists case003_channel_message_subject_idx
@@ -217,10 +218,10 @@ begin
 
   insert into case003.verification_request(
     tenant_id,channel,subject_hash,candidate_supplier_id,candidate_vendor_id,company_code_scope,
-    claimed_tax_id,trusted_contact_masked,status,delivery_status,expires_at
+    claimed_tax_id,trusted_contact_masked,status,delivery_status,expires_at,requested_invoice_reference
   ) values(
     p_tenant_id,p_channel,p_subject_hash,candidate_supplier,candidate_vendor,candidate_company,
-    p_claimed_tax_id,masked,'pending','disabled',now()+interval '15 minutes'
+    p_claimed_tax_id,masked,'pending','disabled',now()+interval '15 minutes',p_invoice_reference
   )
   returning id into request_id;
 
