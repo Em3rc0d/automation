@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - case003_pg:/var/lib/postgresql/data
+      - ../build/canonical-model.sql:/docker-entrypoint-initdb.d/001-canonical-model.sql:ro
+      - ../build/notification-idempotency.sql:/docker-entrypoint-initdb.d/002-notification-idempotency.sql:ro
+      - ./sql/010-synthetic-smoke.sql:/docker-entrypoint-initdb.d/010-synthetic-smoke.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  n8n:
+    image: n8nio/n8n:2.38.7
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      N8N_USER_FOLDER: /home/node
+      DB_SQLITE_DATABASE: /home/node/.n8n/database.sqlite
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+      TZ: ${TZ}
+      CASE003_EXPECTED_PRE_WORKFLOWS: ${CASE003_EXPECTED_PRE_WORKFLOWS:-0}
+      CASE003_EXPECTED_PRE_CREDENTIALS: ${CASE003_EXPECTED_PRE_CREDENTIALS:-0}
+    ports:
+      - "5678:5678"
+    volumes:
+      - case003_n8n:/home/node/.n8n
+      - ./n8n:/opt/case003/n8n:ro
+      - ./scripts:/opt/case003/scripts:ro
+
+volumes:
+  case003_pg:
+  case003_n8n:
