@@ -13,9 +13,13 @@ if(!['pre','post'].includes(mode)){
 }
 
 const targetWorkflowId='case003DueDateEvaluationV1';
-const targetCredentialId='case003RpcAuthV1';
-const targetCredentialName='CASE003 Supabase RPC Token';
+const targetCredentialId=process.env.CASE003_GATE2_CREDENTIAL_ID||'case003RpcAuthV1';
+const targetCredentialName=process.env.CASE003_GATE2_CREDENTIAL_NAME||'CASE003 Supabase RPC Token';
+const targetCredentialType=process.env.CASE003_GATE2_CREDENTIAL_TYPE||'httpHeaderAuth';
+const targetNodeId=process.env.CASE003_GATE2_NODE_ID||'query-rpc';
+const targetCredentialSlot=process.env.CASE003_GATE2_CREDENTIAL_SLOT||'httpHeaderAuth';
 const checkpoint='/tmp/case003-gate2-binding-pre.json';
+
 const userFolder=process.env.N8N_USER_FOLDER||os.homedir();
 const n8nDir=path.join(userFolder,'.n8n');
 const configured=process.env.DB_SQLITE_DATABASE;
@@ -41,16 +45,18 @@ function close(db){return new Promise(resolve=>db.close(()=>resolve()));}
     const state={
       workflowCount:workflows.length,
       credentialCount:credentials.length,
+      binding:{targetCredentialId,targetCredentialName,targetCredentialType,targetNodeId,targetCredentialSlot},
       credentials:credentials.map(c=>({id:c.id,name:c.name,type:c.type,dataHash:sha(c.data)})),
       otherWorkflows:workflows.filter(w=>w.id!==targetWorkflowId).map(w=>({
         id:w.id,name:w.name,active:w.active,nodesHash:sha(w.nodes),connectionsHash:sha(w.connections)
       }))
     };
     fs.writeFileSync(checkpoint,JSON.stringify(state,null,2),{mode:0o600});
-    console.log('[case003-gate2-bind] PRE PASS workflows='+workflows.length+' credentials='+credentials.length+' targetCredential=absent targetWorkflow=inactive');
+    console.log('[case003-gate2-bind] PRE PASS workflows='+workflows.length+' credentials='+credentials.length+' targetCredential=absent targetWorkflow=inactive adapterCredential='+targetCredentialId);
   } else {
     if(!fs.existsSync(checkpoint)) throw new Error('Gate-2 binding checkpoint missing');
     const before=JSON.parse(fs.readFileSync(checkpoint,'utf8'));
+    const binding=before.binding;
 
     if(workflows.length!==before.workflowCount) throw new Error('workflow count changed');
     if(credentials.length!==before.credentialCount+1) throw new Error('credential count must increase by exactly one');
@@ -68,17 +74,21 @@ function close(db){return new Promise(resolve=>db.close(()=>resolve()));}
       }
     }
 
-    const created=credentials.find(c=>c.id===targetCredentialId);
-    if(!created||created.name!==targetCredentialName||created.type!=='httpHeaderAuth') throw new Error('dedicated Gate-2 credential mismatch');
+    const created=credentials.find(c=>c.id===binding.targetCredentialId);
+    if(!created||created.name!==binding.targetCredentialName||created.type!==binding.targetCredentialType){
+      throw new Error('dedicated Gate-2 credential mismatch');
+    }
 
     const wf=workflows.find(w=>w.id===targetWorkflowId);
     if(!wf) throw new Error('CASE-003 workflow missing after Gate 2');
     if(!(wf.active===0||wf.active===false||wf.active==='0')) throw new Error('CASE-003 unexpectedly active');
     const nodes=JSON.parse(wf.nodes);
-    const rpc=nodes.find(n=>n.id==='query-rpc');
-    if(rpc?.credentials?.httpHeaderAuth?.id!==targetCredentialId) throw new Error('CASE-003 RPC node not bound to dedicated credential');
+    const targetNode=nodes.find(n=>n.id===binding.targetNodeId);
+    if(targetNode?.credentials?.[binding.targetCredentialSlot]?.id!==binding.targetCredentialId){
+      throw new Error('CASE-003 target node not bound to dedicated credential');
+    }
 
-    console.log('[case003-gate2-bind] POST PASS workflows='+workflows.length+' credentials='+credentials.length+' existingCredentials=unchanged existingWorkflows=unchanged CASE003=inactive');
+    console.log('[case003-gate2-bind] POST PASS workflows='+workflows.length+' credentials='+credentials.length+' existingCredentials=unchanged existingWorkflows=unchanged CASE003=inactive adapterCredential='+binding.targetCredentialId);
   }
 
   await close(db);
