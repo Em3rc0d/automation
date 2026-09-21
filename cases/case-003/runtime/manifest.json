@@ -17,7 +17,8 @@
     "../build/gate3-reservation-core.sql",
     "../build/gate3-reservation-rpc.sql",
     "../build/gate4-import-provenance.sql",
-    "../build/gate4-batch-ingest-rpc.sql"
+    "../build/gate4-batch-ingest-rpc.sql",
+    "../build/gate4-staged-import.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
@@ -38,11 +39,10 @@
     "A duplicate reservation returns reserved=false and is filtered before delivery payload construction",
     "CASE-003 remains inactive through Gate 3",
     "Gate 3 contains no outbound messaging node",
-    "Gate 4 records source-file SHA-256 and row-count provenance before publication",
-    "Gate 4 real-report snapshots remain candidate until explicit atomic publication",
-    "Gate 4 publication requires all three datasets, zero blocking import errors, and non-empty canonical data",
-    "Gate 4 never interprets payment-date evidence as certified bank payment",
-    "Gate 4 does not commit raw SAP XLSX data or integration secrets to Git"
+    "Gate 4 never exposes raw XLSX columns directly to n8n",
+    "Gate 4 verifies source provenance before canonical publication",
+    "Gate 4 publication is atomic: candidate becomes active and previous active becomes superseded",
+    "Gate 4 keeps PAYMENT_DATE_EVIDENCE distinct from certified paid/unpaid semantics"
   ],
   "targets": [
     "local-linux",
@@ -104,14 +104,30 @@
     "coreSchema": "../build/gate3-reservation-core.sql"
   },
   "gate4": {
-    "provenanceSchema": "../build/gate4-import-provenance.sql",
-    "supabaseBatchRpc": "../build/gate4-batch-ingest-rpc.sql",
-    "sourceDatasets": [
-      "QQVA",
-      "SCIV",
-      "FBL1N"
+    "sourceManifest": "gate4-source-manifest.json",
+    "runbook": "gate4-real-xlsx.md",
+    "stagedImportSchema": "../build/gate4-staged-import.sql",
+    "certifiedSnapshotId": "b1ea19f1-ed7d-54b5-9009-10759dd6126d",
+    "publicationStates": [
+      "candidate",
+      "active",
+      "superseded",
+      "rejected"
     ],
-    "publicationFunction": "case003.publish_snapshot(uuid)",
-    "currentCertifiedSnapshotId": "b1ea19f1-ed7d-54b5-9009-10759dd6126d"
+    "expectedCounts": {
+      "supplier": 2,
+      "invoice": 531,
+      "financial_item": 991,
+      "link": 435,
+      "issue": 114,
+      "import_file": 3
+    },
+    "realSmokeCandidate": {
+      "reference": "01-FM01-0096939",
+      "fiDocument": "5100028290",
+      "canonicalDueDate": "2026-09-21",
+      "dueDateSource": "FBL1N",
+      "paymentStatusEvidence": "PAYMENT_DATE_EVIDENCE"
+    }
   }
 }
