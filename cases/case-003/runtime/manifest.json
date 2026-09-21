@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.4.0-gate5",
+  "runtimeVersion": "1.5.0-gate6",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -20,11 +20,14 @@
     "../build/gate4-batch-ingest-rpc.sql",
     "../build/gate4-staged-import.sql",
     "../build/gate5-supplier-query-core.sql",
-    "../build/gate5-supplier-query-rpc.sql"
+    "../build/gate5-supplier-query-rpc.sql",
+    "../build/gate6-channel-ingress-core.sql",
+    "../build/gate6-channel-ingress-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
-    "sql/010-synthetic-smoke.sql"
+    "sql/010-synthetic-smoke.sql",
+    "gate6-synthetic-channel-fixture.sql"
   ],
   "invariants": [
     "additive workflow import only",
@@ -52,7 +55,13 @@
     "Gate 5 requires verified identity, active membership, invoice.read and resource ownership before invoice data is returned",
     "Gate 5 uses neutral NOT_FOUND_OR_NOT_AUTHORIZED for denied resource lookups",
     "Gate 5 audits every supplier invoice query",
-    "Gate 5 has no outbound messaging node"
+    "Gate 5 has no outbound messaging node",
+    "Gate 6 authenticates channel ingress before canonical data access",
+    "Gate 6 uses provider_message_id replay protection per tenant and channel",
+    "Gate 6 never treats RUC/tax ID as authentication and never auto-binds a channel identity from a RUC claim",
+    "Gate 6 creates only pending verification requests against pre-existing trusted contact data",
+    "Gate 6 masks trusted contact details and keeps verification delivery disabled",
+    "Gate 6 has no outbound messaging node"
   ],
   "targets": [
     "local-linux",
@@ -105,7 +114,12 @@
     "gate3Renderer": "scripts/render-gate3-supabase-workflow.js",
     "gate3BindingVerifier": "scripts/verify-gate3-binding.js",
     "gate3ExecutionTest": "scripts/test-gate3.sh",
-    "gate3ExecutionValidator": "scripts/validate-gate3-execution.js"
+    "gate3ExecutionValidator": "scripts/validate-gate3-execution.js",
+    "gate6Renderer": "scripts/render-gate6-workflow.js",
+    "gate6Configure": "scripts/configure-gate6.sh",
+    "gate6ImportVerifier": "scripts/verify-gate6-import.js",
+    "gate6HttpTest": "scripts/test-gate6-http.sh",
+    "gate6HttpClient": "scripts/test-gate6-http.js"
   },
   "gate3": {
     "coreFunction": "case003.reserve_due_candidates(integer,text)",
@@ -169,5 +183,29 @@
     "postgresWorkflow": "n8n/case003-supplier-query-gate5-postgres.template.json",
     "postgresConfigureScript": "scripts/configure-gate5-postgres.sh",
     "localAccessFixture": "sql/020-gate5-access-smoke.sql"
+  },
+  "gate6": {
+    "runbook": "gate6-channel-ingress.md",
+    "coreSchema": "../build/gate6-channel-ingress-core.sql",
+    "supabaseRpcSchema": "../build/gate6-channel-ingress-rpc.sql",
+    "workflow": "n8n/case003-supplier-channel-gate6.template.json",
+    "postgresWorkflow": "n8n/case003-supplier-channel-gate6-postgres.template.json",
+    "workflowId": "case003SupplierChannelGate6V1",
+    "credentialId": "case003RpcAuthV1",
+    "webhookPath": "case003/supplier-channel",
+    "authHeader": "x-case003-token",
+    "decisions": [
+      "FOUND",
+      "DUPLICATE",
+      "AUTH_REQUIRED",
+      "VERIFICATION_REQUIRED",
+      "NOT_FOUND_OR_NOT_AUTHORIZED",
+      "NEEDS_DISAMBIGUATION"
+    ],
+    "replayKey": "tenant_id + channel + provider_message_id",
+    "taxIdAuthenticates": false,
+    "autoBindFromTaxId": false,
+    "trustedContactDelivery": false,
+    "outboundDelivery": false
   }
 }
