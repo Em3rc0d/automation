@@ -232,3 +232,20 @@ Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume.
 Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies verified identity, membership, permission and resource ownership. Gate 6 certifies authenticated provider-neutral channel ingress, replay protection and verification initiation. Gate 7 certifies a signed Kapso-shaped provider adapter and persisted connector-to-tenant binding. Gate 8 certifies a real WhatsApp-originated Kapso delivery into that path while CASE-003 outbound delivery remains disabled.
 
 It does **not** yet certify an actual Kapso Cloud / WhatsApp-originated delivery into the CASE-003 endpoint, OTP/trusted-contact delivery, approval of an unknown identity, outbound WhatsApp delivery, or production payment semantics. Those remain later gates.
+
+
+## Gate 9 — verified supplier identity
+
+Gate 9 adds the durable verification boundary after the real Gate-8 WhatsApp proof. RUC/tax ID remains identification only. Access is created only after a trusted-contact email code or an explicit audited operator approval.
+
+Artifacts:
+
+- `../build/gate9-verification-core.sql`
+- `../build/gate9-verification-rpc.sql`
+- `../build/gate9-provider-verification-core.sql`
+- `../build/gate9-provider-verification-rpc.sql`
+- `gate9-verification.md`
+- `sql/030-gate9-verification-smoke.sql`
+- `n8n/case003-kapso-verification-gate9.template.json`
+
+The database core has been smoke-tested through wrong-code rejection, successful verification, verified identity/membership creation and an owned invoice `FOUND` query. Synthetic test access was removed after proof. Transactional email transport remains an explicit connector boundary; no email or WhatsApp send credential is embedded in Gate 9.
