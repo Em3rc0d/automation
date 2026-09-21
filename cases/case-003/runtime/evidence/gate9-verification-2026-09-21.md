@@ -329,3 +329,66 @@ post-arm backup sha256 =
 The one-shot arm/import/disarm variables were reset to `false` without redeploying, so the currently running Gate-9 path stays armed for the explicit retry while unrelated future deployments will not repeat the mutation automatically.
 
 The real-provider verification-init proof therefore remains **pending one user resend** after this hotfix; it is not falsely marked as certified.
+
+
+## Second real-provider attempt — unresolved runtime endpoint found and repaired
+
+The user resent the real WhatsApp request after the parser hotfix. CASE-002 again received the event successfully:
+
+```text
+2026-09-21T22:12:11Z
+POST /webhook/adapters/kapso/whatsapp/messages
+HTTP 200
+```
+
+Gate 9 also received the event, proving the HMAC/provider path remained live, but failed before the database RPC:
+
+```text
+2026-09-21T22:12:23Z
+POST /webhook/case003/adapters/kapso/whatsapp/verification
+HTTP 500
+
+Invalid URL:
+__CASE003_SUPABASE_URL__/rest/v1/rpc/case003_provider_channel_message_json
+```
+
+Kapso retried the Gate-9 delivery and received the same failure. No new CASE-003 `channel_message`, `verification_request`, `verification_challenge`, or `verification_event` row was created by this attempt, so no identity/access state was partially committed.
+
+Root cause: the Gate-9 template intentionally used portable Supabase placeholders, but the Railway preparation step bound credentials without rendering `CASE003_SUPABASE_URL` and `CASE003_SUPABASE_PUBLISHABLE_KEY`.
+
+Repair:
+
+```text
+runtime renderer commit          = b404c5a47e2a2cec3cc8dab0da1a51fc3e0d5148
+runtime verifier commit          = 8ec7e7704c3c23191f895b1a07e8fa3758796352
+portable canonical renderer      = ce7783c54206d9c5b23bb4f819bca77af5f16ca5
+```
+
+The renderer now resolves the Supabase URL/key only from runtime environment configuration, refuses missing/invalid values, refuses unresolved `__CASE003_*` placeholders, and does not log the key. The import verifier also fails closed if either RPC URL is not HTTPS or a template placeholder remains.
+
+Controlled replacement sequence:
+
+```text
+disarm deployment = b4a461b7-8991-4c34-9cfe-d72021c622b8
+result            = gate9WebhookActive=false, gate9WorkflowActive=false
+CASE-002           = unchanged
+
+replacement deployment = 2ad10104-21bc-4da4-9749-28bdd141f8c3
+status                 = SUCCESS
+PRE                    = target=replace-inactive
+POST                   = workflows=15 credentials=5 target=inactive sourceUnchanged=true
+post-import backup     = sha256:68fc665084c0b2b844e62a0601793f5048e68b2de72bdf54ddb0e982d417803b
+
+re-arm deployment = 563dadc7-d2a7-49b9-93da-9c2d9733f43c
+status            = SUCCESS
+gate9WebhookActive=true
+gate9WorkflowActive=true
+case002Unchanged=true
+whatsappOutboundDisabled=true
+emailOutboundDisabled=true
+post-arm backup   = sha256:4599d6e532a5254b9930abc7051d0eec5d2ae54cd6740a4fb7951fda1a3028d4
+```
+
+All Gate-9 one-shot variables were reset to `false` without another deployment. The running Gate-9 workflow/webhook remains armed for the next explicit real-provider attempt.
+
+The real verification-init proof remains pending; neither failed attempt is counted as certification.
