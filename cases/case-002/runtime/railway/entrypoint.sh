@@ -355,5 +355,38 @@ if [ "${CASE003_TRIGGER_SPLIT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-split] split complete; both workflows inactive; credentials unchanged"
 fi
 
+# CASE-003 Gate 5: additive supplier-query workflow. It remains inactive,
+# reuses the dedicated CASE-003 RPC credential, and has no outbound channel.
+if [ "${CASE003_GATE5_IMPORT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate5] guarded additive supplier-query import requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate5-import
+  node /opt/case002/verify-case003-gate5-import.js pre
+  n8n import:workflow --input=/opt/case002/case003-supplier-query-gate5.json
+  node /opt/case002/verify-case003-gate5-import.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate5-import
+  rm -f /tmp/case003-gate5-pre.json
+  echo "[case003-gate5] import complete; workflow inactive; existing state unchanged"
+fi
+
+# CASE-003 Gate 5 execution proof: run the inactive manual workflow through CLI,
+# validate four access-control decisions and safe response rendering.
+if [ "${CASE003_GATE5_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate5-test] guarded supplier-query execution requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate5-test
+  rm -f /tmp/case003-gate5-cli.log
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003SupplierQueryGate5V1 --rawOutput > /tmp/case003-gate5-cli.log 2>&1
+  CASE003_GATE5_RC=$?
+  set -e
+  node /opt/case002/validate-case003-gate5-execution.js
+  rm -f /tmp/case003-gate5-cli.log
+  if [ "$CASE003_GATE5_RC" -ne 0 ]; then
+    echo "[case003-gate5-test] CLI non-zero rc=$CASE003_GATE5_RC"
+    exit 1
+  fi
+  node /opt/case002/backup-n8n-state.js post-case003-gate5-test
+  echo "[case003-gate5-test] PASS access controls + neutral denial + safe response; outbound disabled"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
