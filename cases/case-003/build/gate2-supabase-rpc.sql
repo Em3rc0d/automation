@@ -3,6 +3,9 @@
 -- After applying this migration, register SHA-256(CASE003_RPC_TOKEN) in
 -- case003.integration_secret with integration_key='due_candidates_rpc'.
 
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 create table if not exists case003.integration_secret (
   integration_key text primary key,
   secret_sha256 text not null check (secret_sha256 ~ '^[0-9a-f]{64}$'),
