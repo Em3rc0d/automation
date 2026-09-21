@@ -59,8 +59,12 @@ create table if not exists case003.supplier_query_audit (
 
 create index if not exists case003_external_identity_lookup_idx
   on case003.external_identity(tenant_id,channel,subject_hash,status);
+create index if not exists case003_external_identity_user_fk_idx
+  on case003.external_identity(user_id);
 create index if not exists case003_external_membership_user_idx
   on case003.external_membership(tenant_id,user_id,status);
+create index if not exists case003_external_membership_user_fk_idx
+  on case003.external_membership(user_id);
 create index if not exists case003_supplier_query_audit_trace_idx
   on case003.supplier_query_audit(tenant_id,trace_id,created_at desc);
 
