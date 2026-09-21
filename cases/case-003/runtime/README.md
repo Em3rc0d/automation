@@ -126,12 +126,50 @@ The test does not trust CLI log formatting. It checkpoints the latest CASE-003 C
 
 For the synthetic fixture, the validator requires the known smoke invoice, FBL1N due-date precedence, `payment_status_evidence=UNKNOWN`, and a notification key containing the active snapshot ID.
 
+## Gate 3 — durable reservation and duplicate suppression
+
+Gate 3 moves idempotency into the real n8n execution path. Apply:
+
+```text
+../build/gate3-reservation-rpc.sql
+```
+
+The runtime-independent core is `case003.reserve_due_candidates(integer,text)`. It selects ACTIVE-snapshot due candidates and calls `case003.reserve_due_notification(...)` for each candidate. The returned `reserved` flag is the delivery gate.
+
+For Supabase/PostgREST, configure the reservation workflow using the existing Gate-2 RPC credential:
+
+```bash
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/configure-gate3-rpc.sh
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/test-gate3.sh
+docker compose up -d n8n
+```
+
+For direct PostgreSQL:
+
+```bash
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/configure-gate3-postgres.sh
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/test-gate3.sh
+docker compose up -d n8n
+```
+
+The smoke test executes the same inactive workflow twice. The first execution must return the expected synthetic invoice with `reserved=true` and allow it into `Build Notification Payload`. The second execution must return the same notification identity with `reserved=false`, produce zero items from `Allow Newly Reserved`, and never reach an outbound channel.
+
+On a shared test database that may already contain the default `due_3d` reservation, set a unique certification rule such as:
+
+```text
+CASE003_RULE_CODE=due_3d_gate3_v1
+```
+
+Rule codes are part of the durable idempotency key. Production deployments should use a stable business rule code such as `due_3d`; probe codes are only for repeatable certification.
+
 ## Railway
 
 Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
 
 ## Current certification boundary
 
-Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated read-only canonical query through n8n while preserving all pre-existing credentials/workflows and keeping CASE-003 inactive.
+Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated read-only canonical query through n8n while preserving all pre-existing credentials/workflows. Gate 3 certifies durable reservation and duplicate suppression inside the n8n path while CASE-003 remains inactive.
 
-It does **not** yet certify outbound WhatsApp delivery, production payment semantics, or durable notification reservation inside the n8n execution path. Those are later gates.
+It does **not** yet certify outbound WhatsApp delivery or production payment semantics. Those remain later gates.
