@@ -460,5 +460,70 @@ NODE
   echo "[case003-gate6-http] PASS authenticated HTTP ingress + replay + verification-init; outbound disabled"
 fi
 
+
+# CASE-003 Gate 7: additive signed Kapso provider adapter. The workflow is
+# rendered with the existing live Kapso HMAC credential binding and the
+# existing CASE-003 RPC credential; no credential payload is modified.
+if [ "${CASE003_GATE7_IMPORT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate7] guarded additive Kapso ingress import requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate7-import
+  node /opt/case002/verify-case003-gate7-import.js pre
+  node /opt/case002/prepare-case003-gate7.js
+  n8n import:workflow --input=/tmp/case003-kapso-ingress-gate7.json
+  rm -f /tmp/case003-kapso-ingress-gate7.json
+  node /opt/case002/verify-case003-gate7-import.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate7-import
+  rm -f /tmp/case003-gate7-pre.json
+  echo "[case003-gate7] import complete; target inactive; CASE-002 receive and credentials unchanged"
+fi
+
+# CASE-003 Gate 7 signed provider proof. Temporarily activates only the new
+# CASE-003 Kapso adapter, sends synthetic Kapso-shaped payloads signed with
+# the already-stored live HMAC secret, then restores the target to inactive.
+if [ "${CASE003_GATE7_HTTP_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate7-http] guarded signed Kapso HTTP proof requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate7-http-test
+  node /opt/case002/verify-case003-gate7-test.js pre
+
+  n8n update:workflow --id=case003KapsoIngressGate7V1 --active=true
+
+  rm -f /tmp/case003-gate7-server.log
+  N8N_LOG_OUTPUT=console n8n start > /tmp/case003-gate7-server.log 2>&1 &
+  CASE003_GATE7_PID=$!
+
+  gate7_cleanup() {
+    if kill -0 "$CASE003_GATE7_PID" 2>/dev/null; then
+      kill "$CASE003_GATE7_PID" 2>/dev/null || true
+      wait "$CASE003_GATE7_PID" 2>/dev/null || true
+    fi
+    n8n update:workflow --id=case003KapsoIngressGate7V1 --active=false >/dev/null 2>&1 || true
+  }
+  trap gate7_cleanup EXIT INT TERM
+
+  CASE003_GATE7_READY=false
+  for i in $(seq 1 40); do
+    if node -e "fetch('http://127.0.0.1:5678/healthz',{signal:AbortSignal.timeout(1000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
+      CASE003_GATE7_READY=true
+      break
+    fi
+    sleep 1
+  done
+  if [ "$CASE003_GATE7_READY" != "true" ]; then
+    tail -n 100 /tmp/case003-gate7-server.log || true
+    echo "[case003-gate7-http] temporary n8n server did not become healthy"
+    exit 1
+  fi
+
+  CASE003_GATE7_BASE_URL=http://127.0.0.1:5678 node /opt/case002/test-case003-gate7-http.js
+
+  gate7_cleanup
+  trap - EXIT INT TERM
+  rm -f /tmp/case003-gate7-server.log
+  node /opt/case002/verify-case003-gate7-test.js post
+  rm -f /tmp/case003-gate7-test-pre.json
+  node /opt/case002/backup-n8n-state.js post-case003-gate7-http-test
+  echo "[case003-gate7-http] PASS signed Kapso ingress + replay + connector binding + signature rejection; outbound disabled"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
