@@ -219,12 +219,16 @@ Gate 7 adds a Kapso-shaped receive adapter in front of the Gate-6/Gate-5 trust c
 
 The provider never controls the tenant boundary. Invalid signatures fail with HTTP 401, unbound provider channels fail closed, replayed provider message IDs are harmless, and outbound messaging remains disabled. See `gate7-kapso-ingress.md`.
 
+## Gate 8 — real WhatsApp receive proof
+
+Gate 8 certifies an actual user-originated WhatsApp message delivered by Kapso Cloud into the isolated CASE-003 webhook. The real execution passed the stored HMAC check and persisted the provider message with `AUTH_REQUIRED`, proving that an unverified sender receives no invoice disclosure. CASE-002 remained active in parallel and completed its normal receive/reply path. See `evidence/gate8-real-whatsapp-2026-09-21.md`.
+
 ## Railway
 
 Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
 
 ## Current certification boundary
 
-Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies verified identity, membership, permission and resource ownership. Gate 6 certifies authenticated provider-neutral channel ingress, replay protection and verification initiation. Gate 7 certifies a signed Kapso-shaped provider adapter, persisted connector-to-tenant binding and the same downstream authorization path while outbound delivery remains disabled.
+Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies verified identity, membership, permission and resource ownership. Gate 6 certifies authenticated provider-neutral channel ingress, replay protection and verification initiation. Gate 7 certifies a signed Kapso-shaped provider adapter and persisted connector-to-tenant binding. Gate 8 certifies a real WhatsApp-originated Kapso delivery into that path while CASE-003 outbound delivery remains disabled.
 
 It does **not** yet certify an actual Kapso Cloud / WhatsApp-originated delivery into the CASE-003 endpoint, OTP/trusted-contact delivery, approval of an unknown identity, outbound WhatsApp delivery, or production payment semantics. Those remain later gates.
