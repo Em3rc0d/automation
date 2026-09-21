@@ -149,3 +149,31 @@ jobs:
           }
           console.log('PASS split-trigger workflow invariants');
           NODE
+
+      - name: Validate Gate-5 access-control artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate5-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate5-import.js
+          node --check cases/case-003/runtime/scripts/validate-gate5-execution.js
+          sh -n cases/case-003/runtime/scripts/configure-gate5.sh
+          sh -n cases/case-003/runtime/scripts/test-gate5.sh
+          grep -q "resolve_supplier_invoice_query" cases/case-003/build/gate5-supplier-query-core.sql
+          grep -q "case003_supplier_invoice_query_json" cases/case-003/build/gate5-supplier-query-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-supplier-query-gate5.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003SupplierQueryGate5V1'||w.active!==false) throw new Error('Gate-5 workflow identity/active invariant failed');
+          if(w.nodes.filter(n=>String(n.type||'').includes('Trigger')).length!==1) throw new Error('Gate-5 must have exactly one trigger');
+          for(const id of ['cases','query','assert','response']) if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-5 node '+id);
+          if(w.nodes.find(n=>n.id==='query')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-5 RPC credential mismatch');
+          if(/whatsapp|kapso|send message/i.test(raw)) throw new Error('outbound channel content detected in Gate 5');
+          for(const token of ['__CASE003_SUPABASE_URL__','__CASE003_SUPABASE_PUBLISHABLE_KEY__','__CASE003_GATE5_TENANT_ID__','__CASE003_GATE5_INVOICE_REFERENCE__','__CASE003_GATE5_COMPANY_CODE__','__CASE003_GATE5_FI_DOCUMENT__','__CASE003_GATE5_SNAPSHOT_ID__']) {
+            if(!raw.includes(token)) throw new Error('missing Gate-5 placeholder '+token);
+          }
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.4.0-gate5') throw new Error('manifest not pinned to Gate 5');
+          if(m.gate5?.permission!=='invoice.read'||m.gate5?.outboundDelivery!==false) throw new Error('Gate-5 manifest invariant failed');
+          console.log('PASS Gate-5 access-control artifacts');
+          NODE
