@@ -20,6 +20,10 @@ create table if not exists case003.notification_delivery (
 );
 create index if not exists case003_notification_invoice_idx
   on case003.notification_delivery(tenant_id,invoice_id,status);
+create index if not exists case003_notification_invoice_fk_idx
+  on case003.notification_delivery(invoice_id);
+create index if not exists case003_notification_snapshot_fk_idx
+  on case003.notification_delivery(snapshot_id);
 
 drop function if exists case003.reserve_due_notification(uuid,uuid,text,date,uuid);
 create function case003.reserve_due_notification(
