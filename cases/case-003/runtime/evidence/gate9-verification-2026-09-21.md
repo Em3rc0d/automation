@@ -231,3 +231,29 @@ bootstrap complete
 ```
 
 No Gate-9 import or provider-preparation block ran during the final startup. The Gate-9 n8n workflow and Kapso webhook remain inactive; CASE-002 remains the active live WhatsApp path.
+
+## Real-provider arm
+
+Gate 9 was armed for the next real WhatsApp verification-init proof.
+
+Arm deployment: `77a709cd-af2c-4d37-8dd1-be8c8a35740f` — `SUCCESS`.
+
+Pre-arm backup: `/home/node/.n8n/backups/snapshot-2026-09-21T21-32-22-237Z-pre-case003-gate9-arm`
+
+Pre-arm SHA-256: `b1adb08306e4014ea8e7d61dfbe34807bcbe5d9c6fe5330688e4bd4e7ed18c19`
+
+Arm assertions:
+
+```text
+gate9WebhookActive=true
+gate9WorkflowActive=true
+case002Unchanged=true
+whatsappOutboundDisabled=true
+emailOutboundDisabled=true
+```
+
+Post-arm backup: `/home/node/.n8n/backups/snapshot-2026-09-21T21-32-31-465Z-post-case003-gate9-arm`
+
+Post-arm SHA-256: `bf53882c442e8bac8756e2e6b666f157221435ab4fda143e99d9421e2ebae383`
+
+The one-shot arm variable was reset to false without triggering another deployment. The running Gate-9 path remains armed only for the explicit real test; future unrelated deployments will not re-run the arm mutation automatically.
