@@ -221,5 +221,18 @@ if [ "${CASE003_GATE2_RPC_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate2] binding complete; CASE-003 remains inactive and existing state verified unchanged"
 fi
 
+# CASE-003 Gate-2 execution proof. Executes only the inactive CASE-003
+# workflow via CLI; the workflow has no outbound delivery node.
+if [ "${CASE003_GATE2_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate2-test] guarded CLI execution requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate2-test
+  rm -f /tmp/case003-gate2-execution.json
+  n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate2-execution.json
+  node /opt/case002/validate-case003-gate2-execution.js /tmp/case003-gate2-execution.json
+  rm -f /tmp/case003-gate2-execution.json
+  node /opt/case002/backup-n8n-state.js post-case003-gate2-test
+  echo "[case003-gate2-test] execution proof complete"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
