@@ -243,8 +243,26 @@ jobs:
           const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-kapso-ingress-gate7-postgres.template.json','utf8'));
           if(pg.nodes.find(n=>n.id==='process-provider')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-7 PostgreSQL credential mismatch');
           const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
-          if(m.runtimeVersion!=='1.6.0-gate7') throw new Error('manifest not pinned to Gate 7');
+          if(!m.gate7||m.gate7.provider!=='kapso') throw new Error('Gate-7 manifest contract missing');
           if(m.gate7?.providerPayloadTenantTrusted!==false||m.gate7?.reusesExistingCredentials!==true||m.gate7?.outboundDelivery!==false) throw new Error('Gate-7 trust boundary invariant failed');
           if(!m.schemas.includes('../build/gate7-provider-ingress-core.sql')||!m.schemas.includes('../build/gate7-provider-ingress-rpc.sql')) throw new Error('Gate-7 schemas absent from manifest');
           console.log('PASS Gate-7 signed provider-ingress artifacts');
+          NODE
+
+      - name: Validate Gate-8 real-provider evidence
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.7.0-gate8') throw new Error('manifest not pinned to Gate 8');
+          if(m.gate8?.realWhatsAppOriginCertified!==true) throw new Error('Gate-8 real WhatsApp evidence flag missing');
+          if(m.gate8?.decision!=='AUTH_REQUIRED') throw new Error('Gate-8 expected AUTH_REQUIRED proof missing');
+          if(m.gate8?.case002ContinuityCertified!==true) throw new Error('Gate-8 CASE-002 continuity proof missing');
+          if(m.gate8?.outboundDelivery!==false) throw new Error('Gate-8 outbound boundary violated');
+          const p='cases/case-003/runtime/evidence/gate8-real-whatsapp-2026-09-21.md';
+          const e=fs.readFileSync(p,'utf8');
+          for(const token of ['execution_id = 139','execution_id = 138','AUTH_REQUIRED','01-FM01-0096939','CASE-003 outbound message']) {
+            if(!e.includes(token)) throw new Error('Gate-8 evidence token missing: '+token);
+          }
+          console.log('PASS Gate-8 real WhatsApp evidence');
           NODE
