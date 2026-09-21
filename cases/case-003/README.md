@@ -14,6 +14,10 @@ CASE-003 proves a portable supplier/AP automation path from SAP report exports t
 - `build/gate6-channel-ingress-rpc.sql` — Supabase/PostgREST Gate-6 adapter.
 - `build/gate7-provider-ingress-core.sql` — portable provider/channel binding and Kapso ingress core.
 - `build/gate7-provider-ingress-rpc.sql` — Supabase/PostgREST Gate-7 adapter.
+- `build/gate9-verification-core.sql` / `build/gate9-verification-rpc.sql` — trusted-contact verification state machine and RPC adapter.
+- `build/gate9-provider-verification-core.sql` / `build/gate9-provider-verification-rpc.sql` — provider-bound verification-code consumption.
+- `build/gate9-request-resume-hotfix.sql` — preserves the invoice reference that triggered verification.
+- `build/gate10-test-email-override.sql` — controlled test-only email destination override; stores only hash + masked destination.
 - `build/normalize-and-reconcile.js` — QQVA/SCIV/FBL1N normalization and reconciliation logic.
 - `build/n8n-due-date-workflow.json` — source n8n workflow.
 - `build/synthetic-fixtures.json` — synthetic domain fixture.
@@ -38,7 +42,10 @@ n8n orchestration
 idempotent notification reservation
         |
         v
-channel delivery (later gate)
+trusted-contact verification
+        |
+        v
+email delivery adapter (Gate 10; Gmail OAuth2 preferred)
 ```
 
 Business truth lives in PostgreSQL/Supabase. n8n remains an execution/orchestration engine.
@@ -57,3 +64,12 @@ See:
 - `build/gate9-provider-verification-core.sql`
 - `build/gate9-provider-verification-rpc.sql`
 - `runtime/gate9-verification.md`
+
+
+### Gate 10 email delivery
+
+Gate 10 is the transport boundary for the email verification code. The identity core remains provider-neutral: PostgreSQL creates and hashes the challenge; n8n delivers it through a mail connector and records delivery outcome.
+
+For the controlled real test, the repository keeps the SAP trusted-contact data unchanged and uses a short-lived test override whose database representation is only SHA-256 + masked destination. The preferred runtime transport is the native n8n Gmail node with OAuth2; SMTP via n8n `Send Email` is the supported fallback. No Resend-specific runtime is part of the canonical design.
+
+See `runtime/gate10-email-delivery.md`.
