@@ -388,5 +388,77 @@ if [ "${CASE003_GATE5_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate5-test] PASS access controls + neutral denial + safe response; outbound disabled"
 fi
 
+# CASE-003 Gate 6: additive authenticated channel webhook. Imported
+# inactive, reuses the existing CASE-003 RPC credential, and has no outbound send.
+if [ "${CASE003_GATE6_IMPORT_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate6] guarded additive channel workflow import requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate6-import
+  node /opt/case002/verify-case003-gate6-import.js pre
+  n8n import:workflow --input=/opt/case002/case003-supplier-channel-gate6.json
+  node /opt/case002/verify-case003-gate6-import.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate6-import
+  rm -f /tmp/case003-gate6-pre.json
+  echo "[case003-gate6] import complete; workflow inactive; existing state unchanged"
+fi
+
+# CASE-003 Gate 6 HTTP proof. Temporarily activates ONLY the Gate-6 webhook,
+# starts a local n8n HTTP runtime, exercises authenticated ingress/replay/
+# verification-init behavior, then deactivates Gate-6 before normal startup.
+if [ "${CASE003_GATE6_HTTP_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate6-http] guarded real HTTP ingress proof requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate6-http-test
+
+  n8n update:workflow --id=case003SupplierChannelGate6V1 --active=true
+
+  rm -f /tmp/case003-gate6-server.log
+  N8N_LOG_OUTPUT=console n8n start > /tmp/case003-gate6-server.log 2>&1 &
+  CASE003_GATE6_PID=$!
+
+  gate6_cleanup() {
+    if kill -0 "$CASE003_GATE6_PID" 2>/dev/null; then
+      kill "$CASE003_GATE6_PID" 2>/dev/null || true
+      wait "$CASE003_GATE6_PID" 2>/dev/null || true
+    fi
+    n8n update:workflow --id=case003SupplierChannelGate6V1 --active=false >/dev/null 2>&1 || true
+  }
+  trap gate6_cleanup EXIT INT TERM
+
+  CASE003_GATE6_READY=false
+  for i in $(seq 1 40); do
+    if node -e "fetch('http://127.0.0.1:5678/healthz',{signal:AbortSignal.timeout(1000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
+      CASE003_GATE6_READY=true
+      break
+    fi
+    sleep 1
+  done
+  if [ "$CASE003_GATE6_READY" != "true" ]; then
+    tail -n 80 /tmp/case003-gate6-server.log || true
+    echo "[case003-gate6-http] temporary n8n server did not become healthy"
+    exit 1
+  fi
+
+  CASE003_GATE6_BASE_URL=http://127.0.0.1:5678 node /opt/case002/test-case003-gate6-http.js
+
+  gate6_cleanup
+  trap - EXIT INT TERM
+  rm -f /tmp/case003-gate6-server.log
+
+  node - <<'NODE'
+const {createRequire}=require('module');
+const req=createRequire('/usr/local/lib/node_modules/n8n/package.json');
+const sqlite3=req('sqlite3');
+const db=new sqlite3.Database(process.env.DB_SQLITE_DATABASE||'/home/node/.n8n/database.sqlite',sqlite3.OPEN_READONLY);
+db.get("select active from workflow_entity where id='case003SupplierChannelGate6V1'",(e,r)=>{
+  db.close();
+  if(e) throw e;
+  if(!r || !(r.active===0||r.active===false||r.active==='0')) throw new Error('Gate-6 workflow not inactive after HTTP proof');
+  console.log('[case003-gate6-http] FINAL workflow inactive=true');
+});
+NODE
+
+  node /opt/case002/backup-n8n-state.js post-case003-gate6-http-test
+  echo "[case003-gate6-http] PASS authenticated HTTP ingress + replay + verification-init; outbound disabled"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
