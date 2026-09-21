@@ -242,5 +242,49 @@ if [ "${CASE003_GATE2_TEST_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate2-test] execution proof complete"
 fi
 
+# CASE-003 Gate 3 binding: replace only the inactive CASE-003 workflow with
+# the reservation/idempotency path. Reuse the existing dedicated CASE-003 RPC
+# credential without editing any credential payload.
+if [ "${CASE003_GATE3_BIND_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate3] guarded reservation workflow binding requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate3-bind
+  node /opt/case002/verify-case003-gate3.js pre
+  n8n import:workflow --input=/opt/case002/case003-due-date-reservation-gate3.json
+  node /opt/case002/verify-case003-gate3.js post
+  node /opt/case002/backup-n8n-state.js post-case003-gate3-bind
+  rm -f /tmp/case003-gate3-pre.json
+  echo "[case003-gate3] binding complete; CASE-003 remains inactive; credentials unchanged"
+fi
+
+# CASE-003 Gate 3 execution proof. Execute twice: first execution must reserve
+# the synthetic notification; second must return the same reservation with
+# reserved=false and be filtered before the delivery payload.
+if [ "${CASE003_GATE3_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate3-test] guarded double execution requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate3-test
+  node /opt/case002/validate-case003-gate3-execution.js pre
+
+  rm -f /tmp/case003-gate3-first.log /tmp/case003-gate3-second.log
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate3-first.log 2>&1
+  CASE003_FIRST_RC=$?
+  set -e
+  node /opt/case002/validate-case003-gate3-execution.js first
+
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003DueDateEvaluationV1 --rawOutput > /tmp/case003-gate3-second.log 2>&1
+  CASE003_SECOND_RC=$?
+  set -e
+  node /opt/case002/validate-case003-gate3-execution.js second
+
+  rm -f /tmp/case003-gate3-first.log /tmp/case003-gate3-second.log /tmp/case003-gate3-execution.json
+  if [ "$CASE003_FIRST_RC" -ne 0 ] || [ "$CASE003_SECOND_RC" -ne 0 ]; then
+    echo "[case003-gate3-test] CLI non-zero first=$CASE003_FIRST_RC second=$CASE003_SECOND_RC"
+    exit 1
+  fi
+  node /opt/case002/backup-n8n-state.js post-case003-gate3-test
+  echo "[case003-gate3-test] PASS first reserved=true; second reserved=false; duplicate blocked before payload"
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
