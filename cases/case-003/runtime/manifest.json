@@ -119,7 +119,9 @@
     "gate6Configure": "scripts/configure-gate6.sh",
     "gate6ImportVerifier": "scripts/verify-gate6-import.js",
     "gate6HttpTest": "scripts/test-gate6-http.sh",
-    "gate6HttpClient": "scripts/test-gate6-http.js"
+    "gate6HttpClient": "scripts/test-gate6-http.js",
+    "gate6PostgresRenderer": "scripts/render-gate6-postgres-workflow.js",
+    "gate6PostgresConfigure": "scripts/configure-gate6-postgres.sh"
   },
   "gate3": {
     "coreFunction": "case003.reserve_due_candidates(integer,text)",
@@ -206,6 +208,8 @@
     "taxIdAuthenticates": false,
     "autoBindFromTaxId": false,
     "trustedContactDelivery": false,
-    "outboundDelivery": false
+    "outboundDelivery": false,
+    "postgresConfigureScript": "scripts/configure-gate6-postgres.sh",
+    "postgresRenderer": "scripts/render-gate6-postgres-workflow.js"
   }
 }
