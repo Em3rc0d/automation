@@ -1,90 +1,115 @@
 # CASE-003 portable runtime
 
-This directory is the reproducible runtime bundle for CASE-003 on Linux.
+This directory is the reproducible Linux runtime bundle for CASE-003. PostgreSQL/Supabase owns durable business state; n8n is only the orchestration/runtime layer.
 
-## Invariants
+## Safety invariants
 
-- PostgreSQL/Supabase is the durable source of truth.
-- n8n is an orchestrator, not the database.
-- Importing the CASE-003 workflow is additive-only.
-- The workflow is imported **inactive**.
-- Existing n8n workflows and credentials must not be edited or deleted.
-- A consistent n8n backup is required immediately before any import.
-- The canonical schema is owned by `../build/canonical-model.sql`.
-- Notification reservation/idempotency is owned by `../build/notification-idempotency.sql`.
+- CASE-003 imports are additive at Gate 1.
+- CASE-003 remains inactive through Gate 2.
+- Existing n8n workflows and credentials are never edited or deleted.
+- A consistent SQLite backup is created before every startup mutation.
+- Gate 2 creates at most one dedicated CASE-003 credential.
+- No Gate-2 workflow contains an outbound messaging node.
+- Payment evidence `UNKNOWN` is not interpreted as certified unpaid status.
+
+## Runtime targets
+
+The same repository artifacts support:
+
+```text
+local Linux ─────┐
+brand-new VPS ───┼──> n8n 2.38.7 ──> canonical CASE-003 data
+Railway Linux ───┘                       │
+                                        ├─ local/external PostgreSQL
+                                        └─ Supabase RPC adapter
+```
 
 ## Layout
 
-- `docker-compose.yml`: Linux local/VPS reference stack: PostgreSQL 16 + n8n 2.38.7.
-- `.env.example`: non-secret configuration template.
-- `n8n/case003-due-date-evaluation.json`: portable inactive workflow.
-- `scripts/import-workflow.sh`: guarded additive import.
-- `scripts/verify-case003-import.js`: fail-closed pre/post state verifier.
-- `sql/010-synthetic-smoke.sql`: deterministic local smoke fixture.
-- `manifest.json`: pinned versions, artifacts and invariants.
+- `docker-compose.yml` — reference local/VPS stack with PostgreSQL 16 and n8n 2.38.7.
+- `.env.example` — non-secret runtime configuration template.
+- `../build/canonical-model.sql` — canonical schema.
+- `../build/notification-idempotency.sql` — durable notification reservation ledger.
+- `../build/gate2-supabase-rpc.sql` — Supabase Gate-2 RPC adapter.
+- `n8n/case003-due-date-evaluation.json` — inactive direct-Postgres workflow source.
+- `n8n/case003-due-date-evaluation-supabase-rpc.template.json` — portable Supabase RPC template.
+- `scripts/import-workflow.sh` — guarded Gate-1 workflow import.
+- `scripts/render-supabase-rpc-workflow.js` — renders public Supabase endpoint/project key into the portable template.
+- `scripts/prepare-rpc-credential.js` — creates a temporary n8n credential import file from `CASE003_RPC_TOKEN`.
+- `scripts/render-rpc-secret-registration.sh` — renders the SHA-256 secret-registration DML.
+- `scripts/test-gate2.sh` — CLI execution smoke test validated from persisted n8n execution data.
+- `sql/010-synthetic-smoke.sql` — deterministic, date-relative synthetic fixture.
+- `manifest.json` — pinned versions, adapters and invariants.
 
-## Local Linux / brand-new VPS
+## Local Linux / brand-new VPS — Gate 1
 
-Prerequisites: Docker Engine + Docker Compose plugin.
+Prerequisites: Docker Engine and the Docker Compose plugin.
 
 ```bash
 cd cases/case-003/runtime
 cp .env.example .env
+# edit .env and replace all placeholder secrets
 docker compose up -d postgres n8n
 ```
 
-PostgreSQL initialization mounts the canonical model, idempotency ledger and synthetic smoke fixture from this repository. n8n persists state in a named volume.
-
-Import CASE-003 only after n8n is healthy:
+For SQLite-backed n8n, stop the server before running CLI imports against the same persistent volume:
 
 ```bash
-docker compose exec n8n sh /opt/case003/scripts/import-workflow.sh
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/import-workflow.sh
+docker compose up -d n8n
 ```
 
-The script fails closed unless the target workflow is absent before import, credentials are unchanged, the workflow count rises by exactly one, and the imported workflow remains inactive.
+The Gate-1 verifier refuses the mutation unless the target workflow is absent and the pre-import workflow/credential counts match the configured baseline. Post-import it requires exactly one additional workflow, unchanged credential count, and `active=false`.
 
-## Railway
+## Gate 2A — direct PostgreSQL
 
-CASE-003 reuses the existing n8n service and persistent `/home/node/.n8n` volume. Do not create another Railway project/service.
+Use this path when n8n has a dedicated database login to the CASE-003 PostgreSQL database. Bind a dedicated `postgres` credential only to `case003DueDateEvaluationV1`; do not reuse or modify unrelated credentials. The canonical query is defined in the source workflow and reads `case003.invoice_projection`.
 
-The current production gate is implemented in the CASE-002 runtime branch because that branch owns the live n8n image:
+For local Docker Compose, the database hostname is `postgres`, database/user/password come from `.env`, and the synthetic fixture is installed automatically on a fresh PostgreSQL volume.
 
-`CASE003_DUE_DATE_IMPORT_ON_STARTUP=true`
+## Gate 2B — Supabase RPC
 
-On startup it performs:
+Use this path when you do not want the n8n runtime to hold a Supabase database-owner password.
 
-```text
-consistent backup
- -> pre-import verification
- -> import one inactive workflow
- -> post-import verification
- -> consistent backup
-```
-
-After the one-shot import succeeds, set the variable back to `false` so future restarts do not attempt re-import.
-
-## Supabase / external PostgreSQL
-
-Apply, in order:
+Apply these database artifacts in order:
 
 ```text
 ../build/canonical-model.sql
 ../build/notification-idempotency.sql
+../build/gate2-supabase-rpc.sql
 ```
 
-Then load normalized data/snapshots. The n8n Postgres credential is a runtime secret and is intentionally not committed.
+Generate a high-entropy `CASE003_RPC_TOKEN`. Register only its SHA-256 in `case003.integration_secret` using `scripts/render-rpc-secret-registration.sh`. The plaintext token belongs only in the runtime secret store and the dedicated n8n credential.
 
-## Smoke query
+Render the workflow template:
 
-```sql
-select tenant_id, invoice_id, invoice_reference, canonical_due_date,
-       due_date_source, due_date_conflict, payment_status_evidence
-from case003.invoice_projection
-where canonical_due_date between current_date and current_date + interval '3 days';
+```bash
+node /opt/case003/scripts/render-supabase-rpc-workflow.js
 ```
 
-The local synthetic fixture is date-relative so this query remains useful on future dates.
+Create/import the dedicated credential with `scripts/prepare-rpc-credential.js`, then import the rendered CASE-003 workflow. n8n encrypts the credential payload before storage; never commit the rendered credential JSON.
+
+Detailed Gate-2 procedure: `gate2-connection.md`.
+
+## Gate-2 execution proof
+
+Keep the workflow inactive. Stop the interactive n8n server before a local CLI smoke test against its SQLite volume, then run:
+
+```bash
+sh /opt/case003/scripts/test-gate2.sh
+```
+
+The test does not trust CLI log formatting. It checkpoints the latest CASE-003 CLI execution ID, runs the workflow, then reads the newly persisted execution from n8n SQLite, parses n8n's flatted run data and validates the canonical output. The temporary CLI log and execution checkpoint are deleted.
+
+For the synthetic fixture, the validator requires the known smoke invoice, FBL1N due-date precedence, `payment_status_evidence=UNKNOWN`, and a notification key containing the active snapshot ID.
+
+## Railway
+
+Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
 
 ## Current certification boundary
 
-This bundle certifies reproducibility of the canonical schema, inactive n8n workflow import, backup/verification gates, and synthetic read-only due-date evaluation. Outbound WhatsApp delivery and production payment semantics are intentionally outside Gate 1.
+Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated read-only canonical query through n8n while preserving all pre-existing credentials/workflows and keeping CASE-003 inactive.
+
+It does **not** yet certify outbound WhatsApp delivery, production payment semantics, or durable notification reservation inside the n8n execution path. Those are later gates.
