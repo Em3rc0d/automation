@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.7.0-gate8",
+  "runtimeVersion": "1.8.0-gate9",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -24,13 +24,18 @@
     "../build/gate6-channel-ingress-core.sql",
     "../build/gate6-channel-ingress-rpc.sql",
     "../build/gate7-provider-ingress-core.sql",
-    "../build/gate7-provider-ingress-rpc.sql"
+    "../build/gate7-provider-ingress-rpc.sql",
+    "../build/gate9-verification-core.sql",
+    "../build/gate9-verification-rpc.sql",
+    "../build/gate9-provider-verification-core.sql",
+    "../build/gate9-provider-verification-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
     "sql/010-synthetic-smoke.sql",
     "gate6-synthetic-channel-fixture.sql",
-    "gate7-synthetic-kapso-fixture.sql"
+    "gate7-synthetic-kapso-fixture.sql",
+    "sql/030-gate9-verification-smoke.sql"
   ],
   "invariants": [
     "additive workflow import only",
@@ -74,7 +79,13 @@
     "Gate 8 proves a real user-originated WhatsApp message delivered by Kapso Cloud to CASE-003",
     "Gate 8 keeps CASE-002 live and unchanged while CASE-003 receives the same provider event in parallel",
     "Gate 8 returns AUTH_REQUIRED for an unverified real sender and does not disclose invoice data",
-    "Gate 8 keeps CASE-003 outbound messaging disabled"
+    "Gate 8 keeps CASE-003 outbound messaging disabled",
+    "Gate 9 never treats RUC/tax ID as authentication",
+    "Gate 9 stores only SHA-256 of verification codes and trusted-contact destinations",
+    "Gate 9 limits challenge issuance per channel subject and supplier vendor",
+    "Gate 9 requires trusted-contact code proof or explicit audited operator approval before identity binding",
+    "Gate 9 creates invoice.read only after successful verification",
+    "Gate 9 keeps email transport and WhatsApp outbound delivery separate from the identity core"
   ],
   "targets": [
     "local-linux",
@@ -289,5 +300,35 @@
     "finalProviderWebhookActive": false,
     "finalN8nWorkflowActive": false,
     "case002WebhookActive": true
+  },
+  "gate9": {
+    "runbook": "gate9-verification.md",
+    "coreSchema": "../build/gate9-verification-core.sql",
+    "rpcSchema": "../build/gate9-verification-rpc.sql",
+    "providerCoreSchema": "../build/gate9-provider-verification-core.sql",
+    "providerRpcSchema": "../build/gate9-provider-verification-rpc.sql",
+    "kapsoWorkflow": "n8n/case003-kapso-verification-gate9.template.json",
+    "workflowId": "case003KapsoVerificationGate9V1",
+    "webhookPath": "case003/adapters/kapso/whatsapp/verification",
+    "verificationMethods": [
+      "email_code",
+      "operator_approval"
+    ],
+    "codeEntropyBits": 48,
+    "codeLength": 12,
+    "challengeTtlMinutes": 10,
+    "maxAttempts": 5,
+    "subjectRateLimitPerHour": 3,
+    "vendorRateLimitPerDay": 10,
+    "rawCodePersisted": false,
+    "rawTrustedEmailPersistedInDeliveryLedger": false,
+    "taxIdAuthenticates": false,
+    "autoBindFromTaxId": false,
+    "emailTransportConfigured": false,
+    "whatsappOutboundDelivery": false,
+    "databaseSmokeCertified": true,
+    "smokeRealInvoiceReference": "01-FM01-0096939",
+    "smokeResult": "FOUND",
+    "syntheticAccessCleaned": true
   }
 }
