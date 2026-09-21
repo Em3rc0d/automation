@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.9.0-gate10-mail-prep",
+  "runtimeVersion": "1.9.1-gate10-smtp-prep",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -88,7 +88,7 @@
     "Gate 9 creates invoice.read only after successful verification",
     "Gate 9 keeps email transport and WhatsApp outbound delivery separate from the identity core",
     "Gate 10 keeps challenge generation, expiry, attempts and verification authority in PostgreSQL",
-    "Gate 10 prefers native n8n Gmail OAuth2 delivery and permits SMTP as a transport fallback",
+    "Gate 10 uses native n8n Send Email with a dedicated SMTP credential",
     "Gate 10 test email overrides never modify SAP snapshot trusted-contact data",
     "Gate 10 test email overrides persist only a destination SHA-256 and masked destination",
     "Gate 10 never persists or logs the raw verification code outside the transient internal delivery payload"
@@ -399,9 +399,7 @@
     "runbook": "gate10-email-delivery.md",
     "overrideSchema": "../build/gate10-test-email-override.sql",
     "evidence": "evidence/gate10-email-transport-2026-09-21.md",
-    "architecture": "native-n8n-mail-adapter",
-    "preferredTransport": "gmail-oauth2",
-    "fallbackTransport": "smtp-send-email",
+    "architecture": "native-n8n-smtp",
     "modifiesSapTrustedContact": false,
     "overridePersistsRawEmail": false,
     "overridePersistsDestinationHash": true,
@@ -419,6 +417,12 @@
       "submit code through real WhatsApp",
       "verify external identity and supplier membership",
       "resume original invoice query and return FOUND"
-    ]
+    ],
+    "selectedTransport": "smtp",
+    "n8nNode": "n8n-nodes-base.emailSend",
+    "n8nNodeVersion": 2.1,
+    "credentialType": "smtp",
+    "credentialName": "CASE003 SMTP OTP",
+    "liveSmtpCredentialConfigured": false
   }
 }
