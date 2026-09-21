@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.3.0-gate4",
+  "runtimeVersion": "1.3.1-trigger-split",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -42,7 +42,10 @@
     "Gate 4 never exposes raw XLSX columns directly to n8n",
     "Gate 4 verifies source provenance before canonical publication",
     "Gate 4 publication is atomic: candidate becomes active and previous active becomes superseded",
-    "Gate 4 keeps PAYMENT_DATE_EVIDENCE distinct from certified paid/unpaid semantics"
+    "Gate 4 keeps PAYMENT_DATE_EVIDENCE distinct from certified paid/unpaid semantics",
+    "Trigger split isolates Manual Trigger and Schedule Trigger into separate workflows",
+    "Both split workflows remain inactive until explicitly enabled",
+    "Trigger split reuses the existing CASE-003 credential without editing credential payloads"
   ],
   "targets": [
     "local-linux",
@@ -130,5 +133,13 @@
       "dueDateSource": "FBL1N",
       "paymentStatusEvidence": "PAYMENT_DATE_EVIDENCE"
     }
+  },
+  "triggerSplit": {
+    "reason": "n8n 2.38.7 partial-execution null-state failures when Manual Trigger and Schedule Trigger converge into one path",
+    "manualWorkflow": "n8n/case003-due-date-reservation-manual.template.json",
+    "scheduleWorkflow": "n8n/case003-due-date-reservation-schedule.template.json",
+    "manualWorkflowId": "case003DueDateEvaluationV1",
+    "scheduleWorkflowId": "case003DueDateScheduleV1",
+    "defaultState": "inactive"
   }
 }
