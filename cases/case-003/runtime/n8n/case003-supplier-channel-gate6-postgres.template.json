@@ -1,0 +1,176 @@
+{
+  "id": "case003SupplierChannelGate6V1",
+  "name": "CASE-003 Supplier Channel Gate 6",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "case003/supplier-channel",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Supplier Channel Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "case003-supplier-channel-gate6-v1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "case003RpcAuthV1",
+          "name": "CASE003 Supabase RPC Token"
+        }
+      },
+      "notes": "Gate 6 provider-neutral inbound endpoint. Header-authenticated; no outbound messaging."
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$input.first().json||{};\nconst body=req.body||req;\nconst text=String(body.text||'').trim();\nconst explicitInvoice=body.invoice_reference==null?'':String(body.invoice_reference).trim();\nconst explicitTax=body.claimed_tax_id==null?'':String(body.claimed_tax_id).replace(/\\D/g,'');\nconst invoiceMatch=text.match(/(?:FACTURA|INVOICE)\\s*[:=#-]?\\s*([A-Z0-9-]{4,120})/i);\nconst taxMatch=text.match(/(?:RUC|TAX)\\s*[:=#-]?\\s*(\\d{8,20})/i);\nconst providerMessageId=String(body.provider_message_id||body.message_id||'').trim();\nconst subject=String(body.subject||body.sender_id||'').trim();\nconst channel=String(body.channel||'whatsapp').trim().toLowerCase();\nconst tenantId=String(body.tenant_id||'__CASE003_GATE6_TENANT_ID__').trim();\nconst traceId=String(body.trace_id||providerMessageId).trim();\nif(!providerMessageId) throw new Error('GATE6_PROVIDER_MESSAGE_ID_REQUIRED');\nif(!subject) throw new Error('GATE6_SUBJECT_REQUIRED');\nif(!text) throw new Error('GATE6_TEXT_REQUIRED');\nreturn [{json:{\n  tenant_id:tenantId,\n  channel,\n  subject,\n  provider_message_id:providerMessageId,\n  text,\n  invoice_reference:explicitInvoice||(invoiceMatch?.[1]||null),\n  claimed_tax_id:explicitTax||(taxMatch?.[1]||null),\n  trace_id:traceId\n}}];"
+      },
+      "id": "normalize",
+      "name": "Normalize Channel Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select case003.channel_message_direct($1::uuid,$2,$3,$4,$5,$6,$7,$8) as result",
+        "options": {
+          "queryReplacement": "={{ [$json.tenant_id,$json.channel,$json.subject,$json.provider_message_id,$json.text,$json.invoice_reference,$json.claimed_tax_id,$json.trace_id] }}"
+        }
+      },
+      "id": "process",
+      "name": "Resolve Identity and Invoice",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        520,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "case003PostgresV1",
+          "name": "CASE003 PostgreSQL"
+        }
+      },
+      "notes": "Direct PostgreSQL Gate-6 adapter using parameterized query values."
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{};\nconst allowed=new Set(['FOUND','DUPLICATE','AUTH_REQUIRED','VERIFICATION_REQUIRED','NOT_FOUND_OR_NOT_AUTHORIZED','NEEDS_DISAMBIGUATION']);\nif(!allowed.has(j.decision)) throw new Error('GATE6_UNEXPECTED_DECISION');\nif(j.channel_delivery!=='disabled') throw new Error('GATE6_OUTBOUND_MUST_BE_DISABLED');\nif(j.decision!=='FOUND'){\n  for(const k of ['company_code','fi_document_number','snapshot_id']){\n    if(j[k]!==undefined&&j[k]!==null) throw new Error('GATE6_DENIED_RESPONSE_LEAK:'+k);\n  }\n}\nreturn [{json:{...j,gate6Assertion:true}}];"
+      },
+      "id": "assert",
+      "name": "Assert Safe Channel Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond",
+      "name": "Return Safe Channel Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r=$input.first().json?.result; if(!r||typeof r!=='object') throw new Error('GATE6_POSTGRES_RESULT_MISSING'); return [{json:r}];"
+      },
+      "id": "unwrap",
+      "name": "Unwrap PostgreSQL Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Supplier Channel Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Channel Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Channel Message": {
+      "main": [
+        [
+          {
+            "node": "Resolve Identity and Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Identity and Invoice": {
+      "main": [
+        [
+          {
+            "node": "Unwrap PostgreSQL Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assert Safe Channel Decision": {
+      "main": [
+        [
+          {
+            "node": "Return Safe Channel Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unwrap PostgreSQL Result": {
+      "main": [
+        [
+          {
+            "node": "Assert Safe Channel Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "caseId": "CASE-003",
+    "purpose": "Gate-6 authenticated provider-neutral channel ingress and verification initiation. Outbound disabled."
+  }
+}
