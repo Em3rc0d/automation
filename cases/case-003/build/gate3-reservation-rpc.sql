@@ -118,4 +118,4 @@ $$;
 
 revoke all on function public.case003_reserve_due_candidates(integer,text) from public;
 grant execute on function public.case003_reserve_due_candidates(integer,text)
-  to anon, authenticated, service_role;
+  to anon, service_role;
