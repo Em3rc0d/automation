@@ -38,7 +38,7 @@ async function latest(db){
   const row=await latest(db);
 
   if(mode==='pre'){
-    fs.writeFileSync(checkpoint,JSON.stringify({latestExecutionId:row?.id??null},null,2)+'\\n',{mode:0o600});
+    fs.writeFileSync(checkpoint,JSON.stringify({latestExecutionId:row?.id??null},null,2),{mode:0o600});
     console.log('[case003-gate2-test] PRE execution checkpoint latestCliExecutionId='+(row?.id??'none'));
     await close(db);
     return;
