@@ -1,0 +1,34 @@
+{
+  "caseId": "CASE-003",
+  "runtimeVersion": "1.0.0-gate1",
+  "linux": true,
+  "n8nImage": "n8nio/n8n:2.38.7",
+  "postgresImage": "postgres:16",
+  "workflow": {
+    "id": "case003DueDateEvaluationV1",
+    "name": "CASE-003 Due Date Evaluation",
+    "active": false,
+    "path": "n8n/case003-due-date-evaluation.json"
+  },
+  "schemas": [
+    "../build/canonical-model.sql",
+    "../build/notification-idempotency.sql"
+  ],
+  "fixtures": [
+    "../build/synthetic-fixtures.json",
+    "sql/010-synthetic-smoke.sql"
+  ],
+  "invariants": [
+    "additive workflow import only",
+    "workflow remains inactive after Gate 1",
+    "existing credentials unchanged",
+    "backup before mutation",
+    "PostgreSQL/Supabase owns durable business state"
+  ],
+  "targets": [
+    "local-linux",
+    "linux-vps",
+    "railway-linux",
+    "supabase-postgresql"
+  ]
+}
