@@ -25,14 +25,16 @@ No credential secret value was read or logged.
 
 ## Decision
 
-Gate 10 will use n8n-native mail delivery:
+Gate 10 will use n8n-native SMTP delivery:
 
 ```text
-preferred  = Gmail node + OAuth2
-fallback   = Send Email node + SMTP
+node       = Send Email
+node type  = n8n-nodes-base.emailSend
+version    = 2.1
+credential = smtp / CASE003 SMTP OTP
 ```
 
-A Resend-specific runner is not part of the canonical architecture and has been removed from the repository/runtime source branch.
+A Resend-specific runner and Gmail OAuth2 are not required by the selected architecture.
 
 ## Controlled test destination
 
@@ -49,7 +51,7 @@ real WhatsApp verification-init     PASS
 durable VERIFICATION_REQUIRED       PASS
 challenge creation                  PASS
 invoice resume context              PASS
-native n8n mail credential          PENDING
+SMTP credential                     PENDING
 real email delivery                 PENDING
 code receipt                        PENDING
 WhatsApp code verification          PENDING
