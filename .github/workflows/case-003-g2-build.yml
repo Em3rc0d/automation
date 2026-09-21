@@ -129,3 +129,23 @@ jobs:
           if(!m.schemas.includes('../build/gate3-reservation-rpc.sql')) throw new Error('Gate-3 RPC schema absent from manifest');
           console.log('PASS Gate-3 portable artifacts');
           NODE
+
+      - name: Validate split-trigger workflows
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          for (const [path,triggerId] of [
+            ['cases/case-003/runtime/n8n/case003-due-date-reservation-manual.template.json','manual'],
+            ['cases/case-003/runtime/n8n/case003-due-date-reservation-schedule.template.json','schedule'],
+          ]) {
+            const w=JSON.parse(fs.readFileSync(path,'utf8'));
+            if(w.active!==false) throw new Error(path+' must remain inactive');
+            const triggers=w.nodes.filter(n=>String(n.type||'').includes('Trigger'));
+            if(triggers.length!==1) throw new Error(path+' must contain exactly one trigger');
+            if(!w.nodes.some(n=>n.id===triggerId)) throw new Error(path+' expected trigger missing');
+            if(triggerId==='manual' && w.nodes.some(n=>n.id==='schedule')) throw new Error('manual template contains schedule trigger');
+            if(triggerId==='schedule' && w.nodes.some(n=>n.id==='manual')) throw new Error('schedule template contains manual trigger');
+            for(const id of ['reserve-rpc','allow-new','payload']) if(!w.nodes.some(n=>n.id===id)) throw new Error(path+' missing '+id);
+          }
+          console.log('PASS split-trigger workflow invariants');
+          NODE
