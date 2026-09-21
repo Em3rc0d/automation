@@ -80,8 +80,9 @@ The output binds only the CASE-003 RPC node to `case003RpcAuthV1`. The workflow 
 5. Import the dedicated credential.
 6. Replace only `case003DueDateEvaluationV1` with the RPC adapter.
 7. Verify workflow count is unchanged, credential count is exactly +1, every old credential hash is unchanged, every non-CASE003 workflow hash is unchanged, and CASE-003 remains inactive.
-8. Execute CASE-003 manually/CLI and verify deterministic read-only output.
-9. No WhatsApp/channel side effect is permitted during Gate 2.
+8. Checkpoint the latest CASE-003 CLI execution ID, execute the inactive workflow with the n8n CLI, then validate the newly persisted `execution_entity`/`execution_data` record using n8n's flatted data format. This avoids depending on logger/stdout configuration.
+9. Require the synthetic smoke invoice, FBL1N due-date precedence, `payment_status_evidence=UNKNOWN`, and a notification key containing the active snapshot ID.
+10. No WhatsApp/channel side effect is permitted during Gate 2.
 
 ## Gate-2 pass conditions
 
