@@ -2,9 +2,15 @@ name: CASE-003 G2 Build Gate
 on:
   push:
     branches: [case-003/s4hana-report-supplier-self-service]
-    paths: ["cases/case-003/build/**"]
+    paths:
+      - "cases/case-003/build/**"
+      - "cases/case-003/runtime/**"
+      - ".github/workflows/case-003-g2-build.yml"
   pull_request:
-    paths: ["cases/case-003/build/**"]
+    paths:
+      - "cases/case-003/build/**"
+      - "cases/case-003/runtime/**"
+      - ".github/workflows/case-003-g2-build.yml"
 permissions:
   contents: read
 jobs:
@@ -18,5 +24,26 @@ jobs:
           node-version: "22"
       - name: Test canonical normalization and due-date projection
         run: node cases/case-003/build/test-g2.js
-      - name: Validate n8n workflow JSON
-        run: node -e "JSON.parse(require('fs').readFileSync('cases/case-003/build/n8n-due-date-workflow.json','utf8')); console.log('PASS n8n JSON')"
+      - name: Validate n8n workflow JSON and portable mirror
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const source=JSON.parse(fs.readFileSync('cases/case-003/build/n8n-due-date-workflow.json','utf8'));
+          const portable=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-due-date-evaluation.json','utf8'));
+          if(source.id!=='case003DueDateEvaluationV1') throw new Error('source workflow ID not pinned');
+          if(source.active!==false || portable.active!==false) throw new Error('Gate-1 workflow must be inactive');
+          if(JSON.stringify(source)!==JSON.stringify(portable)) throw new Error('portable workflow drifted from source workflow');
+          console.log('PASS n8n workflow mirror');
+          NODE
+      - name: Validate portable runtime manifest
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.caseId!=='CASE-003') throw new Error('wrong caseId');
+          if(m.workflow.id!=='case003DueDateEvaluationV1' || m.workflow.active!==false) throw new Error('workflow manifest invariant failed');
+          for(const p of ['cases/case-003/build/canonical-model.sql','cases/case-003/build/notification-idempotency.sql','cases/case-003/runtime/docker-compose.yml','cases/case-003/runtime/scripts/import-workflow.sh']) {
+            if(!fs.existsSync(p)) throw new Error('missing runtime artifact: '+p);
+          }
+          console.log('PASS portable runtime manifest');
+          NODE
