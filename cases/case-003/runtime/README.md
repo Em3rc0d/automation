@@ -213,12 +213,18 @@ RUC/tax ID remains identification only. Unknown channel subjects are never auto-
 
 Artifacts are documented in `gate6-channel-ingress.md`. The live and portable Gate-6 workflows contain no outbound messaging node.
 
+## Gate 7 — signed Kapso provider ingress
+
+Gate 7 adds a Kapso-shaped receive adapter in front of the Gate-6/Gate-5 trust chain. It verifies HMAC-SHA256 over the raw body, validates the provider event/version/idempotency headers, normalizes only required message fields, resolves tenant scope from a persisted provider-channel binding, and then delegates to the existing identity/authorization/canonical-data path.
+
+The provider never controls the tenant boundary. Invalid signatures fail with HTTP 401, unbound provider channels fail closed, replayed provider message IDs are harmless, and outbound messaging remains disabled. See `gate7-kapso-ingress.md`.
+
 ## Railway
 
 Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
 
 ## Current certification boundary
 
-Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies verified identity, membership, permission and resource ownership. Gate 6 certifies authenticated provider-neutral channel ingress, replay protection and verification initiation while outbound delivery remains disabled.
+Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies verified identity, membership, permission and resource ownership. Gate 6 certifies authenticated provider-neutral channel ingress, replay protection and verification initiation. Gate 7 certifies a signed Kapso-shaped provider adapter, persisted connector-to-tenant binding and the same downstream authorization path while outbound delivery remains disabled.
 
-It does **not** yet certify real provider-to-CASE003 WhatsApp ingress, OTP/trusted-contact delivery, approval of an unknown identity, outbound WhatsApp delivery, or production payment semantics. Those remain later gates.
+It does **not** yet certify an actual Kapso Cloud / WhatsApp-originated delivery into the CASE-003 endpoint, OTP/trusted-contact delivery, approval of an unknown identity, outbound WhatsApp delivery, or production payment semantics. Those remain later gates.
