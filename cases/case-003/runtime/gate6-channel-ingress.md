@@ -139,7 +139,16 @@ docker compose up -d n8n
 
 The HTTP proof temporarily activates only the Gate-6 webhook, starts n8n locally, performs authenticated requests, then restores the workflow to inactive.
 
-For vanilla PostgreSQL, use the Gate-6 core and the direct-PostgreSQL workflow template with a least-privilege `case003PostgresV1` credential.
+For vanilla PostgreSQL, use the Gate-6 core and the direct-PostgreSQL adapter:
+
+```bash
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/configure-gate6-postgres.sh
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/test-gate6-http.sh
+docker compose up -d n8n
+```
+
+The direct workflow uses parameterized PostgreSQL query replacements and the least-privilege `case003PostgresV1` credential.
 
 ## Certified decision matrix
 
