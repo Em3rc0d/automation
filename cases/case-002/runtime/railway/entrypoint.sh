@@ -543,5 +543,14 @@ if [ "${CASE003_GATE8_PREPARE_KAPSO_WEBHOOK_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js post-case003-gate8-prepare
 fi
 
+# CASE-003 Gate 8: arm the isolated CASE-003 Kapso webhook for a
+# real WhatsApp-originated receive proof. No outbound send node exists.
+if [ "${CASE003_GATE8_ARM_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate8-arm] guarded real-provider arm requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate8-arm
+  node /opt/case002/arm-case003-gate8.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate8-arm
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
