@@ -96,7 +96,8 @@
     "evidence/gate2-railway-2026-09-21.md",
     "evidence/gate3-railway-2026-09-21.md",
     "evidence/gate4-railway-2026-09-21.md",
-    "evidence/gate5-railway-2026-09-21.md"
+    "evidence/gate5-railway-2026-09-21.md",
+    "evidence/gate6-railway-2026-09-21.md"
   ],
   "scripts": {
     "gate1Import": "scripts/import-workflow.sh",
@@ -210,6 +211,8 @@
     "trustedContactDelivery": false,
     "outboundDelivery": false,
     "postgresConfigureScript": "scripts/configure-gate6-postgres.sh",
-    "postgresRenderer": "scripts/render-gate6-postgres-workflow.js"
+    "postgresRenderer": "scripts/render-gate6-postgres-workflow.js",
+    "certifiedHttpDeployment": "bdbc1d0e-19f0-4541-af54-12de8717406f",
+    "finalCleanDeployment": "f7aa1a6a-3ede-49fe-95a8-69228d73f3ef"
   }
 }
