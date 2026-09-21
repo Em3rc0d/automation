@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.3.1-trigger-split",
+  "runtimeVersion": "1.4.0-gate5",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -18,7 +18,9 @@
     "../build/gate3-reservation-rpc.sql",
     "../build/gate4-import-provenance.sql",
     "../build/gate4-batch-ingest-rpc.sql",
-    "../build/gate4-staged-import.sql"
+    "../build/gate4-staged-import.sql",
+    "../build/gate5-supplier-query-core.sql",
+    "../build/gate5-supplier-query-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
@@ -45,7 +47,12 @@
     "Gate 4 keeps PAYMENT_DATE_EVIDENCE distinct from certified paid/unpaid semantics",
     "Trigger split isolates Manual Trigger and Schedule Trigger into separate workflows",
     "Both split workflows remain inactive until explicitly enabled",
-    "Trigger split reuses the existing CASE-003 credential without editing credential payloads"
+    "Trigger split reuses the existing CASE-003 credential without editing credential payloads",
+    "Gate 5 never treats RUC/tax ID as authentication",
+    "Gate 5 requires verified identity, active membership, invoice.read and resource ownership before invoice data is returned",
+    "Gate 5 uses neutral NOT_FOUND_OR_NOT_AUTHORIZED for denied resource lookups",
+    "Gate 5 audits every supplier invoice query",
+    "Gate 5 has no outbound messaging node"
   ],
   "targets": [
     "local-linux",
@@ -141,5 +148,21 @@
     "manualWorkflowId": "case003DueDateEvaluationV1",
     "scheduleWorkflowId": "case003DueDateScheduleV1",
     "defaultState": "inactive"
+  },
+  "gate5": {
+    "runbook": "gate5-supplier-query.md",
+    "fixture": "gate5-synthetic-access-fixtures.sql",
+    "workflow": "n8n/case003-supplier-query-gate5.template.json",
+    "workflowId": "case003SupplierQueryGate5V1",
+    "permission": "invoice.read",
+    "decisions": [
+      "FOUND",
+      "AUTH_REQUIRED",
+      "NOT_FOUND_OR_NOT_AUTHORIZED",
+      "NEEDS_DISAMBIGUATION"
+    ],
+    "positiveInvoice": "01-FM01-0096939",
+    "positiveSnapshot": "b1ea19f1-ed7d-54b5-9009-10759dd6126d",
+    "outboundDelivery": false
   }
 }
