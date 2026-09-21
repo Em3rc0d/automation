@@ -1,0 +1,107 @@
+{
+  "id": "case003SupplierQueryGate5V1",
+  "name": "CASE-003 Supplier Invoice Query Gate 5",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Manual Gate 5 Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with cases(trace_id,subject,invoice_reference) as (\n  values\n    ('gate5-positive','gate5-pe10-authorized-v1','__CASE003_GATE5_INVOICE_REFERENCE__'),\n    ('gate5-wrong-vendor','gate5-other-vendor-v1','__CASE003_GATE5_INVOICE_REFERENCE__'),\n    ('gate5-no-permission','gate5-no-permission-v1','__CASE003_GATE5_INVOICE_REFERENCE__'),\n    ('gate5-unknown','gate5-unknown-user-v1','__CASE003_GATE5_INVOICE_REFERENCE__')\n)\nselect q.*\nfrom cases c\ncross join lateral case003.supplier_invoice_query_direct(\n  '__CASE003_GATE5_TENANT_ID__'::uuid,\n  'test',\n  c.subject,\n  c.invoice_reference,\n  c.trace_id\n) q\norder by c.trace_id;"
+      },
+      "id": "query-postgres",
+      "name": "Query Supplier Invoice",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        280,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "case003PostgresV1",
+          "name": "CASE003 PostgreSQL"
+        }
+      },
+      "notes": "Portable direct-PostgreSQL Gate-5 adapter for local Linux/VPS."
+    },
+    {
+      "parameters": {
+        "jsCode": "const expected={\n  'gate5-positive':'FOUND',\n  'gate5-wrong-vendor':'NOT_FOUND_OR_NOT_AUTHORIZED',\n  'gate5-no-permission':'NOT_FOUND_OR_NOT_AUTHORIZED',\n  'gate5-unknown':'AUTH_REQUIRED',\n};\nconst required=new Set(Object.keys(expected));\nfor(const item of items){\n  const j=item.json;\n  if(!j||!required.has(j.trace_id)) throw new Error('Unexpected Gate-5 trace_id');\n  if(j.decision!==expected[j.trace_id]) throw new Error('Gate-5 decision mismatch for '+j.trace_id);\n  if(j.trace_id==='gate5-positive'){\n    if(j.invoice_reference!=='__CASE003_GATE5_INVOICE_REFERENCE__') throw new Error('Positive invoice mismatch');\n    if(j.company_code!=='__CASE003_GATE5_COMPANY_CODE__') throw new Error('Positive company mismatch');\n    if(j.fi_document_number!=='__CASE003_GATE5_FI_DOCUMENT__') throw new Error('Positive FI mismatch');\n    if(j.snapshot_id!=='__CASE003_GATE5_SNAPSHOT_ID__') throw new Error('Positive snapshot mismatch');\n  }else{\n    for(const k of ['invoice_reference','company_code','fi_document_number','snapshot_id']) if(j[k]!==null&&j[k]!==undefined) throw new Error('Denied case leaked '+k);\n  }\n  required.delete(j.trace_id);\n}\nif(required.size) throw new Error('Missing Gate-5 decisions');\nreturn items.map(item=>({json:{...item.json,gate5Assertion:true}}));"
+      },
+      "id": "assert",
+      "name": "Assert Access Decisions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item=>{\n  const j=item.json;\n  if(j.decision==='FOUND') return {json:{...j,response_type:'invoice_status',safe_to_respond:true,channel_delivery:'disabled'}};\n  if(j.decision==='AUTH_REQUIRED') return {json:{trace_id:j.trace_id,decision:j.decision,response_type:'verification_required',safe_to_respond:true,channel_delivery:'disabled'}};\n  return {json:{trace_id:j.trace_id,decision:j.decision,response_type:'neutral_not_found_or_not_authorized',safe_to_respond:true,channel_delivery:'disabled'}};\n});"
+      },
+      "id": "response",
+      "name": "Build Safe Supplier Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Gate 5 Test": {
+      "main": [
+        [
+          {
+            "node": "Query Supplier Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Supplier Invoice": {
+      "main": [
+        [
+          {
+            "node": "Assert Access Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assert Access Decisions": {
+      "main": [
+        [
+          {
+            "node": "Build Safe Supplier Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "caseId": "CASE-003",
+    "purpose": "Portable direct-PostgreSQL Gate-5 access-control proof. Inactive. No outbound delivery."
+  }
+}
