@@ -11,7 +11,9 @@ services:
       - ../build/canonical-model.sql:/docker-entrypoint-initdb.d/001-canonical-model.sql:ro
       - ../build/notification-idempotency.sql:/docker-entrypoint-initdb.d/002-notification-idempotency.sql:ro
       - ../build/gate3-reservation-core.sql:/docker-entrypoint-initdb.d/003-gate3-reservation-core.sql:ro
+      - ../build/gate5-supplier-query-core.sql:/docker-entrypoint-initdb.d/004-gate5-supplier-query-core.sql:ro
       - ./sql/010-synthetic-smoke.sql:/docker-entrypoint-initdb.d/010-synthetic-smoke.sql:ro
+      - ./sql/020-gate5-access-smoke.sql:/docker-entrypoint-initdb.d/020-gate5-access-smoke.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -44,6 +46,11 @@ services:
       CASE003_RULE_CODE: ${CASE003_RULE_CODE:-due_3d}
       CASE003_EXPECTED_SMOKE_TENANT_ID: ${CASE003_EXPECTED_SMOKE_TENANT_ID:-30000000-0000-0000-0000-000000000000}
       CASE003_EXPECTED_SMOKE_INVOICE_ID: ${CASE003_EXPECTED_SMOKE_INVOICE_ID:-30000000-0000-0000-0000-000000000100}
+      CASE003_GATE5_TENANT_ID: ${CASE003_GATE5_TENANT_ID:-30000000-0000-0000-0000-000000000000}
+      CASE003_GATE5_INVOICE_REFERENCE: ${CASE003_GATE5_INVOICE_REFERENCE:-F001-100}
+      CASE003_GATE5_COMPANY_CODE: ${CASE003_GATE5_COMPANY_CODE:-PE10}
+      CASE003_GATE5_FI_DOCUMENT: ${CASE003_GATE5_FI_DOCUMENT:-5100000100}
+      CASE003_GATE5_SNAPSHOT_ID: ${CASE003_GATE5_SNAPSHOT_ID:-30000000-0000-0000-0000-000000000001}
     ports:
       - "5678:5678"
     volumes:
