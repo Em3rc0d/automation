@@ -75,7 +75,8 @@
   "evidence": [
     "evidence/gate1-railway-2026-09-21.md",
     "evidence/gate2-railway-2026-09-21.md",
-    "evidence/gate3-railway-2026-09-21.md"
+    "evidence/gate3-railway-2026-09-21.md",
+    "evidence/gate4-railway-2026-09-21.md"
   ],
   "scripts": {
     "gate1Import": "scripts/import-workflow.sh",
