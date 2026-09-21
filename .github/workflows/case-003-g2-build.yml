@@ -179,9 +179,11 @@ jobs:
       - name: Validate Gate-6 channel-ingress artifacts
         run: |
           node --check cases/case-003/runtime/scripts/render-gate6-workflow.js
+          node --check cases/case-003/runtime/scripts/render-gate6-postgres-workflow.js
           node --check cases/case-003/runtime/scripts/verify-gate6-import.js
           node --check cases/case-003/runtime/scripts/test-gate6-http.js
           sh -n cases/case-003/runtime/scripts/configure-gate6.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate6-postgres.sh
           sh -n cases/case-003/runtime/scripts/test-gate6-http.sh
           grep -q "process_channel_message" cases/case-003/build/gate6-channel-ingress-core.sql
           grep -q "channel_message_direct" cases/case-003/build/gate6-channel-ingress-core.sql
