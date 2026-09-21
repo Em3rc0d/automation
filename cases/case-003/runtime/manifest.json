@@ -338,6 +338,11 @@
     "preparedKapsoWebhookActive": false,
     "n8nWorkflowActive": false,
     "workflowCount": 15,
-    "credentialCount": 5
+    "credentialCount": 5,
+    "armDeployment": "77a709cd-af2c-4d37-8dd1-be8c8a35740f",
+    "armPostBackupSha256": "bf53882c442e8bac8756e2e6b666f157221435ab4fda143e99d9421e2ebae383",
+    "providerWebhookActiveForExplicitTest": true,
+    "n8nWorkflowActiveForExplicitTest": true,
+    "armOneShotResetWithoutDeploy": true
   }
 }
