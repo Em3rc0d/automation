@@ -1,7 +1,8 @@
--- CASE-003 Gate 6: authenticated provider-neutral channel ingress +
--- identity-verification initiation + replay protection.
--- This gate never treats RUC/tax ID as authentication and never auto-binds
--- an unknown channel subject to a supplier.
+-- CASE-003 Gate 6 combined Supabase deployment convenience file.
+-- For vanilla PostgreSQL use gate6-channel-ingress-core.sql only.
+
+-- CASE-003 Gate 6 portable PostgreSQL core.
+-- Prerequisite: Gate-5 identity/membership/permission/ownership core.
 
 create table if not exists case003.channel_message (
   id uuid primary key default gen_random_uuid(),
@@ -54,9 +55,7 @@ begin
   if p_email is null or position('@' in p_email)=0 then return null; end if;
   local_part:=split_part(p_email,'@',1);
   domain_part:=split_part(p_email,'@',2);
-  if length(local_part)=1 then
-    return '*'||'@'||domain_part;
-  end if;
+  if length(local_part)=1 then return '*'||'@'||domain_part; end if;
   return left(local_part,1)||repeat('*',greatest(length(local_part)-2,1))||
          case when length(local_part)>2 then right(local_part,1) else '' end||
          '@'||domain_part;
@@ -82,8 +81,12 @@ declare
   inserted_id uuid;
   verified_user uuid;
   result_row record;
-  candidate record;
-  candidate_count integer:=0;
+  candidate_vendor text;
+  candidate_supplier uuid;
+  candidate_company text;
+  candidate_email text;
+  candidate_vendor_count integer:=0;
+  candidate_email_count integer:=0;
   request_id uuid;
   masked text;
 begin
@@ -97,7 +100,7 @@ begin
 
   insert into case003.channel_message(
     tenant_id,channel,subject_hash,provider_message_id,trace_id,command,invoice_reference,claimed_tax_id,decision
-  ) values (
+  ) values(
     p_tenant_id,p_channel,p_subject_hash,p_provider_message_id,p_trace_id,'supplier_invoice_query',
     p_invoice_reference,p_claimed_tax_id,'PROCESSING'
   )
@@ -106,11 +109,8 @@ begin
 
   if inserted_id is null then
     return jsonb_build_object(
-      'trace_id',p_trace_id,
-      'decision','DUPLICATE',
-      'response_type','duplicate_ignored',
-      'safe_to_respond',true,
-      'channel_delivery','disabled'
+      'trace_id',p_trace_id,'decision','DUPLICATE','response_type','duplicate_ignored',
+      'safe_to_respond',true,'channel_delivery','disabled'
     );
   end if;
 
@@ -177,14 +177,18 @@ begin
     );
   end if;
 
-  select count(*)::int into candidate_count
+  -- A tax ID is identification only. Multiple company-code rows for the same
+  -- SAP vendor are one candidate relationship, not multiple authentications.
+  select count(distinct s.sap_vendor_id)::int,
+         count(distinct nullif(lower(trim(s.trusted_contact_email)),''))::int
+    into candidate_vendor_count,candidate_email_count
   from case003.supplier s
   join case003.import_snapshot snap on snap.id=s.snapshot_id
   where s.tenant_id=p_tenant_id
     and snap.status='active'
     and s.tax_id=p_claimed_tax_id;
 
-  if candidate_count<>1 then
+  if candidate_vendor_count<>1 or candidate_email_count<>1 then
     update case003.channel_message set decision='NOT_FOUND_OR_NOT_AUTHORIZED' where id=inserted_id;
     return jsonb_build_object(
       'trace_id',p_trace_id,
@@ -195,24 +199,33 @@ begin
     );
   end if;
 
-  select s.id,s.sap_vendor_id,s.company_code,s.trusted_contact_email
-  into candidate
+  select min(s.id::text)::uuid,min(s.sap_vendor_id),min(s.trusted_contact_email)
+    into candidate_supplier,candidate_vendor,candidate_email
+  from case003.supplier s
+  join case003.import_snapshot snap on snap.id=s.snapshot_id
+  where s.tenant_id=p_tenant_id
+    and snap.status='active'
+    and s.tax_id=p_claimed_tax_id;
+
+  select case when count(distinct s.company_code)=1 then min(s.company_code) else null end
+    into candidate_company
   from case003.supplier s
   join case003.import_snapshot snap on snap.id=s.snapshot_id
   where s.tenant_id=p_tenant_id
     and snap.status='active'
     and s.tax_id=p_claimed_tax_id
-  limit 1;
+    and s.sap_vendor_id=candidate_vendor;
 
-  masked:=case003.mask_email(candidate.trusted_contact_email);
+  masked:=case003.mask_email(candidate_email);
 
   insert into case003.verification_request(
     tenant_id,channel,subject_hash,candidate_supplier_id,candidate_vendor_id,company_code_scope,
     claimed_tax_id,trusted_contact_masked,status,delivery_status,expires_at
-  ) values (
-    p_tenant_id,p_channel,p_subject_hash,candidate.id,candidate.sap_vendor_id,candidate.company_code,
+  ) values(
+    p_tenant_id,p_channel,p_subject_hash,candidate_supplier,candidate_vendor,candidate_company,
     p_claimed_tax_id,masked,'pending','disabled',now()+interval '15 minutes'
-  ) returning id into request_id;
+  )
+  returning id into request_id;
 
   update case003.channel_message set decision='VERIFICATION_REQUIRED' where id=inserted_id;
 
@@ -230,9 +243,36 @@ begin
 end;
 $$;
 
-revoke all on function case003.process_channel_message(uuid,text,text,text,text,text,text,text)
-  from public,anon,authenticated;
+create or replace function case003.channel_message_direct(
+  p_tenant_id uuid,
+  p_channel text,
+  p_subject text,
+  p_provider_message_id text,
+  p_text text,
+  p_invoice_reference text default null,
+  p_claimed_tax_id text default null,
+  p_trace_id text default null
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path=pg_catalog,case003,extensions
+as $$
+declare subject_hash text;
+begin
+  if p_subject is null or length(p_subject)<1 or length(p_subject)>200 then
+    raise exception 'invalid subject';
+  end if;
+  subject_hash:=encode(extensions.digest(p_subject,'sha256'),'hex');
+  return case003.process_channel_message(
+    p_tenant_id,p_channel,subject_hash,p_provider_message_id,p_text,
+    p_invoice_reference,p_claimed_tax_id,p_trace_id
+  );
+end;
+$$;
 
+-- CASE-003 Gate 6 Supabase/PostgREST adapter.
+-- Prerequisites: Gate-2 integration secret + Gate-6 core.
 create or replace function public.case003_channel_message_json(
   p_tenant_id uuid,
   p_channel text,
@@ -252,7 +292,6 @@ declare
   request_headers jsonb;
   provided_token text;
   expected_hash text;
-  subject_hash text;
 begin
   request_headers:=coalesce(current_setting('request.headers',true),'{}')::jsonb;
   provided_token:=request_headers->>'x-case003-token';
@@ -266,14 +305,8 @@ begin
     raise exception 'unauthorized' using errcode='28000';
   end if;
 
-  if p_subject is null or length(p_subject)<1 or length(p_subject)>200 then
-    raise exception 'invalid subject';
-  end if;
-
-  subject_hash:=encode(extensions.digest(p_subject,'sha256'),'hex');
-
-  return case003.process_channel_message(
-    p_tenant_id,p_channel,subject_hash,p_provider_message_id,p_text,
+  return case003.channel_message_direct(
+    p_tenant_id,p_channel,p_subject,p_provider_message_id,p_text,
     p_invoice_reference,p_claimed_tax_id,p_trace_id
   );
 end;
