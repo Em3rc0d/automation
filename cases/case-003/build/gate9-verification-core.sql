@@ -83,9 +83,9 @@ set search_path=pg_catalog,case003
 as $$
 declare
   vr case003.verification_request%rowtype;
-  user_id uuid;
-  membership_id uuid;
-  identity_id uuid;
+  v_user_id uuid;
+  v_membership_id uuid;
+  v_identity_id uuid;
 begin
   if p_verification_request_id is null then raise exception 'verification request required'; end if;
   if p_proof_method not in ('email_code','operator_approval') then raise exception 'invalid proof method'; end if;
@@ -123,62 +123,62 @@ begin
     raise exception 'verification request missing candidate vendor';
   end if;
 
-  select ei.id,ei.user_id into identity_id,user_id
+  select ei.id,ei.user_id into v_identity_id,v_user_id
   from case003.external_identity ei
   where ei.tenant_id=vr.tenant_id
     and ei.channel=vr.channel
     and ei.subject_hash=vr.subject_hash
   limit 1;
 
-  if user_id is null then
-    user_id:=gen_random_uuid();
+  if v_user_id is null then
+    v_user_id:=gen_random_uuid();
     insert into case003.external_user(id,tenant_id,display_label,status)
-    values(user_id,vr.tenant_id,'supplier:'||vr.candidate_vendor_id,'active');
+    values(v_user_id,vr.tenant_id,'supplier:'||vr.candidate_vendor_id,'active');
 
-    identity_id:=gen_random_uuid();
+    v_identity_id:=gen_random_uuid();
     insert into case003.external_identity(
       id,tenant_id,user_id,channel,subject_hash,status,verified_at
     ) values(
-      identity_id,vr.tenant_id,user_id,vr.channel,vr.subject_hash,'active',now()
+      v_identity_id,vr.tenant_id,v_user_id,vr.channel,vr.subject_hash,'active',now()
     );
   else
     update case003.external_user
       set status='active'
-      where id=user_id and tenant_id=vr.tenant_id;
+      where id=v_user_id and tenant_id=vr.tenant_id;
 
     update case003.external_identity
       set status='active',verified_at=now()
-      where id=identity_id;
+      where id=v_identity_id;
   end if;
 
-  select em.id into membership_id
+  select em.id into v_membership_id
   from case003.external_membership em
   where em.tenant_id=vr.tenant_id
-    and em.user_id=user_id
+    and em.user_id=v_user_id
     and em.supplier_vendor_id=vr.candidate_vendor_id
     and em.company_code_scope is not distinct from vr.company_code_scope
     and em.status='active'
   order by em.created_at
   limit 1;
 
-  if membership_id is null then
-    membership_id:=gen_random_uuid();
+  if v_membership_id is null then
+    v_membership_id:=gen_random_uuid();
     insert into case003.external_membership(
       id,tenant_id,user_id,supplier_vendor_id,company_code_scope,role_code,status
     ) values(
-      membership_id,vr.tenant_id,user_id,vr.candidate_vendor_id,
+      v_membership_id,vr.tenant_id,v_user_id,vr.candidate_vendor_id,
       vr.company_code_scope,'supplier_contact','active'
     );
   end if;
 
   insert into case003.external_membership_permission(membership_id,permission_code)
-  values(membership_id,'invoice.read')
+  values(v_membership_id,'invoice.read')
   on conflict do nothing;
 
   update case003.verification_request
   set status='approved',
-      approved_external_user_id=user_id,
-      approved_membership_id=membership_id
+      approved_external_user_id=v_user_id,
+      approved_membership_id=v_membership_id
   where id=vr.id;
 
   insert into case003.verification_event(
@@ -191,8 +191,8 @@ begin
   return jsonb_build_object(
     'decision','VERIFIED',
     'verification_request_id',vr.id,
-    'external_user_id',user_id,
-    'membership_id',membership_id,
+    'external_user_id',v_user_id,
+    'membership_id',v_membership_id,
     'next_action','retry_invoice_query',
     'requested_invoice_reference',vr.requested_invoice_reference,
     'safe_to_respond',true,
