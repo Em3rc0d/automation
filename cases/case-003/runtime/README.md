@@ -82,22 +82,29 @@ Apply these database artifacts in order:
 
 Generate a high-entropy `CASE003_RPC_TOKEN`. Register only its SHA-256 in `case003.integration_secret` using `scripts/render-rpc-secret-registration.sh`. The plaintext token belongs only in the runtime secret store and the dedicated n8n credential.
 
-Render the workflow template:
+For a Linux local/VPS n8n instance, stop the server before mutating its SQLite volume and run the guarded one-shot configurator:
 
 ```bash
-node /opt/case003/scripts/render-supabase-rpc-workflow.js
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/configure-gate2-rpc.sh
 ```
 
-Create/import the dedicated credential with `scripts/prepare-rpc-credential.js`, then import the rendered CASE-003 workflow. n8n encrypts the credential payload before storage; never commit the rendered credential JSON.
+The configurator backs up SQLite, hashes every existing credential and non-CASE003 workflow, renders the portable RPC workflow, imports exactly one dedicated credential, replaces only the CASE-003 workflow definition, verifies the invariant set, creates a post-backup, and deletes temporary credential/workflow files. With no explicit n8n project ID, the n8n CLI assigns the new credential to the instance owner's personal project.
 
 Detailed Gate-2 procedure: `gate2-connection.md`.
 
 ## Gate-2 execution proof
 
-Keep the workflow inactive. Stop the interactive n8n server before a local CLI smoke test against its SQLite volume, then run:
+Keep the workflow inactive. With the interactive n8n server still stopped, run the CLI smoke test against the same persistent SQLite volume:
 
 ```bash
-sh /opt/case003/scripts/test-gate2.sh
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/test-gate2.sh
+```
+
+Then restart the server:
+
+```bash
+docker compose up -d n8n
 ```
 
 The test does not trust CLI log formatting. It checkpoints the latest CASE-003 CLI execution ID, runs the workflow, then reads the newly persisted execution from n8n SQLite, parses n8n's flatted run data and validates the canonical output. The temporary CLI log and execution checkpoint are deleted.
