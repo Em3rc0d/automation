@@ -1,9 +1,28 @@
 #!/usr/bin/env node
 'use strict';
+const fs=require('fs'),os=require('os'),path=require('path');
+const {execFileSync}=require('child_process');
 const base=String(process.env.CASE003_GATE6_BASE_URL||'http://127.0.0.1:5678').replace(/\/$/,'');
-const token=String(process.env.CASE003_RPC_TOKEN||'');
 const taxId=String(process.env.CASE003_GATE6_TAX_ID||'');
-if(!token) throw new Error('CASE003_RPC_TOKEN missing');
+
+function loadRpcToken(){
+  const fromEnv=String(process.env.CASE003_RPC_TOKEN||'');
+  if(fromEnv) return fromEnv;
+  const out=path.join(os.tmpdir(),'case003-gate6-rpc-'+process.pid+'.json');
+  try{
+    execFileSync('/usr/local/lib/node_modules/n8n/bin/n8n',[
+      'export:credentials','--id=case003RpcAuthV1','--decrypted','--output='+out
+    ],{env:process.env,stdio:['ignore','ignore','pipe']});
+    const parsed=JSON.parse(fs.readFileSync(out,'utf8'));
+    const list=Array.isArray(parsed)?parsed:[parsed];
+    const cred=list.find(x=>x&&x.id==='case003RpcAuthV1');
+    if(String(cred?.data?.name||'').toLowerCase()!=='x-case003-token') throw new Error('CASE003 RPC credential header mismatch');
+    const value=String(cred?.data?.value||'');
+    if(!value) throw new Error('CASE003 RPC credential value empty');
+    return value;
+  }finally{try{fs.unlinkSync(out);}catch(_){}}
+}
+const token=loadRpcToken();
 if(!/^\d{8,20}$/.test(taxId)) throw new Error('CASE003_GATE6_TAX_ID missing/invalid');
 const url=base+'/webhook/case003/supplier-channel';
 
