@@ -18,8 +18,9 @@ COPY cases/case-002/runtime/railway/backup-n8n-state.js /opt/case002/backup-n8n-
 COPY cases/case-002/runtime/railway/prepare-level2-reply-test.js /opt/case002/prepare-level2-reply-test.js
 COPY cases/case-002/runtime/railway/prepare-level2-appointment-agent.js /opt/case002/prepare-level2-appointment-agent.js
 COPY cases/case-002/runtime/railway/prepare-level2-gemini-poc.js /opt/case002/prepare-level2-gemini-poc.js
+COPY cases/case-002/runtime/railway/verify-case003-import.js /opt/case002/verify-case003-import.js
 COPY cases/case-002/runtime/railway/entrypoint.sh /opt/case002/entrypoint.sh
-RUN chmod 755 /opt/case002/entrypoint.sh /opt/case002/recover-workflows.js /opt/case002/backup-n8n-state.js /opt/case002/prepare-level2-reply-test.js /opt/case002/prepare-level2-appointment-agent.js /opt/case002/prepare-level2-gemini-poc.js && chown -R node:node /opt/case002
+RUN chmod 755 /opt/case002/entrypoint.sh /opt/case002/recover-workflows.js /opt/case002/backup-n8n-state.js /opt/case002/prepare-level2-reply-test.js /opt/case002/prepare-level2-appointment-agent.js /opt/case002/prepare-level2-gemini-poc.js /opt/case002/verify-case003-import.js && chown -R node:node /opt/case002
 USER node
 
 ENTRYPOINT ["/opt/case002/entrypoint.sh"]
