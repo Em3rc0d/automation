@@ -14,6 +14,7 @@
     "../build/canonical-model.sql",
     "../build/notification-idempotency.sql",
     "../build/gate2-supabase-rpc.sql",
+    "../build/gate3-reservation-core.sql",
     "../build/gate3-reservation-rpc.sql"
   ],
   "fixtures": [
@@ -92,6 +93,7 @@
     "supabaseRpc": "public.case003_reserve_due_candidates(integer,text)",
     "supabaseWorkflowTemplate": "n8n/case003-due-date-reservation-supabase-rpc.template.json",
     "postgresWorkflow": "n8n/case003-due-date-reservation-postgres.json",
-    "defaultRuleCode": "due_3d"
+    "defaultRuleCode": "due_3d",
+    "coreSchema": "../build/gate3-reservation-core.sql"
   }
 }
