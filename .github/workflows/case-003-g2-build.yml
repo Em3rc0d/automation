@@ -205,8 +205,46 @@ jobs:
           const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-supplier-channel-gate6-postgres.template.json','utf8'));
           if(pg.nodes.find(n=>n.id==='process')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-6 PostgreSQL credential mismatch');
           const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
-          if(m.runtimeVersion!=='1.5.0-gate6') throw new Error('manifest not pinned to Gate 6');
           if(m.gate6?.taxIdAuthenticates!==false||m.gate6?.autoBindFromTaxId!==false||m.gate6?.outboundDelivery!==false) throw new Error('Gate-6 trust-boundary invariant failed');
           if(!m.schemas.includes('../build/gate6-channel-ingress-core.sql')||!m.schemas.includes('../build/gate6-channel-ingress-rpc.sql')) throw new Error('Gate-6 schemas absent from manifest');
           console.log('PASS Gate-6 channel-ingress artifacts');
+          NODE
+
+      - name: Validate Gate-7 signed provider-ingress artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate7-workflow.js
+          node --check cases/case-003/runtime/scripts/render-gate7-postgres-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate7-import.js
+          node --check cases/case-003/runtime/scripts/test-gate7-http.js
+          node --check cases/case-003/runtime/scripts/verify-gate7-test-state.js
+          sh -n cases/case-003/runtime/scripts/configure-gate7.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate7-postgres.sh
+          sh -n cases/case-003/runtime/scripts/test-gate7-http.sh
+          grep -q "channel_connector_binding" cases/case-003/build/gate7-provider-ingress-core.sql
+          grep -q "process_provider_channel_message" cases/case-003/build/gate7-provider-ingress-core.sql
+          grep -q "case003_provider_channel_message_json" cases/case-003/build/gate7-provider-ingress-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-kapso-ingress-gate7.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003KapsoIngressGate7V1'||w.active!==false) throw new Error('Gate-7 workflow identity/active invariant failed');
+          if(w.nodes.filter(n=>String(n.type||'').includes('webhook')).length!==1) throw new Error('Gate-7 must have exactly one webhook');
+          for(const id of ['kapso-webhook','kapso-hmac','verify-kapso-envelope','kapso-security-gate','reject','normalize','process-provider','assert','ack']) {
+            if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-7 node '+id);
+          }
+          if(w.nodes.find(n=>n.id==='kapso-hmac')?.credentials) throw new Error('portable Gate-7 HMAC credential must be deployment-injected');
+          if(w.nodes.find(n=>n.id==='process-provider')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-7 RPC credential mismatch');
+          if(!raw.includes('__CASE003_SUPABASE_URL__')||!raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')) throw new Error('Gate-7 portable placeholders missing');
+          const names=w.nodes.map(n=>String(n.name||''));
+          if(names.some(n=>/kapso send|send message|whatsapp send/i.test(n))) throw new Error('outbound send node detected in Gate 7');
+          const reject=w.nodes.find(n=>n.id==='reject');
+          if(reject?.parameters?.options?.responseCode!==401) throw new Error('Gate-7 invalid-signature rejection must be HTTP 401');
+          const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-kapso-ingress-gate7-postgres.template.json','utf8'));
+          if(pg.nodes.find(n=>n.id==='process-provider')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-7 PostgreSQL credential mismatch');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.6.0-gate7') throw new Error('manifest not pinned to Gate 7');
+          if(m.gate7?.providerPayloadTenantTrusted!==false||m.gate7?.reusesExistingCredentials!==true||m.gate7?.outboundDelivery!==false) throw new Error('Gate-7 trust boundary invariant failed');
+          if(!m.schemas.includes('../build/gate7-provider-ingress-core.sql')||!m.schemas.includes('../build/gate7-provider-ingress-rpc.sql')) throw new Error('Gate-7 schemas absent from manifest');
+          console.log('PASS Gate-7 signed provider-ingress artifacts');
           NODE
