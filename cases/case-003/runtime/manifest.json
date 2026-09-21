@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.8.3-gate9-real-init",
+  "runtimeVersion": "1.9.0-gate10-mail-prep",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -28,7 +28,8 @@
     "../build/gate9-verification-core.sql",
     "../build/gate9-verification-rpc.sql",
     "../build/gate9-provider-verification-core.sql",
-    "../build/gate9-provider-verification-rpc.sql"
+    "../build/gate9-provider-verification-rpc.sql",
+    "../build/gate10-test-email-override.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
@@ -85,7 +86,12 @@
     "Gate 9 limits challenge issuance per channel subject and supplier vendor",
     "Gate 9 requires trusted-contact code proof or explicit audited operator approval before identity binding",
     "Gate 9 creates invoice.read only after successful verification",
-    "Gate 9 keeps email transport and WhatsApp outbound delivery separate from the identity core"
+    "Gate 9 keeps email transport and WhatsApp outbound delivery separate from the identity core",
+    "Gate 10 keeps challenge generation, expiry, attempts and verification authority in PostgreSQL",
+    "Gate 10 prefers native n8n Gmail OAuth2 delivery and permits SMTP as a transport fallback",
+    "Gate 10 test email overrides never modify SAP snapshot trusted-contact data",
+    "Gate 10 test email overrides persist only a destination SHA-256 and masked destination",
+    "Gate 10 never persists or logs the raw verification code outside the transient internal delivery payload"
   ],
   "targets": [
     "local-linux",
@@ -124,7 +130,8 @@
     "evidence/gate6-railway-2026-09-21.md",
     "evidence/gate7-railway-2026-09-21.md",
     "evidence/gate8-real-whatsapp-2026-09-21.md",
-    "evidence/gate9-verification-2026-09-21.md"
+    "evidence/gate9-verification-2026-09-21.md",
+    "evidence/gate10-email-transport-2026-09-21.md"
   ],
   "scripts": {
     "gate1Import": "scripts/import-workflow.sh",
@@ -379,7 +386,7 @@
     "thirdRealProviderVerificationRequestId": "a583893e-2545-45d5-aa2f-86b9a7f61257",
     "challengeCreated": true,
     "challengeMethod": "email_code",
-    "challengeDeliveryStatus": "pending",
+    "challengeDeliveryStatus": "cancelled_after_transport_probe",
     "challengeDestinationMasked": "m***************z@soltrak.com.pe",
     "realProviderVerificationInitCertified": true,
     "realProviderChallengeCreationCertified": true,
@@ -387,5 +394,31 @@
     "requestedInvoiceResumeHotfix": "build/gate9-request-resume-hotfix.sql",
     "requestedInvoiceResumeCommit": "6692c845a57051bfb8624b37c865d75f292a130f",
     "requestedInvoiceResumeLivePatched": true
+  },
+  "gate10": {
+    "runbook": "gate10-email-delivery.md",
+    "overrideSchema": "../build/gate10-test-email-override.sql",
+    "evidence": "evidence/gate10-email-transport-2026-09-21.md",
+    "architecture": "native-n8n-mail-adapter",
+    "preferredTransport": "gmail-oauth2",
+    "fallbackTransport": "smtp-send-email",
+    "modifiesSapTrustedContact": false,
+    "overridePersistsRawEmail": false,
+    "overridePersistsDestinationHash": true,
+    "overridePersistsMaskedDestination": true,
+    "rawCodePersisted": false,
+    "liveWorkflowCountAtInspection": 15,
+    "liveCredentialCountAtInspection": 5,
+    "liveMailCredentialConfigured": false,
+    "resendRuntimeRequired": false,
+    "status": "prepared_not_certified",
+    "remainingProof": [
+      "configure native n8n mail credential",
+      "send real test email",
+      "receive verification code",
+      "submit code through real WhatsApp",
+      "verify external identity and supplier membership",
+      "resume original invoice query and return FOUND"
+    ]
   }
 }
