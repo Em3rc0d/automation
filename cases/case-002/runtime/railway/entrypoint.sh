@@ -533,5 +533,15 @@ if [ "${CASE003_KAPSO_DISCOVERY_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/inspect-case003-kapso-account.js
 fi
 
+# CASE-003 Gate 8 preparation: create a SECOND inactive Kapso webhook
+# for CASE-003 using existing KAPSO API + HMAC credentials. Existing CASE-002
+# webhook must remain untouched and active.
+if [ "${CASE003_GATE8_PREPARE_KAPSO_WEBHOOK_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate8-prepare] guarded Kapso webhook preparation requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate8-prepare
+  node /opt/case002/prepare-case003-gate8-kapso-webhook.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate8-prepare
+fi
+
 echo "[case002] bootstrap complete; starting n8n"
 exec n8n start
