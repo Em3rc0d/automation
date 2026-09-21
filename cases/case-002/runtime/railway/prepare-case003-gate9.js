@@ -43,7 +43,16 @@ const all=(db,sql,p=[])=>new Promise((resolve,reject)=>db.all(sql,p,(e,r)=>e?rej
     if(!hmacCred) throw new Error('bound Kapso crypto credential metadata missing');
     if(!rpcCred) throw new Error('CASE-003 RPC credential metadata missing');
 
-    const w=JSON.parse(fs.readFileSync(template,'utf8'));
+    const raw=fs.readFileSync(template,'utf8');
+    const supabaseUrl=String(process.env.CASE003_SUPABASE_URL||'').trim().replace(/\/$/,'');
+    const publishableKey=String(process.env.CASE003_SUPABASE_PUBLISHABLE_KEY||'').trim();
+    if(!/^https:\/\//.test(supabaseUrl)) throw new Error('CASE003_SUPABASE_URL missing or invalid');
+    if(!publishableKey || publishableKey.includes('__CASE003_')) throw new Error('CASE003_SUPABASE_PUBLISHABLE_KEY missing or invalid');
+    const rendered=raw
+      .split('__CASE003_SUPABASE_URL__').join(supabaseUrl)
+      .split('__CASE003_SUPABASE_PUBLISHABLE_KEY__').join(publishableKey);
+    if(rendered.includes('__CASE003_')) throw new Error('unresolved CASE003 template placeholder');
+    const w=JSON.parse(rendered);
     const hmac=w.nodes.find(n=>n.id==='kapso-hmac');
     const rpcNodes=w.nodes.filter(n=>['process-provider','verify-provider-code'].includes(n.id));
     if(!hmac||rpcNodes.length!==2) throw new Error('Gate-9 template nodes missing');
