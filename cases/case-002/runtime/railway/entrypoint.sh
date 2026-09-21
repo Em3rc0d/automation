@@ -292,7 +292,7 @@ fi
 if [ "${CASE003_GATE4_IMPORT_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-gate4] guarded real-data load requested"
   node /opt/case002/backup-n8n-state.js pre-case003-gate4-load
-  node /opt/case002/load-case003-gate4.js
+  node /opt/case002/load-case003-gate4-v2.js
   node /opt/case002/backup-n8n-state.js post-case003-gate4-load
   echo "[case003-gate4] load complete; snapshot remains candidate until control-plane publication"
 fi
