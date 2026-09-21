@@ -100,3 +100,31 @@ jobs:
           if(m.scripts?.gate2ConfigureRpc!=='scripts/configure-gate2-rpc.sh') throw new Error('Gate-2 configurator absent from manifest');
           console.log('PASS portable Gate-2 runtime manifest');
           NODE
+
+      - name: Validate Gate-3 reservation artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate3-supabase-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate3-binding.js
+          node --check cases/case-003/runtime/scripts/validate-gate3-execution.js
+          sh -n cases/case-003/runtime/scripts/configure-gate3-rpc.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate3-postgres.sh
+          sh -n cases/case-003/runtime/scripts/test-gate3.sh
+          grep -q "case003.reserve_due_candidates" cases/case-003/build/gate3-reservation-rpc.sql
+          grep -q "case003_reserve_due_candidates" cases/case-003/build/gate3-reservation-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const templatePath='cases/case-003/runtime/n8n/case003-due-date-reservation-supabase-rpc.template.json';
+          const raw=fs.readFileSync(templatePath,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003DueDateEvaluationV1'||w.active!==false) throw new Error('Gate-3 workflow identity/active invariant failed');
+          for(const id of ['reserve-rpc','allow-new','payload']) if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-3 node '+id);
+          if(w.nodes.find(n=>n.id==='reserve-rpc')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-3 RPC credential binding mismatch');
+          if(!raw.includes('__CASE003_SUPABASE_URL__')||!raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')||!raw.includes('__CASE003_RULE_CODE__')) throw new Error('Gate-3 portable placeholders missing');
+          if(/whatsapp|kapso|send message|provider_message/i.test(raw)) throw new Error('outbound channel content detected in Gate 3');
+          const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-due-date-reservation-postgres.json','utf8'));
+          if(pg.nodes.find(n=>n.id==='reserve-postgres')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-3 Postgres credential mismatch');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.2.0-gate3') throw new Error('manifest not pinned to Gate 3');
+          if(!m.schemas.includes('../build/gate3-reservation-rpc.sql')) throw new Error('Gate-3 schema absent from manifest');
+          console.log('PASS Gate-3 portable artifacts');
+          NODE
