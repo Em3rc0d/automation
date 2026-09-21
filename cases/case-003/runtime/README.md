@@ -64,9 +64,24 @@ The Gate-1 verifier refuses the mutation unless the target workflow is absent an
 
 ## Gate 2A — direct PostgreSQL
 
-Use this path when n8n has a dedicated database login to the CASE-003 PostgreSQL database. Bind a dedicated `postgres` credential only to `case003DueDateEvaluationV1`; do not reuse or modify unrelated credentials. The canonical query is defined in the source workflow and reads `case003.invoice_projection`.
+Use this path for the bundled local/VPS PostgreSQL service or any PostgreSQL endpoint reachable from n8n. The dedicated credential is:
 
-For local Docker Compose, the database hostname is `postgres`, database/user/password come from `.env`, and the synthetic fixture is installed automatically on a fresh PostgreSQL volume.
+```text
+id   = case003PostgresV1
+name = CASE003 PostgreSQL
+type = postgres
+```
+
+For the bundled Linux Compose stack, fill the `CASE003_PG_*` values in `.env` (defaults point to the `postgres` service), then:
+
+```bash
+docker compose stop n8n
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/configure-gate2-postgres.sh
+docker compose run --rm --entrypoint sh n8n /opt/case003/scripts/test-gate2.sh
+docker compose up -d n8n
+```
+
+The configurator creates a pre-backup, hashes all pre-existing credentials and non-CASE003 workflows, imports one dedicated PostgreSQL credential, replaces only the inactive CASE-003 workflow with `n8n/case003-due-date-evaluation-postgres.json`, verifies the invariant set and creates a post-backup. The synthetic fixture is date-relative, so the smoke query remains testable on a fresh install.
 
 ## Gate 2B — Supabase RPC
 
