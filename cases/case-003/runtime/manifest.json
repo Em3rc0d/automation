@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.0.0-gate1",
+  "runtimeVersion": "1.1.0-gate2",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -12,7 +12,8 @@
   },
   "schemas": [
     "../build/canonical-model.sql",
-    "../build/notification-idempotency.sql"
+    "../build/notification-idempotency.sql",
+    "../build/gate2-supabase-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
@@ -23,12 +24,28 @@
     "workflow remains inactive after Gate 1",
     "existing credentials unchanged",
     "backup before mutation",
-    "PostgreSQL/Supabase owns durable business state"
+    "PostgreSQL/Supabase owns durable business state",
+    "Gate 2 never edits pre-existing credentials",
+    "Gate 2 never edits non-CASE003 workflows",
+    "Supabase RPC stores only SHA-256 of the integration token",
+    "CASE-003 remains inactive through Gate 2"
   ],
   "targets": [
     "local-linux",
     "linux-vps",
     "railway-linux",
     "supabase-postgresql"
-  ]
+  ],
+  "adapters": {
+    "directPostgres": {
+      "workflow": "n8n/case003-due-date-evaluation.json",
+      "credentialType": "postgres"
+    },
+    "supabaseRpc": {
+      "workflowTemplate": "n8n/case003-due-date-evaluation-supabase-rpc.template.json",
+      "credentialId": "case003RpcAuthV1",
+      "credentialType": "httpHeaderAuth",
+      "header": "x-case003-token"
+    }
+  }
 }
