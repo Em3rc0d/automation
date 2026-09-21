@@ -170,12 +170,20 @@ CASE003_RULE_CODE=due_3d_gate3_v1
 
 Rule codes are part of the durable idempotency key. Production deployments should use a stable business rule code such as `due_3d`; probe codes are only for repeatable certification.
 
+## Gate 4 — real SAP XLSX snapshot
+
+Gate 4 publishes normalized/reconciled QQVA + SCIV + FBL1N data as a canonical snapshot. See `gate4-real-xlsx.md`, `gate4-source-manifest.json`, and `../build/gate4-staged-import.sql`.
+
+The certified source version produces 2 suppliers, 531 invoices, 991 financial items, 435 primary FI links and 114 reconciliation/import issues. The previous synthetic snapshot is superseded only after the real candidate snapshot passes publication checks.
+
+The n8n proof remains inactive and outbound-free. A fresh Gate-4 rule executes twice against the real snapshot: first run `reserved=true`, second run `reserved=false`, with the duplicate blocked before payload construction.
+
 ## Railway
 
 Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume. It must not create another Railway project or service. The live image implements one-shot startup gates with before/after backups and fail-closed verification. See `railway/README.md` and `evidence/`.
 
 ## Current certification boundary
 
-Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated read-only canonical query through n8n while preserving all pre-existing credentials/workflows. Gate 3 certifies durable reservation and duplicate suppression inside the n8n path while CASE-003 remains inactive.
+Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot and the same n8n reservation path against real SAP-report-derived data while CASE-003 remains inactive.
 
 It does **not** yet certify outbound WhatsApp delivery or production payment semantics. Those remain later gates.
