@@ -550,6 +550,23 @@ if [ "${CASE003_GATE9_PREPARE_KAPSO_WEBHOOK_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js post-case003-gate9-webhook-prepare
 fi
 
+# CASE-003 Gate 9: arm the isolated verification provider path.
+# This only receives/validates messages; WhatsApp and email outbound remain disabled.
+if [ "${CASE003_GATE9_ARM_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate9-arm] guarded real-provider verification arm requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate9-arm
+  node /opt/case002/arm-case003-gate9.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate9-arm
+fi
+
+# CASE-003 Gate 9 cleanup after real-provider verification tests.
+if [ "${CASE003_GATE9_DISARM_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate9-disarm] guarded verification cleanup requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate9-disarm
+  node /opt/case002/disarm-case003-gate9.js
+  node /opt/case002/backup-n8n-state.js post-case003-gate9-disarm
+fi
+
 # CASE-003: one-shot READ-ONLY Kapso account discovery.
 # Uses the existing KAPSO API credential, lists phone-number/webhook metadata,
 # logs no credential secret values, performs no provider mutation.
