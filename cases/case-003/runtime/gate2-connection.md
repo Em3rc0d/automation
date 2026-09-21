@@ -84,6 +84,18 @@ The output binds only the CASE-003 RPC node to `case003RpcAuthV1`. The workflow 
 9. Require the synthetic smoke invoice, FBL1N due-date precedence, `payment_status_evidence=UNKNOWN`, and a notification key containing the active snapshot ID.
 10. No WhatsApp/channel side effect is permitted during Gate 2.
 
+## Portable Linux one-shot configuration
+
+For a stopped SQLite-backed n8n instance, the repository provides:
+
+```bash
+sh /opt/case003/scripts/configure-gate2-rpc.sh
+```
+
+This script is fail-closed. It creates a consistent pre-backup, captures hashes for every existing credential and every non-CASE003 workflow, renders the environment-specific RPC workflow from the portable template, imports exactly one dedicated CASE-003 credential, replaces only `case003DueDateEvaluationV1`, verifies the before/after invariants, creates a post-backup, and removes temporary files.
+
+When `n8n import:credentials` is called without `--projectId` or `--userId`, n8n assigns a new credential to the instance owner's personal project. Railway may instead pin an explicit project ID when reproducing an existing multi-workflow production instance.
+
 ## Gate-2 pass conditions
 
 ```text
