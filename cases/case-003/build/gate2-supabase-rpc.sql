@@ -78,4 +78,4 @@ end;
 $$;
 
 revoke all on function public.case003_due_candidates(integer) from public;
-grant execute on function public.case003_due_candidates(integer) to anon, authenticated, service_role;
+grant execute on function public.case003_due_candidates(integer) to anon, service_role;
