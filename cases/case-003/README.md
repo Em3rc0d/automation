@@ -12,6 +12,8 @@ CASE-003 proves a portable supplier/AP automation path from SAP report exports t
 - `build/gate5-supplier-query-rpc.sql` — Supabase/PostgREST Gate-5 authenticated adapter.
 - `build/gate6-channel-ingress-core.sql` — portable authenticated channel-ingress/replay/verification-init core.
 - `build/gate6-channel-ingress-rpc.sql` — Supabase/PostgREST Gate-6 adapter.
+- `build/gate7-provider-ingress-core.sql` — portable provider/channel binding and Kapso ingress core.
+- `build/gate7-provider-ingress-rpc.sql` — Supabase/PostgREST Gate-7 adapter.
 - `build/normalize-and-reconcile.js` — QQVA/SCIV/FBL1N normalization and reconciliation logic.
 - `build/n8n-due-date-workflow.json` — source n8n workflow.
 - `build/synthetic-fixtures.json` — synthetic domain fixture.
