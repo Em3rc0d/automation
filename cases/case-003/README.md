@@ -8,6 +8,8 @@ CASE-003 proves a portable supplier/AP automation path from SAP report exports t
 - `build/notification-idempotency.sql` — durable notification reservation ledger.
 - `build/gate3-reservation-core.sql` — portable PostgreSQL due-candidate reservation core.
 - `build/gate3-reservation-rpc.sql` — Supabase/PostgREST authenticated Gate-3 wrapper.
+- `build/gate5-supplier-query-core.sql` — portable supplier identity/membership/permission/ownership query core.
+- `build/gate5-supplier-query-rpc.sql` — Supabase/PostgREST Gate-5 authenticated adapter.
 - `build/normalize-and-reconcile.js` — QQVA/SCIV/FBL1N normalization and reconciliation logic.
 - `build/n8n-due-date-workflow.json` — source n8n workflow.
 - `build/synthetic-fixtures.json` — synthetic domain fixture.
