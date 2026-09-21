@@ -304,6 +304,7 @@ def validate() -> list[str]:
         require("@n8n/n8n-nodes-langchain.outputParserStructured" in raw, errors, "Gemini response renderer missing structured output parser")
         require("protectedFacts" in raw, errors, "Gemini response renderer missing protected-fact instruction")
         require("Business decisions are already made by deterministic policy" in raw, errors, "Gemini response renderer missing authority boundary")
+        require("to: String(input.to || input.senderId || '')" in raw, errors, "Gemini response renderer must preserve recipient")
         require('"onError": "continueRegularOutput"' in raw, errors, "Gemini response renderer must degrade to deterministic text fallback")
 
     require(
@@ -319,7 +320,7 @@ def validate() -> list[str]:
             "Gemini conversation agent v2 has unexpected workflow id",
         )
         meta = conversation_v2.get("meta") or {}
-        require(meta.get("candidateVersion") == "2.2.0", errors, "Gemini conversation agent v2 version mismatch")
+        require(meta.get("candidateVersion") == "2.2.1", errors, "Gemini conversation agent v2 version mismatch")
         require(meta.get("policyAuthority") == "deterministic", errors, "Gemini conversation agent must preserve deterministic policy authority")
         require(meta.get("calendarAuthority") == "case002-level2-internal", errors, "Gemini conversation agent must preserve sandbox calendar boundary")
 
@@ -346,6 +347,8 @@ def validate() -> list[str]:
         require("case002GeminiResponseRendererV1" in raw, errors, "Gemini conversation agent does not call response renderer child")
         require("responsePlan" in raw and "protectedFacts" in raw, errors, "Gemini conversation agent missing deterministic response plan")
         require("renderValidation" in raw, errors, "Gemini conversation agent missing deterministic rendered-response validation")
+        require("CASE002_RENDER_RECIPIENT_MISSING" in raw, errors, "Gemini conversation agent missing recipient guard")
+        require("to: recipient" in raw, errors, "Gemini conversation agent must restore recipient after rendering")
         require("starts > now.getTime()" in raw, errors, "Gemini conversation agent must exclude past appointments from active list")
         require("map.weekday + ' ' + map.day + '/' + map.month + ' a las '" in raw, errors, "Gemini conversation agent slot label format mismatch")
         require('"onError": "continueRegularOutput"' in raw, errors, "Gemini conversation agent must preserve deterministic model fallback")
