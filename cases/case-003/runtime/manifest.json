@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.8.0-gate9",
+  "runtimeVersion": "1.8.1-gate9-hotfix",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -339,10 +339,23 @@
     "n8nWorkflowActive": false,
     "workflowCount": 15,
     "credentialCount": 5,
-    "armDeployment": "77a709cd-af2c-4d37-8dd1-be8c8a35740f",
-    "armPostBackupSha256": "bf53882c442e8bac8756e2e6b666f157221435ab4fda143e99d9421e2ebae383",
+    "armDeployment": "be7c8c99-e35a-47cc-b267-1c020ab8e8a6",
+    "armPostBackupSha256": "23e9423f443e286677a94311b9c0587eeddec099bc0762cbb6bc9298aabfcaf4",
     "providerWebhookActiveForExplicitTest": true,
     "n8nWorkflowActiveForExplicitTest": true,
-    "armOneShotResetWithoutDeploy": true
+    "armOneShotResetWithoutDeploy": true,
+    "initialArmDeployment": "77a709cd-af2c-4d37-8dd1-be8c8a35740f",
+    "initialArmPostBackupSha256": "bf53882c442e8bac8756e2e6b666f157221435ab4fda143e99d9421e2ebae383",
+    "firstRealProviderAttemptAt": "2026-09-21T21:44:51Z",
+    "firstRealProviderAttemptResult": "FAILED_BEFORE_DATABASE",
+    "firstRealProviderHttpStatus": 500,
+    "firstRealProviderError": "Normalize Kapso Message SyntaxError: Invalid or unexpected token",
+    "hotfixCanonicalParserCommit": "530b578e30889dc1ed14abe35c5f67008bfdb34a",
+    "hotfixRuntimeParserCommit": "3692a37b38a34c5158fb7f41b8dd10bd14be4ecd",
+    "hotfixRuntimeGuardCommit": "4525de492dcd517a3c9f084827c962104264896e",
+    "hotfixImportDeployment": "612b059f-26ef-468f-b006-1143d99f26dd",
+    "hotfixArmDeployment": "be7c8c99-e35a-47cc-b267-1c020ab8e8a6",
+    "hotfixArmPostBackupSha256": "23e9423f443e286677a94311b9c0587eeddec099bc0762cbb6bc9298aabfcaf4",
+    "hotfixReadyForRealRetry": true
   }
 }
