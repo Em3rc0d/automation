@@ -45,7 +45,7 @@ unknown subject + source tax-id claim
  -> no external_identity or membership auto-created
 ```
 
-The verification candidate logic groups multiple active company-code rows for the same SAP vendor as one supplier relationship only when there is exactly one vendor and one pre-existing trusted contact.
+The verification candidate logic groups multiple active company-code rows for the same SAP vendor as one supplier relationship only when there is exactly one vendor and one pre-existing trusted contact. A post-proof database check returned `auto_bound_identity_count=0` and `verification_request_count=1` for the synthetic unknown subject used in the RUC branch.
 
 Example verification request created during the proof:
 
