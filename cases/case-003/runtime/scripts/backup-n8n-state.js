@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+'use strict';
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),os=require('os');
+const {createRequire}=require('module');
+const req=createRequire('/usr/local/lib/node_modules/n8n/package.json');
+const sqlite3=req('sqlite3');
+const label=(process.argv[2]||'checkpoint').replace(/[^a-zA-Z0-9._-]/g,'-').slice(0,64);
+const userFolder=process.env.N8N_USER_FOLDER||os.homedir();
+const n8nDir=path.join(userFolder,'.n8n');
+const configured=process.env.DB_SQLITE_DATABASE;
+const dbPath=configured?(path.isAbsolute(configured)?configured:path.join(n8nDir,configured)):path.join(n8nDir,'database.sqlite');
+const root=process.env.CASE003_BACKUP_DIR||path.join(n8nDir,'backups-case003');
+const open=()=>new Promise((resolve,reject)=>{const db=new sqlite3.Database(dbPath,sqlite3.OPEN_READWRITE,e=>e?reject(e):resolve(db));});
+const get=(db,sql,p=[])=>new Promise((resolve,reject)=>db.get(sql,p,(e,r)=>e?reject(e):resolve(r)));
+const exec=(db,sql)=>new Promise((resolve,reject)=>db.exec(sql,e=>e?reject(e):resolve()));
+const close=db=>new Promise(resolve=>db.close(()=>resolve()));
+const sha=f=>crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+(async()=>{
+ if(!fs.existsSync(dbPath)) throw new Error('n8n database missing: '+dbPath);
+ fs.mkdirSync(root,{recursive:true,mode:0o700});
+ const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+ const dir=path.join(root,`snapshot-${stamp}-${label}`); fs.mkdirSync(dir,{mode:0o700});
+ const out=path.join(dir,'database.sqlite');
+ const db=await open();
+ const workflows=(await get(db,'select count(*) c from workflow_entity')).c;
+ const credentials=(await get(db,'select count(*) c from credentials_entity')).c;
+ await exec(db,`VACUUM INTO '${out.replace(/'/g,"''")}'`);
+ await close(db); fs.chmodSync(out,0o600);
+ const manifest={createdAt:new Date().toISOString(),label,sourceDatabase:dbPath,backupDatabase:out,sha256:sha(out),counts:{workflow_entity:workflows,credentials_entity:credentials}};
+ fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(manifest,null,2)+'\n',{mode:0o600});
+ console.log(`[case003-backup] created ${dir}`);
+ console.log(`[case003-backup] sha256=${manifest.sha256}`);
+ console.log(`[case003-backup] workflows=${workflows} credentials=${credentials}`);
+})().catch(e=>{console.error('[case003-backup] FAIL: '+(e.stack||e.message));process.exit(1);});
