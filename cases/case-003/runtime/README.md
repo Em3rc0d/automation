@@ -11,6 +11,9 @@ This directory is the reproducible Linux runtime bundle for CASE-003. PostgreSQL
 - Gate 2 creates at most one dedicated CASE-003 credential.
 - No Gate-2 workflow contains an outbound messaging node.
 - Payment evidence `UNKNOWN` is not interpreted as certified unpaid status.
+- Gate 9 never authenticates a supplier from RUC/tax ID alone.
+- Gate 10 keeps challenge generation in PostgreSQL and mail delivery in n8n.
+- Test email overrides never modify the SAP snapshot trusted-contact value and persist only hash + masked destination.
 
 ## Runtime targets
 
@@ -40,6 +43,8 @@ Railway Linux ───┘                       │
 - `scripts/test-gate2.sh` — CLI execution smoke test validated from persisted n8n execution data.
 - `sql/010-synthetic-smoke.sql` — deterministic, date-relative synthetic fixture.
 - `manifest.json` — pinned versions, adapters and invariants.
+- `gate9-verification.md` — verified supplier identity runbook.
+- `gate10-email-delivery.md` — native n8n email-delivery boundary and controlled test override.
 
 ## Local Linux / brand-new VPS — Gate 1
 
@@ -229,9 +234,9 @@ Railway reuses the existing n8n service and persistent `/home/node/.n8n` volume.
 
 ## Current certification boundary
 
-Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies verified identity, membership, permission and resource ownership. Gate 6 certifies authenticated provider-neutral channel ingress, replay protection and verification initiation. Gate 7 certifies a signed Kapso-shaped provider adapter and persisted connector-to-tenant binding. Gate 8 certifies a real WhatsApp-originated Kapso delivery into that path while CASE-003 outbound delivery remains disabled.
+Gate 1 certifies additive inactive installation. Gate 2 certifies an authenticated canonical query. Gate 3 certifies durable reservation and duplicate suppression. Gate 4 certifies the real QQVA/SCIV/FBL1N snapshot. Gate 5 certifies identity/membership/permission/resource-ownership enforcement. Gate 6 certifies authenticated provider-neutral channel ingress and replay protection. Gate 7 certifies signed Kapso ingress with persisted connector-to-tenant binding. Gate 8 certifies a real WhatsApp-originated Kapso delivery. Gate 9 certifies the real WhatsApp verification-init path through durable `VERIFICATION_REQUIRED` and challenge creation without treating RUC as authentication.
 
-It does **not** yet certify an actual Kapso Cloud / WhatsApp-originated delivery into the CASE-003 endpoint, OTP/trusted-contact delivery, approval of an unknown identity, outbound WhatsApp delivery, or production payment semantics. Those remain later gates.
+Gate 10 is **prepared but not certified**: the remaining proof is native n8n email delivery to the controlled test mailbox, code receipt, WhatsApp code submission, verified identity/membership creation, and post-verification invoice response. Production payment semantics and outbound WhatsApp delivery remain outside the current certification boundary.
 
 
 ## Gate 9 — verified supplier identity
@@ -249,3 +254,12 @@ Artifacts:
 - `n8n/case003-kapso-verification-gate9.template.json`
 
 The database core has been smoke-tested through wrong-code rejection, successful verification, verified identity/membership creation and an owned invoice `FOUND` query. Synthetic test access was removed after proof. Transactional email transport remains an explicit connector boundary; no email or WhatsApp send credential is embedded in Gate 9.
+
+
+## Gate 10 — native n8n email delivery
+
+Gate 10 deliberately uses n8n's native mail transport boundary rather than adding a CASE-specific external delivery service. Preferred transport is the Gmail node with OAuth2; the n8n `Send Email` SMTP node is the fallback.
+
+The database remains authoritative for challenge lifecycle, attempts, expiry and verification. n8n receives the internal delivery payload, sends the email, then calls `case003_mark_verification_delivery_json` with the provider result. The OTP must never be logged, committed, or returned to WhatsApp before verification.
+
+For controlled testing, `../build/gate10-test-email-override.sql` authorizes a short-lived destination override by SHA-256. It does not mutate the supplier snapshot or persist the full override address. See `gate10-email-delivery.md` and `evidence/gate10-email-transport-2026-09-21.md`.
