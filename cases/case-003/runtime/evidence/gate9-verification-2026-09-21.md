@@ -209,3 +209,25 @@ pending verification request
 It also certifies an inactive, isolated Kapso verification workflow and inactive Kapso webhook prepared without changing CASE-002.
 
 Gate 9 does **not** yet claim that a verification code has been delivered to the real supplier mailbox. Transactional email transport still requires an explicitly configured email connector/credential. CASE-003 WhatsApp outbound remains disabled.
+
+## Final clean state
+
+Both one-shot Gate-9 deployment variables were reset to false.
+
+Final clean deployment:
+
+`9a5550a4-9a85-441a-8aca-ec5dda11b9c5`
+
+Terminal status: `SUCCESS`.
+
+Final startup evidence:
+
+```text
+sha256=b1adb08306e4014ea8e7d61dfbe34807bcbe5d9c6fe5330688e4bd4e7ed18c19
+workflows=15
+credentials=5
+users=1
+bootstrap complete
+```
+
+No Gate-9 import or provider-preparation block ran during the final startup. The Gate-9 n8n workflow and Kapso webhook remain inactive; CASE-002 remains the active live WhatsApp path.
