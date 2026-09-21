@@ -54,9 +54,9 @@ as $$
 begin
   if not exists (
     select 1 from case003.import_snapshot s
-    where s.id=p_snapshot_id and s.status='staging'
+    where s.id=p_snapshot_id and s.status='candidate'
   ) then
-    raise exception 'snapshot % is not in staging state', p_snapshot_id;
+    raise exception 'snapshot % is not in candidate state', p_snapshot_id;
   end if;
 end;
 $$;
@@ -221,7 +221,7 @@ begin
   end if;
 
   update case003.import_snapshot
-  set status='inactive'
+  set status='superseded'
   where tenant_id=tenant and dataset_type='supplier_ap' and status='active' and id<>p_snapshot_id;
 
   update case003.import_snapshot
@@ -265,12 +265,12 @@ begin
   end if;
 
   insert into case003.import_snapshot(id,tenant_id,dataset_type,status,source_generated_at,published_at,created_at)
-  values(p_snapshot_id,p_tenant_id,'supplier_ap','staging',null,null,now());
+  values(p_snapshot_id,p_tenant_id,'supplier_ap','candidate',null,null,now());
 
   insert into case003.import_batch(id,tenant_id,snapshot_id,status,expected_counts)
   values(p_snapshot_id,p_tenant_id,p_snapshot_id,'staging',p_expected_counts);
 
-  return jsonb_build_object('snapshot_id',p_snapshot_id,'status','staging');
+  return jsonb_build_object('snapshot_id',p_snapshot_id,'status','candidate');
 end;
 $$;
 
