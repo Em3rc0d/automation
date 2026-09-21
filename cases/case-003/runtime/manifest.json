@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.5.0-gate6",
+  "runtimeVersion": "1.6.0-gate7",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -22,12 +22,15 @@
     "../build/gate5-supplier-query-core.sql",
     "../build/gate5-supplier-query-rpc.sql",
     "../build/gate6-channel-ingress-core.sql",
-    "../build/gate6-channel-ingress-rpc.sql"
+    "../build/gate6-channel-ingress-rpc.sql",
+    "../build/gate7-provider-ingress-core.sql",
+    "../build/gate7-provider-ingress-rpc.sql"
   ],
   "fixtures": [
     "../build/synthetic-fixtures.json",
     "sql/010-synthetic-smoke.sql",
-    "gate6-synthetic-channel-fixture.sql"
+    "gate6-synthetic-channel-fixture.sql",
+    "gate7-synthetic-kapso-fixture.sql"
   ],
   "invariants": [
     "additive workflow import only",
@@ -61,7 +64,13 @@
     "Gate 6 never treats RUC/tax ID as authentication and never auto-binds a channel identity from a RUC claim",
     "Gate 6 creates only pending verification requests against pre-existing trusted contact data",
     "Gate 6 masks trusted contact details and keeps verification delivery disabled",
-    "Gate 6 has no outbound messaging node"
+    "Gate 6 has no outbound messaging node",
+    "Gate 7 never trusts tenant_id from provider payloads; tenant scope resolves from a persisted provider/channel binding",
+    "Gate 7 verifies Kapso HMAC-SHA256 and event/version/idempotency headers before business processing",
+    "Gate 7 reuses existing HMAC and CASE-003 RPC credentials without editing credential payloads",
+    "Gate 7 rejects invalid signatures before canonical data access",
+    "Gate 7 fails closed with CONNECTOR_NOT_BOUND for unknown provider channel bindings",
+    "Gate 7 preserves provider message replay safety and has no outbound messaging node"
   ],
   "targets": [
     "local-linux",
@@ -122,7 +131,15 @@
     "gate6HttpTest": "scripts/test-gate6-http.sh",
     "gate6HttpClient": "scripts/test-gate6-http.js",
     "gate6PostgresRenderer": "scripts/render-gate6-postgres-workflow.js",
-    "gate6PostgresConfigure": "scripts/configure-gate6-postgres.sh"
+    "gate6PostgresConfigure": "scripts/configure-gate6-postgres.sh",
+    "gate7Renderer": "scripts/render-gate7-workflow.js",
+    "gate7PostgresRenderer": "scripts/render-gate7-postgres-workflow.js",
+    "gate7Configure": "scripts/configure-gate7.sh",
+    "gate7PostgresConfigure": "scripts/configure-gate7-postgres.sh",
+    "gate7ImportVerifier": "scripts/verify-gate7-import.js",
+    "gate7HttpTest": "scripts/test-gate7-http.sh",
+    "gate7HttpClient": "scripts/test-gate7-http.js",
+    "gate7TestStateVerifier": "scripts/verify-gate7-test-state.js"
   },
   "gate3": {
     "coreFunction": "case003.reserve_due_candidates(integer,text)",
@@ -214,5 +231,36 @@
     "postgresRenderer": "scripts/render-gate6-postgres-workflow.js",
     "certifiedHttpDeployment": "bdbc1d0e-19f0-4541-af54-12de8717406f",
     "finalCleanDeployment": "f7aa1a6a-3ede-49fe-95a8-69228d73f3ef"
+  },
+  "gate7": {
+    "runbook": "gate7-kapso-ingress.md",
+    "coreSchema": "../build/gate7-provider-ingress-core.sql",
+    "supabaseRpcSchema": "../build/gate7-provider-ingress-rpc.sql",
+    "workflow": "n8n/case003-kapso-ingress-gate7.template.json",
+    "postgresWorkflow": "n8n/case003-kapso-ingress-gate7-postgres.template.json",
+    "workflowId": "case003KapsoIngressGate7V1",
+    "webhookPath": "case003/adapters/kapso/whatsapp/messages",
+    "provider": "kapso",
+    "channel": "whatsapp",
+    "hmacAlgorithm": "HMAC-SHA256",
+    "tenantResolution": "persisted provider + provider_channel_key binding",
+    "decisions": [
+      "FOUND",
+      "DUPLICATE",
+      "AUTH_REQUIRED",
+      "VERIFICATION_REQUIRED",
+      "NOT_FOUND_OR_NOT_AUTHORIZED",
+      "NEEDS_DISAMBIGUATION",
+      "CONNECTOR_NOT_BOUND"
+    ],
+    "providerPayloadTenantTrusted": false,
+    "reusesExistingCredentials": true,
+    "invalidSignatureResponse": 401,
+    "outboundDelivery": false,
+    "supabaseConfigureScript": "scripts/configure-gate7.sh",
+    "postgresConfigureScript": "scripts/configure-gate7-postgres.sh",
+    "httpTestScript": "scripts/test-gate7-http.sh",
+    "certifiedImportDeployment": "d66bcf8b-d44f-4037-b297-71ca1ff9265f",
+    "certifiedHttpDeployment": "25b5000a-3094-44af-af5e-702f9369c1e2"
   }
 }
