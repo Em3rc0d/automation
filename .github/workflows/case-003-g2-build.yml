@@ -80,7 +80,7 @@ jobs:
           const fs=require('fs');
           const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
           if(m.caseId!=='CASE-003') throw new Error('wrong caseId');
-          if(m.runtimeVersion!=='1.1.0-gate2') throw new Error('runtime manifest not pinned to Gate 2');
+          if(!m.adapters?.supabaseRpc) throw new Error('Gate-2 adapter section absent from manifest');
           if(m.workflow.id!=='case003DueDateEvaluationV1' || m.workflow.active!==false) throw new Error('workflow manifest invariant failed');
           if(!m.schemas.includes('../build/gate2-supabase-rpc.sql')) throw new Error('Gate-2 RPC schema absent from manifest');
           if(m.adapters?.supabaseRpc?.credentialId!=='case003RpcAuthV1') throw new Error('Gate-2 credential manifest mismatch');
@@ -124,7 +124,6 @@ jobs:
           const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-due-date-reservation-postgres.json','utf8'));
           if(pg.nodes.find(n=>n.id==='reserve-postgres')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-3 Postgres credential mismatch');
           const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
-          if(m.runtimeVersion!=='1.2.0-gate3') throw new Error('manifest not pinned to Gate 3');
           if(!m.schemas.includes('../build/gate3-reservation-core.sql')) throw new Error('Gate-3 core schema absent from manifest');
           if(!m.schemas.includes('../build/gate3-reservation-rpc.sql')) throw new Error('Gate-3 RPC schema absent from manifest');
           console.log('PASS Gate-3 portable artifacts');
@@ -173,7 +172,39 @@ jobs:
             if(!raw.includes(token)) throw new Error('missing Gate-5 placeholder '+token);
           }
           const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
-          if(m.runtimeVersion!=='1.4.0-gate5') throw new Error('manifest not pinned to Gate 5');
           if(m.gate5?.permission!=='invoice.read'||m.gate5?.outboundDelivery!==false) throw new Error('Gate-5 manifest invariant failed');
           console.log('PASS Gate-5 access-control artifacts');
+          NODE
+
+      - name: Validate Gate-6 channel-ingress artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate6-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate6-import.js
+          node --check cases/case-003/runtime/scripts/test-gate6-http.js
+          sh -n cases/case-003/runtime/scripts/configure-gate6.sh
+          sh -n cases/case-003/runtime/scripts/test-gate6-http.sh
+          grep -q "process_channel_message" cases/case-003/build/gate6-channel-ingress-core.sql
+          grep -q "channel_message_direct" cases/case-003/build/gate6-channel-ingress-core.sql
+          grep -q "case003_channel_message_json" cases/case-003/build/gate6-channel-ingress-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-supplier-channel-gate6.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003SupplierChannelGate6V1'||w.active!==false) throw new Error('Gate-6 workflow identity/active invariant failed');
+          if(w.nodes.filter(n=>String(n.type||'').includes('webhook')).length!==1) throw new Error('Gate-6 must have exactly one webhook');
+          for(const id of ['webhook','normalize','process','assert','respond']) if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-6 node '+id);
+          if(w.nodes.find(n=>n.id==='webhook')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-6 webhook auth binding mismatch');
+          if(w.nodes.find(n=>n.id==='process')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-6 RPC binding mismatch');
+          for(const token of ['__CASE003_SUPABASE_URL__','__CASE003_SUPABASE_PUBLISHABLE_KEY__','__CASE003_GATE6_TENANT_ID__']) {
+            if(!raw.includes(token)) throw new Error('missing Gate-6 placeholder '+token);
+          }
+          if(/kapso send|send message|\/messages/i.test(raw)) throw new Error('outbound provider send content detected in Gate 6');
+          const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-supplier-channel-gate6-postgres.template.json','utf8'));
+          if(pg.nodes.find(n=>n.id==='process')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-6 PostgreSQL credential mismatch');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.5.0-gate6') throw new Error('manifest not pinned to Gate 6');
+          if(m.gate6?.taxIdAuthenticates!==false||m.gate6?.autoBindFromTaxId!==false||m.gate6?.outboundDelivery!==false) throw new Error('Gate-6 trust-boundary invariant failed');
+          if(!m.schemas.includes('../build/gate6-channel-ingress-core.sql')||!m.schemas.includes('../build/gate6-channel-ingress-rpc.sql')) throw new Error('Gate-6 schemas absent from manifest');
+          console.log('PASS Gate-6 channel-ingress artifacts');
           NODE
