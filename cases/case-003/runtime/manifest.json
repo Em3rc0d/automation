@@ -283,6 +283,11 @@
     "case002ContinuityCertified": true,
     "credentialPayloadsEdited": false,
     "outboundDelivery": false,
-    "armDeployment": "472f62f8-e93a-42be-8984-1879d627ab32"
+    "armDeployment": "472f62f8-e93a-42be-8984-1879d627ab32",
+    "cleanupDeployment": "1a855396-b399-40c3-9961-f23b5e50359e",
+    "finalCleanDeployment": "622c0aa2-7db9-4d84-9ae8-0a63360f16fe",
+    "finalProviderWebhookActive": false,
+    "finalN8nWorkflowActive": false,
+    "case002WebhookActive": true
   }
 }
