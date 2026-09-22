@@ -569,6 +569,20 @@ fi
 
 
 
+
+# CASE-003 Gate 10 privacy cleanup. Re-imports the isolated test workflow with
+# inert placeholder values so no real test destination/request remains persisted.
+if [ "${CASE003_GATE10_SCRUB_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate10-scrub] guarded persisted-workflow scrub requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate10-scrub
+  umask 077
+  node /opt/case002/prepare-case003-gate10-smtp-test.js scrub
+  n8n import:workflow --input=/tmp/case003-gate10-smtp-test.json
+  rm -f /tmp/case003-gate10-smtp-test.json
+  node /opt/case002/backup-n8n-state.js post-case003-gate10-scrub
+  echo "[case003-gate10-scrub] PASS persisted Gate 10 test workflow scrubbed"
+fi
+
 # CASE-003 non-secret SMTP network probe. No credential values are read.
 if [ "${CASE003_SMTP_NETWORK_PROBE_ON_STARTUP:-false}" = "true" ]; then
   echo "[case003-smtp-probe] read-only network probe requested"
