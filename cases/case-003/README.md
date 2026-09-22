@@ -73,3 +73,12 @@ Gate 10 is the transport boundary for the email verification code. The identity 
 For the controlled real test, the repository keeps the SAP trusted-contact data unchanged and uses a short-lived test override whose database representation is only SHA-256 + masked destination. The selected runtime transport is the native n8n `Send Email` node using an SMTP credential. No Gmail OAuth2 or Resend-specific runtime is required by the canonical design.
 
 See `runtime/gate10-email-delivery.md`.
+
+
+## Portable deployment handbook
+
+A complete rebuild/migration/operations bundle now lives under `deployment/`.
+
+It covers Railway, a clean VPS/VM Linux host, Docker Compose, exceptional bare-metal/systemd deployment, n8n internal persistence, Supabase/PostgreSQL business state, secrets, provider credentials, Gate-10 mail transport, backups/restores, upgrades/rollback, scaling, incidents and cutover between providers.
+
+Start at `deployment/README.md`. A target environment is not considered certified merely because the containers start; complete `deployment/PORTABILITY-CHECKLIST.md` and create environment-specific evidence.
