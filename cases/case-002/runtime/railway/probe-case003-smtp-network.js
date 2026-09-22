@@ -3,32 +3,40 @@
 const net=require('net');
 const tls=require('tls');
 
-function tcp(host,port){
+function tcp(host,port,family){
   return new Promise(resolve=>{
-    const s=net.createConnection({host,port});
+    const s=net.createConnection({host,port,family});
     let done=false;
-    const finish=(status,code)=>{if(done)return;done=true;try{s.destroy();}catch(_){} resolve({port,status,code:code||null});};
+    const finish=(status,code)=>{if(done)return;done=true;try{s.destroy();}catch(_){} resolve({port,family,status,code:code||null});};
     s.setTimeout(5000);
     s.once('connect',()=>finish('CONNECTED',null));
     s.once('timeout',()=>finish('TIMEOUT','ETIMEDOUT'));
     s.once('error',e=>finish('ERROR',String(e.code||'ERROR')));
   });
 }
-function tlsProbe(host,port){
+function tlsProbe(host,port,family){
   return new Promise(resolve=>{
-    const s=tls.connect({host,port,servername:host,rejectUnauthorized:true});
+    const s=tls.connect({host,port,servername:host,rejectUnauthorized:true,family});
     let done=false;
-    const finish=(status,code)=>{if(done)return;done=true;try{s.destroy();}catch(_){} resolve({port,status,code:code||null});};
+    const finish=(status,code)=>{if(done)return;done=true;try{s.destroy();}catch(_){} resolve({port,family,status,code:code||null});};
     s.setTimeout(5000);
     s.once('secureConnect',()=>finish('CONNECTED',null));
     s.once('timeout',()=>finish('TIMEOUT','ETIMEDOUT'));
     s.once('error',e=>finish('ERROR',String(e.code||'ERROR')));
   });
 }
+const line=(host,r,tlsMode)=>console.log('[case003-smtp-probe] host='+host+' port='+r.port+' family=IPv'+r.family+' tls='+tlsMode+' status='+r.status+(r.code?' code='+r.code:''));
+
 (async()=>{
-  const host='smtp.gmail.com';
-  const r465=await tlsProbe(host,465);
-  const r587=await tcp(host,587);
-  console.log('[case003-smtp-probe] host=smtp.gmail.com port=465 tls=true status='+r465.status+(r465.code?' code='+r465.code:''));
-  console.log('[case003-smtp-probe] host=smtp.gmail.com port=587 tls=false status='+r587.status+(r587.code?' code='+r587.code:''));
+  const gmail='smtp.gmail.com';
+  line(gmail,await tlsProbe(gmail,465,4),true);
+  line(gmail,await tcp(gmail,587,4),false);
+  line(gmail,await tlsProbe(gmail,465,6),true);
+  line(gmail,await tcp(gmail,587,6),false);
+
+  const sendgrid='smtp.sendgrid.net';
+  line(sendgrid,await tcp(sendgrid,2525,4),false);
+
+  const brevo='smtp-relay.brevo.com';
+  line(brevo,await tcp(brevo,2525,4),false);
 })().catch(e=>{console.error('[case003-smtp-probe] FAIL '+String(e.code||e.message||'ERROR'));process.exit(1);});
