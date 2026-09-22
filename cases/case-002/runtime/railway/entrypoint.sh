@@ -568,6 +568,13 @@ if [ "${CASE003_GATE9_DISARM_ON_STARTUP:-false}" = "true" ]; then
 fi
 
 
+
+# CASE-003 non-secret SMTP network probe. No credential values are read.
+if [ "${CASE003_SMTP_NETWORK_PROBE_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-smtp-probe] read-only network probe requested"
+  node /opt/case002/probe-case003-smtp-network.js
+fi
+
 # CASE-003 Gate 10 one-shot SMTP delivery proof. It renders the real test
 # destination only into /tmp, executes with persisted execution saving disabled,
 # then immediately re-imports a scrubbed inactive workflow.
