@@ -1,0 +1,293 @@
+name: CASE-003 G2 Build Gate
+on:
+  push:
+    branches: [case-003/s4hana-report-supplier-self-service]
+    paths:
+      - "cases/case-003/build/**"
+      - "cases/case-003/runtime/**"
+      - ".github/workflows/case-003-g2-build.yml"
+  pull_request:
+    paths:
+      - "cases/case-003/build/**"
+      - "cases/case-003/runtime/**"
+      - ".github/workflows/case-003-g2-build.yml"
+permissions:
+  contents: read
+jobs:
+  g2-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test canonical normalization and due-date projection
+        run: node cases/case-003/build/test-g2.js
+
+      - name: Validate Gate-1 n8n workflow mirror
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const source=JSON.parse(fs.readFileSync('cases/case-003/build/n8n-due-date-workflow.json','utf8'));
+          const portable=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-due-date-evaluation.json','utf8'));
+          if(source.id!=='case003DueDateEvaluationV1') throw new Error('source workflow ID not pinned');
+          if(source.active!==false || portable.active!==false) throw new Error('workflow must remain inactive');
+          if(JSON.stringify(source)!==JSON.stringify(portable)) throw new Error('portable Gate-1 workflow drifted from source');
+          console.log('PASS Gate-1 n8n workflow mirror');
+          NODE
+
+      - name: Validate Gate-2 Supabase RPC template
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-due-date-evaluation-supabase-rpc.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003DueDateEvaluationV1') throw new Error('Gate-2 workflow ID mismatch');
+          if(w.active!==false) throw new Error('Gate-2 workflow must remain inactive');
+          const rpc=w.nodes.find(n=>n.id==='query-rpc');
+          if(!rpc) throw new Error('RPC node missing');
+          if(rpc.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('dedicated Gate-2 credential binding missing');
+          if(!raw.includes('__CASE003_SUPABASE_URL__') || !raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')) throw new Error('portable placeholders missing');
+          if(raw.includes('zqcwlnshtsectitagkca')) throw new Error('environment-specific Supabase project leaked into portable template');
+          if(/whatsapp|\/messages/i.test(raw)) throw new Error('channel delivery must not exist in Gate 2');
+          console.log('PASS Gate-2 Supabase RPC template');
+          NODE
+
+      - name: Validate portable Gate-2 schema and scripts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-supabase-rpc-workflow.js
+          node --check cases/case-003/runtime/scripts/prepare-rpc-credential.js
+          node --check cases/case-003/runtime/scripts/validate-gate2-execution.js
+          node --check cases/case-003/runtime/scripts/verify-gate2-binding.js
+          sh -n cases/case-003/runtime/scripts/render-rpc-secret-registration.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate2-rpc.sh
+          sh -n cases/case-003/runtime/scripts/test-gate2.sh
+          grep -q "CASE003_SUPABASE_URL" cases/case-003/runtime/docker-compose.yml
+          grep -q "CASE003_RPC_TOKEN" cases/case-003/runtime/docker-compose.yml
+          grep -q "case003_due_candidates" cases/case-003/build/gate2-supabase-rpc.sql
+          grep -q "integration_secret" cases/case-003/build/gate2-supabase-rpc.sql
+          if grep -q "59d8928d605eee85f2cffa72cb3861e2b68d15867d7ca55166c291b525d7a953" cases/case-003/build/gate2-supabase-rpc.sql; then
+            echo "production Gate-2 secret hash must not be committed"
+            exit 1
+          fi
+
+      - name: Validate portable runtime manifest
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.caseId!=='CASE-003') throw new Error('wrong caseId');
+          if(!m.adapters?.supabaseRpc) throw new Error('Gate-2 adapter section absent from manifest');
+          if(m.workflow.id!=='case003DueDateEvaluationV1' || m.workflow.active!==false) throw new Error('workflow manifest invariant failed');
+          if(!m.schemas.includes('../build/gate2-supabase-rpc.sql')) throw new Error('Gate-2 RPC schema absent from manifest');
+          if(m.adapters?.supabaseRpc?.credentialId!=='case003RpcAuthV1') throw new Error('Gate-2 credential manifest mismatch');
+          for(const p of [
+            'cases/case-003/build/canonical-model.sql',
+            'cases/case-003/build/notification-idempotency.sql',
+            'cases/case-003/build/gate2-supabase-rpc.sql',
+            'cases/case-003/runtime/docker-compose.yml',
+            'cases/case-003/runtime/scripts/import-workflow.sh',
+            'cases/case-003/runtime/scripts/configure-gate2-rpc.sh',
+            'cases/case-003/runtime/scripts/verify-gate2-binding.js',
+            'cases/case-003/runtime/scripts/test-gate2.sh',
+            'cases/case-003/runtime/scripts/validate-gate2-execution.js'
+          ]) {
+            if(!fs.existsSync(p)) throw new Error('missing runtime artifact: '+p);
+          }
+          if(m.scripts?.gate2ConfigureRpc!=='scripts/configure-gate2-rpc.sh') throw new Error('Gate-2 configurator absent from manifest');
+          console.log('PASS portable Gate-2 runtime manifest');
+          NODE
+
+      - name: Validate Gate-3 reservation artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate3-supabase-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate3-binding.js
+          node --check cases/case-003/runtime/scripts/validate-gate3-execution.js
+          sh -n cases/case-003/runtime/scripts/configure-gate3-rpc.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate3-postgres.sh
+          sh -n cases/case-003/runtime/scripts/test-gate3.sh
+          grep -q "case003.reserve_due_candidates" cases/case-003/build/gate3-reservation-core.sql
+          grep -q "case003_reserve_due_candidates" cases/case-003/build/gate3-reservation-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const templatePath='cases/case-003/runtime/n8n/case003-due-date-reservation-supabase-rpc.template.json';
+          const raw=fs.readFileSync(templatePath,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003DueDateEvaluationV1'||w.active!==false) throw new Error('Gate-3 workflow identity/active invariant failed');
+          for(const id of ['reserve-rpc','allow-new','payload']) if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-3 node '+id);
+          if(w.nodes.find(n=>n.id==='reserve-rpc')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-3 RPC credential binding mismatch');
+          if(!raw.includes('__CASE003_SUPABASE_URL__')||!raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')||!raw.includes('__CASE003_RULE_CODE__')) throw new Error('Gate-3 portable placeholders missing');
+          if(/whatsapp|kapso|send message|provider_message/i.test(raw)) throw new Error('outbound channel content detected in Gate 3');
+          const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-due-date-reservation-postgres.json','utf8'));
+          if(pg.nodes.find(n=>n.id==='reserve-postgres')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-3 Postgres credential mismatch');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(!m.schemas.includes('../build/gate3-reservation-core.sql')) throw new Error('Gate-3 core schema absent from manifest');
+          if(!m.schemas.includes('../build/gate3-reservation-rpc.sql')) throw new Error('Gate-3 RPC schema absent from manifest');
+          console.log('PASS Gate-3 portable artifacts');
+          NODE
+
+      - name: Validate split-trigger workflows
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          for (const [path,triggerId] of [
+            ['cases/case-003/runtime/n8n/case003-due-date-reservation-manual.template.json','manual'],
+            ['cases/case-003/runtime/n8n/case003-due-date-reservation-schedule.template.json','schedule'],
+          ]) {
+            const w=JSON.parse(fs.readFileSync(path,'utf8'));
+            if(w.active!==false) throw new Error(path+' must remain inactive');
+            const triggers=w.nodes.filter(n=>String(n.type||'').includes('Trigger'));
+            if(triggers.length!==1) throw new Error(path+' must contain exactly one trigger');
+            if(!w.nodes.some(n=>n.id===triggerId)) throw new Error(path+' expected trigger missing');
+            if(triggerId==='manual' && w.nodes.some(n=>n.id==='schedule')) throw new Error('manual template contains schedule trigger');
+            if(triggerId==='schedule' && w.nodes.some(n=>n.id==='manual')) throw new Error('schedule template contains manual trigger');
+            for(const id of ['reserve-rpc','allow-new','payload']) if(!w.nodes.some(n=>n.id===id)) throw new Error(path+' missing '+id);
+          }
+          console.log('PASS split-trigger workflow invariants');
+          NODE
+
+      - name: Validate Gate-5 access-control artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate5-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate5-import.js
+          node --check cases/case-003/runtime/scripts/validate-gate5-execution.js
+          sh -n cases/case-003/runtime/scripts/configure-gate5.sh
+          sh -n cases/case-003/runtime/scripts/test-gate5.sh
+          grep -q "resolve_supplier_invoice_query" cases/case-003/build/gate5-supplier-query-core.sql
+          grep -q "case003_supplier_invoice_query_json" cases/case-003/build/gate5-supplier-query-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-supplier-query-gate5.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003SupplierQueryGate5V1'||w.active!==false) throw new Error('Gate-5 workflow identity/active invariant failed');
+          if(w.nodes.filter(n=>String(n.type||'').includes('Trigger')).length!==1) throw new Error('Gate-5 must have exactly one trigger');
+          for(const id of ['cases','query','assert','response']) if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-5 node '+id);
+          if(w.nodes.find(n=>n.id==='query')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-5 RPC credential mismatch');
+          if(/whatsapp|kapso|send message/i.test(raw)) throw new Error('outbound channel content detected in Gate 5');
+          for(const token of ['__CASE003_SUPABASE_URL__','__CASE003_SUPABASE_PUBLISHABLE_KEY__','__CASE003_GATE5_TENANT_ID__','__CASE003_GATE5_INVOICE_REFERENCE__','__CASE003_GATE5_COMPANY_CODE__','__CASE003_GATE5_FI_DOCUMENT__','__CASE003_GATE5_SNAPSHOT_ID__']) {
+            if(!raw.includes(token)) throw new Error('missing Gate-5 placeholder '+token);
+          }
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.gate5?.permission!=='invoice.read'||m.gate5?.outboundDelivery!==false) throw new Error('Gate-5 manifest invariant failed');
+          console.log('PASS Gate-5 access-control artifacts');
+          NODE
+
+      - name: Validate Gate-6 channel-ingress artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate6-workflow.js
+          node --check cases/case-003/runtime/scripts/render-gate6-postgres-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate6-import.js
+          node --check cases/case-003/runtime/scripts/test-gate6-http.js
+          sh -n cases/case-003/runtime/scripts/configure-gate6.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate6-postgres.sh
+          sh -n cases/case-003/runtime/scripts/test-gate6-http.sh
+          grep -q "process_channel_message" cases/case-003/build/gate6-channel-ingress-core.sql
+          grep -q "channel_message_direct" cases/case-003/build/gate6-channel-ingress-core.sql
+          grep -q "case003_channel_message_json" cases/case-003/build/gate6-channel-ingress-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-supplier-channel-gate6.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003SupplierChannelGate6V1'||w.active!==false) throw new Error('Gate-6 workflow identity/active invariant failed');
+          if(w.nodes.filter(n=>String(n.type||'').includes('webhook')).length!==1) throw new Error('Gate-6 must have exactly one webhook');
+          for(const id of ['webhook','normalize','process','assert','respond']) if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-6 node '+id);
+          if(w.nodes.find(n=>n.id==='webhook')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-6 webhook auth binding mismatch');
+          if(w.nodes.find(n=>n.id==='process')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-6 RPC binding mismatch');
+          for(const token of ['__CASE003_SUPABASE_URL__','__CASE003_SUPABASE_PUBLISHABLE_KEY__','__CASE003_GATE6_TENANT_ID__']) {
+            if(!raw.includes(token)) throw new Error('missing Gate-6 placeholder '+token);
+          }
+          if(/kapso send|send message|\/messages/i.test(raw)) throw new Error('outbound provider send content detected in Gate 6');
+          const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-supplier-channel-gate6-postgres.template.json','utf8'));
+          if(pg.nodes.find(n=>n.id==='process')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-6 PostgreSQL credential mismatch');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.gate6?.taxIdAuthenticates!==false||m.gate6?.autoBindFromTaxId!==false||m.gate6?.outboundDelivery!==false) throw new Error('Gate-6 trust-boundary invariant failed');
+          if(!m.schemas.includes('../build/gate6-channel-ingress-core.sql')||!m.schemas.includes('../build/gate6-channel-ingress-rpc.sql')) throw new Error('Gate-6 schemas absent from manifest');
+          console.log('PASS Gate-6 channel-ingress artifacts');
+          NODE
+
+      - name: Validate Gate-7 signed provider-ingress artifacts
+        run: |
+          node --check cases/case-003/runtime/scripts/render-gate7-workflow.js
+          node --check cases/case-003/runtime/scripts/render-gate7-postgres-workflow.js
+          node --check cases/case-003/runtime/scripts/verify-gate7-import.js
+          node --check cases/case-003/runtime/scripts/test-gate7-http.js
+          node --check cases/case-003/runtime/scripts/verify-gate7-test-state.js
+          sh -n cases/case-003/runtime/scripts/configure-gate7.sh
+          sh -n cases/case-003/runtime/scripts/configure-gate7-postgres.sh
+          sh -n cases/case-003/runtime/scripts/test-gate7-http.sh
+          grep -q "channel_connector_binding" cases/case-003/build/gate7-provider-ingress-core.sql
+          grep -q "process_provider_channel_message" cases/case-003/build/gate7-provider-ingress-core.sql
+          grep -q "case003_provider_channel_message_json" cases/case-003/build/gate7-provider-ingress-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='cases/case-003/runtime/n8n/case003-kapso-ingress-gate7.template.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const w=JSON.parse(raw);
+          if(w.id!=='case003KapsoIngressGate7V1'||w.active!==false) throw new Error('Gate-7 workflow identity/active invariant failed');
+          if(w.nodes.filter(n=>String(n.type||'').includes('webhook')).length!==1) throw new Error('Gate-7 must have exactly one webhook');
+          for(const id of ['kapso-webhook','kapso-hmac','verify-kapso-envelope','kapso-security-gate','reject','normalize','process-provider','assert','ack']) {
+            if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-7 node '+id);
+          }
+          if(w.nodes.find(n=>n.id==='kapso-hmac')?.credentials) throw new Error('portable Gate-7 HMAC credential must be deployment-injected');
+          if(w.nodes.find(n=>n.id==='process-provider')?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-7 RPC credential mismatch');
+          if(!raw.includes('__CASE003_SUPABASE_URL__')||!raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')) throw new Error('Gate-7 portable placeholders missing');
+          const names=w.nodes.map(n=>String(n.name||''));
+          if(names.some(n=>/kapso send|send message|whatsapp send/i.test(n))) throw new Error('outbound send node detected in Gate 7');
+          const reject=w.nodes.find(n=>n.id==='reject');
+          if(reject?.parameters?.options?.responseCode!==401) throw new Error('Gate-7 invalid-signature rejection must be HTTP 401');
+          const pg=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-kapso-ingress-gate7-postgres.template.json','utf8'));
+          if(pg.nodes.find(n=>n.id==='process-provider')?.credentials?.postgres?.id!=='case003PostgresV1') throw new Error('Gate-7 PostgreSQL credential mismatch');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(!m.gate7||m.gate7.provider!=='kapso') throw new Error('Gate-7 manifest contract missing');
+          if(m.gate7?.providerPayloadTenantTrusted!==false||m.gate7?.reusesExistingCredentials!==true||m.gate7?.outboundDelivery!==false) throw new Error('Gate-7 trust boundary invariant failed');
+          if(!m.schemas.includes('../build/gate7-provider-ingress-core.sql')||!m.schemas.includes('../build/gate7-provider-ingress-rpc.sql')) throw new Error('Gate-7 schemas absent from manifest');
+          console.log('PASS Gate-7 signed provider-ingress artifacts');
+          NODE
+
+      - name: Validate Gate-8 real-provider evidence
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.7.0-gate8') throw new Error('manifest not pinned to Gate 8');
+          if(m.gate8?.realWhatsAppOriginCertified!==true) throw new Error('Gate-8 real WhatsApp evidence flag missing');
+          if(m.gate8?.decision!=='AUTH_REQUIRED') throw new Error('Gate-8 expected AUTH_REQUIRED proof missing');
+          if(m.gate8?.case002ContinuityCertified!==true) throw new Error('Gate-8 CASE-002 continuity proof missing');
+          if(m.gate8?.outboundDelivery!==false) throw new Error('Gate-8 outbound boundary violated');
+          const p='cases/case-003/runtime/evidence/gate8-real-whatsapp-2026-09-21.md';
+          const e=fs.readFileSync(p,'utf8');
+          for(const token of ['execution_id = 139','execution_id = 138','AUTH_REQUIRED','01-FM01-0096939','CASE-003 outbound message']) {
+            if(!e.includes(token)) throw new Error('Gate-8 evidence token missing: '+token);
+          }
+          console.log('PASS Gate-8 real WhatsApp evidence');
+          NODE
+
+      - name: Validate Gate-9 verification artifacts
+        run: |
+          node --check cases/case-003/runtime/n8n/case003-kapso-verification-gate9.template.json >/dev/null 2>&1 || true
+          grep -q "prepare_email_verification" cases/case-003/build/gate9-verification-core.sql
+          grep -q "verify_email_code" cases/case-003/build/gate9-verification-core.sql
+          grep -q "operator_approve_verification" cases/case-003/build/gate9-verification-core.sql
+          grep -q "verify_provider_email_code" cases/case-003/build/gate9-provider-verification-core.sql
+          grep -q "case003_verify_provider_email_code_json" cases/case-003/build/gate9-provider-verification-rpc.sql
+          node - <<'NODE'
+          const fs=require('fs');
+          const w=JSON.parse(fs.readFileSync('cases/case-003/runtime/n8n/case003-kapso-verification-gate9.template.json','utf8'));
+          if(w.id!=='case003KapsoVerificationGate9V1'||w.active!==false) throw new Error('Gate-9 workflow identity/active invariant failed');
+          for(const id of ['kapso-webhook','kapso-hmac','verify-kapso-envelope','kapso-security-gate','normalize','has-verification-code','verify-provider-code','process-provider','assert-verification']) {
+            if(!w.nodes.some(n=>n.id===id)) throw new Error('missing Gate-9 node '+id);
+          }
+          if(w.nodes.some(n=>/kapso send|send message|whatsapp send|email send|smtp/i.test(String(n.name||'')))) throw new Error('Gate-9 outbound node detected');
+          if(w.settings?.saveDataSuccessExecution!=='none'||w.settings?.saveDataErrorExecution!=='none') throw new Error('Gate-9 must not persist verification execution payloads');
+          const raw=JSON.stringify(w);
+          if(!raw.includes('__CASE003_SUPABASE_URL__')||!raw.includes('__CASE003_SUPABASE_PUBLISHABLE_KEY__')) throw new Error('Gate-9 portable placeholders missing');
+          const m=JSON.parse(fs.readFileSync('cases/case-003/runtime/manifest.json','utf8'));
+          if(m.runtimeVersion!=='1.8.0-gate9') throw new Error('manifest not pinned to Gate 9');
+          if(m.gate9?.taxIdAuthenticates!==false||m.gate9?.autoBindFromTaxId!==false||m.gate9?.rawCodePersisted!==false||m.gate9?.whatsappOutboundDelivery!==false) throw new Error('Gate-9 trust invariant failed');
+          console.log('PASS Gate-9 verification artifacts');
+          NODE

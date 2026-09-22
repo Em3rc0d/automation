@@ -28,8 +28,9 @@ Each case SHOULD document:
 | ID | Case | Status |
 |---|---|---|
 | `CASE-001` | WhatsApp quote assistant for an industrial-paint salesperson using SAP exports | Productive pilot design |
+| `CASE-003` | Supplier self-service over WhatsApp using approved SAP S/4HANA report snapshots | Design baseline; G1 blocked by real anonymized report sample |
 
-See [`CASE-001-WHATSAPP-QUOTE-ASSISTANT.md`](./CASE-001-WHATSAPP-QUOTE-ASSISTANT.md).
+See [`CASE-001-WHATSAPP-QUOTE-ASSISTANT.md`](./CASE-001-WHATSAPP-QUOTE-ASSISTANT.md) and [`CASE-003-S4HANA-SUPPLIER-SELF-SERVICE.md`](./CASE-003-S4HANA-SUPPLIER-SELF-SERVICE.md).
 
 ## Invariant
 

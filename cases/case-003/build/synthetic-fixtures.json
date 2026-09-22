@@ -1,0 +1,62 @@
+{
+  "suppliers": [
+    {
+      "CoCd": "PE10",
+      "Vendor": "900000001",
+      "Name": "Proveedor Sintetico SAC",
+      "Tax code 1": "20111111111",
+      "Clerk's internet address": "ap@proveedor-a.test",
+      "Version": "1"
+    }
+  ],
+  "sciv": [
+    {
+      "Company Code": "PE10",
+      "Supplier": "900000001",
+      "Reference Document No.": "F001-100",
+      "Invoice Unique ID": "SYN-INV-100",
+      "Document Date": "2026-09-01",
+      "Receipt Date": "2026-09-02",
+      "Currency": "PEN",
+      "Gross inv. amnt": 1000,
+      "Due Date for Net Payment": "2026-09-22",
+      "FI Document No.": "5100000100",
+      "Fiscal Year": 2026,
+      "Technical Status": "COMPLETED",
+      "Invoice Status": "5"
+    },
+    {
+      "Company Code": "PE10",
+      "Supplier": "900000001",
+      "Reference Document No.": "F001-101",
+      "Invoice Unique ID": "SYN-INV-101",
+      "Document Date": "2026-09-10",
+      "Receipt Date": "2026-09-11",
+      "Currency": "PEN",
+      "Gross inv. amnt": 500,
+      "Due Date for Net Payment": "2026-09-25",
+      "FI Document No": "",
+      "Fiscal Year": "",
+      "Technical Status": "STARTED",
+      "Invoice Status": "A"
+    }
+  ],
+  "fbl1n": [
+    {
+      "Company Code": "PE10",
+      "Document Number": "5100000100",
+      "Document Type": "RN",
+      "Reference": "F001-100",
+      "Document Date": "2026-09-01",
+      "Posting Date": "2026-09-03",
+      "Payment date": "",
+      "Net due date": "2026-09-24",
+      "Amount in doc. curr.": 1000,
+      "Document currency": "PEN",
+      "Clearing date": "",
+      "Clearing Document": "",
+      "Payment Method": "",
+      "Payment Block": ""
+    }
+  ]
+}

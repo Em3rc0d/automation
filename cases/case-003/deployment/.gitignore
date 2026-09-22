@@ -1,0 +1,7 @@
+.env
+Caddyfile
+backups/
+restore/
+*.dump
+*.tgz
+*.sql.gz

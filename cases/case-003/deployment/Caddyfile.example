@@ -1,0 +1,8 @@
+{$N8N_FQDN} {
+  encode zstd gzip
+
+  reverse_proxy n8n:5678 {
+    header_up X-Forwarded-Proto https
+    header_up X-Forwarded-Host {host}
+  }
+}

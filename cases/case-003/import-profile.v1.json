@@ -1,0 +1,118 @@
+{
+  "profileKey": "sap-s4hana-soltrak-ap-v1",
+  "schemaVersion": 1,
+  "datasetType": "supplier_ap",
+  "status": "evidence_frozen",
+  "sources": {
+    "qqva": {
+      "format": "xlsx",
+      "role": "supplier_master",
+      "requiredHeaders": ["CoCd","Vendor","Name","Tax code 1","Clerk's internet address"],
+      "mapping": {
+        "CoCd": "companyCode",
+        "Vendor": "sapVendorId",
+        "Name": "displayName",
+        "Tax code 1": "taxId",
+        "Clerk's internet address": "trustedContactEmail",
+        "Telephone": "telephone",
+        "Pmnt meths": "paymentMethods",
+        "PayT": "paymentTerms"
+      },
+      "canonicalKey": ["companyCode","sapVendorId"],
+      "notes": ["Source may contain multiple Version rows for the same canonical key; resolution policy is a pilot configuration gap."]
+    },
+    "sciv": {
+      "format": "xlsx",
+      "role": "invoice_workflow",
+      "requiredHeaders": ["Company Code","Supplier","Reference Document No.","Document Date","Receipt Date","Currency","Gross inv. amnt","Due Date for Net Payment"],
+      "mapping": {
+        "Company Code": "companyCode",
+        "Supplier": "sapVendorId",
+        "Vendor Name": "vendorName",
+        "Reference Document No.": "invoiceReference",
+        "Document Date": "documentDate",
+        "Receipt Date": "receiptDate",
+        "Parking/Posting Date": "parkingPostingDate",
+        "Currency": "currency",
+        "Gross inv. amnt": "grossAmount",
+        "Due Date for Net Payment": "dueDate",
+        "FI Document No.": "fiDocumentNumber",
+        "Fiscal Year": "fiscalYear",
+        "MM Document No.": "mmDocumentNumber",
+        "Purchasing Doc.": "purchasingDocument",
+        "Invoice Unique ID": "invoiceUniqueId",
+        "Workflow ID": "workflowId",
+        "Technical Status": "technicalStatusRaw",
+        "Invoice Status": "invoiceStatusRaw",
+        "Log. payt block": "paymentBlockRaw",
+        "Parking Reason Code Description": "parkingReasonRaw",
+        "Rejection Indicator": "rejectionIndicatorRaw",
+        "Rejection Comments": "rejectionCommentsRaw"
+      },
+      "postedCanonicalKey": ["companyCode","fiDocumentNumber","fiscalYear"],
+      "preFiPreferredIdentity": ["companyCode","invoiceUniqueId"],
+      "searchableNonUniqueKey": ["companyCode","invoiceReference"]
+    },
+    "fbl1n": {
+      "format": "xlsx",
+      "role": "financial_items",
+      "requiredHeaders": ["Company Code","Document Number","Document Type","Reference","Document Date","Posting Date","Net due date","Amount in doc. curr.","Document currency"],
+      "mapping": {
+        "Company Code": "companyCode",
+        "Document Number": "documentNumber",
+        "Document Type": "documentTypeRaw",
+        "Reference": "invoiceReference",
+        "Purchasing Document": "purchasingDocument",
+        "Document Date": "documentDate",
+        "Posting Date": "postingDate",
+        "Payment date": "paymentDateRaw",
+        "Net due date": "netDueDate",
+        "Terms of Payment": "paymentTerms",
+        "Payment Method": "paymentMethodRaw",
+        "Payment Block": "paymentBlockRaw",
+        "Clearing date": "clearingDate",
+        "Clearing Document": "clearingDocumentNumber",
+        "Amount in doc. curr.": "documentAmount",
+        "Document currency": "currency",
+        "Amount in local currency": "localAmount",
+        "Text": "textRaw",
+        "Assignment": "assignmentRaw"
+      },
+      "canonicalKey": ["companyCode","documentNumber","postingDate.year"],
+      "searchableNonUniqueKey": ["companyCode","invoiceReference"]
+    }
+  },
+  "joins": [
+    {
+      "name": "supplier_sciv",
+      "left": ["qqva.companyCode","qqva.sapVendorId"],
+      "right": ["sciv.companyCode","sciv.sapVendorId"],
+      "cardinality": "supplier_to_many_invoices"
+    },
+    {
+      "name": "sciv_fbl1n_primary",
+      "left": ["sciv.companyCode","sciv.fiDocumentNumber","sciv.fiscalYear"],
+      "right": ["fbl1n.companyCode","fbl1n.documentNumber","fbl1n.postingDate.year"],
+      "required": false,
+      "observedMatchedRows": 435,
+      "observedEligibleScivRows": 468
+    },
+    {
+      "name": "sciv_fbl1n_reference_reconciliation",
+      "left": ["sciv.companyCode","sciv.invoiceReference"],
+      "right": ["fbl1n.companyCode","fbl1n.invoiceReference"],
+      "required": false,
+      "unique": false,
+      "observedMatchedScivRows": 464,
+      "observedScivRows": 531
+    }
+  ],
+  "statusPolicy": {
+    "preserveRaw": true,
+    "unknownCodeBehavior": "warning_and_no_inference"
+  },
+  "publication": {
+    "mode": "atomic_snapshot_set",
+    "components": ["qqva","sciv","fbl1n"]
+  }
+}

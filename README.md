@@ -137,3 +137,8 @@ P1 PILOT PRODUCT                NOT YET CERTIFIED
 ```
 
 No se presenta W1/P1 como terminado hasta existir evidencia real de workflow tests, conectores, tenant isolation, runtime, restore/rollback e incident drill.
+
+
+## Portable deployment
+
+CASE-003 now includes a reproducible deployment/operations handbook for Railway, VPS/VM Linux and local Docker environments under `cases/case-003/deployment/`. It includes greenfield and current-compat topologies, environment/secrets contracts, Compose/Caddy templates, Railway image/bootstrap files, backup/restore, migration/cutover, upgrades, scaling, security, incidents and a production portability checklist.

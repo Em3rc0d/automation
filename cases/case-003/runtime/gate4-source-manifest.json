@@ -1,0 +1,54 @@
+{
+  "caseId": "CASE-003",
+  "dataset": "SOLTRAK SAP report exports",
+  "snapshotId": "b1ea19f1-ed7d-54b5-9009-10759dd6126d",
+  "files": [
+    {
+      "kind": "QQVA",
+      "filename": "SOLTRAK QQVA.XLSX",
+      "sha256": "8ca860081655d68ec73974aa1acc1915d216c165f60c50303f0d6dfacd841db6",
+      "sourceRows": 5,
+      "acceptedRows": 4,
+      "normalizedRows": 2,
+      "rejectedRows": 1
+    },
+    {
+      "kind": "SCIV",
+      "filename": "SOLTRAK SCIV.XLSX",
+      "sha256": "3b65aff52742dcd1a10e8ec29169197272e41a45b9dd7ccb001b6222f9f6ff08",
+      "sourceRows": 531,
+      "acceptedRows": 531,
+      "normalizedRows": 531,
+      "rejectedRows": 0
+    },
+    {
+      "kind": "FBL1N",
+      "filename": "SOLTRAK FBL1N.XLSX",
+      "sha256": "6ffcddde610ef0683f241a47d3ae40bc77bb75023d88600705d55e9899b70390",
+      "sourceRows": 998,
+      "acceptedRows": 991,
+      "normalizedRows": 991,
+      "rejectedRows": 7
+    }
+  ],
+  "expected": {
+    "suppliers": 2,
+    "invoices": 531,
+    "financialItems": 991,
+    "links": 435,
+    "issues": 114,
+    "issueCounts": {
+      "SCIV_NO_FI": 63,
+      "SCIV_FI_UNMATCHED": 33,
+      "AMOUNT_MISMATCH": 10,
+      "SOURCE_ROW_REJECTED": 8
+    }
+  },
+  "join": "SCIV (Company Code, FI Document No., Fiscal Year) -> FBL1N (Company Code, Document Number, YEAR(Posting Date))",
+  "notes": [
+    "Hashes and counts are provenance metadata only; source XLSX business data is not committed.",
+    "QQVA chooses the latest vendor version per Company Code + Vendor.",
+    "Amount equality is a reconciliation signal, never a join key.",
+    "Clearing evidence is stronger than Payment Date; PAYMENT_DATE_EVIDENCE is not certified paid status."
+  ]
+}
