@@ -581,9 +581,11 @@ if [ "${CASE003_GATE10_SMTP_TEST_ON_STARTUP:-false}" = "true" ]; then
 
   rm -f /tmp/case003-gate10-cli.log
   set +e
-  N8N_LOG_OUTPUT=console n8n execute --id=case003Gate10SmtpTestV1 --rawOutput > /tmp/case003-gate10-cli.log 2>&1
+  timeout 45s sh -c 'N8N_LOG_OUTPUT=console n8n execute --id=case003Gate10SmtpTestV1 --rawOutput' > /tmp/case003-gate10-cli.log 2>&1
   CASE003_GATE10_RC=$?
   set -e
+
+  node /opt/case002/diagnose-case003-gate10-log.js /tmp/case003-gate10-cli.log
 
   node /opt/case002/prepare-case003-gate10-smtp-test.js scrub
   n8n import:workflow --input=/tmp/case003-gate10-smtp-test.json
@@ -592,10 +594,10 @@ if [ "${CASE003_GATE10_SMTP_TEST_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js post-case003-gate10-smtp-test
 
   if [ "$CASE003_GATE10_RC" -ne 0 ]; then
-    echo "[case003-gate10] SMTP workflow execution returned non-zero rc=$CASE003_GATE10_RC"
-    exit "$CASE003_GATE10_RC"
+    echo "[case003-gate10] SMTP workflow execution non-zero rc=$CASE003_GATE10_RC; runtime will still start"
+  else
+    echo "[case003-gate10] SMTP workflow execution completed; verify durable delivery state"
   fi
-  echo "[case003-gate10] SMTP workflow execution completed; verify durable delivery state"
 fi
 
 # CASE-003: one-shot READ-ONLY Kapso account discovery.
