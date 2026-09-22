@@ -446,5 +446,40 @@
       "keep SMTP and move only the mail-delivery worker to a runtime with SMTP egress",
       "keep mail delivery on Railway and explicitly switch Gate 10 transport to an HTTPS mail API"
     ]
+  },
+  "deployment": {
+    "bundleVersion": "1.0.0",
+    "handbook": "../deployment/README.md",
+    "bootstrap": "../deployment/BOOTSTRAP-FROM-ZERO.md",
+    "portabilityMatrix": "../deployment/PORTABILITY-MATRIX.md",
+    "environmentContract": "../deployment/ENVIRONMENT-CONTRACT.md",
+    "railway": "../deployment/RAILWAY.md",
+    "linuxDocker": "../deployment/LINUX-DOCKER.md",
+    "bareMetalLinux": "../deployment/BARE-METAL-LINUX.md",
+    "database": "../deployment/DATABASE.md",
+    "secrets": "../deployment/SECRETS-CREDENTIALS.md",
+    "mailTransport": "../deployment/MAIL-TRANSPORT.md",
+    "backupRestore": "../deployment/BACKUP-RESTORE.md",
+    "migrationCutover": "../deployment/MIGRATION-CUTOVER.md",
+    "upgradeRollback": "../deployment/UPGRADE-ROLLBACK.md",
+    "scaling": "../deployment/SCALING.md",
+    "observability": "../deployment/OBSERVABILITY-INCIDENTS.md",
+    "checklist": "../deployment/PORTABILITY-CHECKLIST.md",
+    "compose": "../deployment/docker-compose.yml",
+    "envExample": "../deployment/.env.example",
+    "reverseProxyExample": "../deployment/Caddyfile.example",
+    "railwayVariablesExample": "../deployment/railway.variables.example",
+    "railwayDockerfile": "../deployment/railway/Dockerfile",
+    "portableTargets": [
+      "railway",
+      "linux-vps",
+      "linux-vm",
+      "local-linux-docker"
+    ],
+    "recommendedGreenfieldN8nDatabase": "postgresql",
+    "currentRailwayCompatibilityDatabase": "sqlite-volume",
+    "currentCertifiedBusinessDatabase": "supabase-postgresql-postgrest",
+    "smtpOnObservedRailwayRuntime": "blocked",
+    "certificationRequiredPerEnvironment": true
   }
 }
