@@ -29,7 +29,10 @@ docker compose exec -T n8n sh -c 'tar -czf - -C /home/node/.n8n .' > "$OUT/n8n-d
   echo "contains_decrypted_credentials=false"
 } > "$OUT/metadata.txt"
 
-sha256sum "$OUT"/n8n-postgres.dump "$OUT"/n8n-data.tgz "$OUT"/metadata.txt > "$OUT/SHA256SUMS"
+(
+  cd "$OUT"
+  sha256sum n8n-postgres.dump n8n-data.tgz metadata.txt > SHA256SUMS
+)
 chmod 600 "$OUT"/*
 
 echo "[backup] PASS $OUT"
