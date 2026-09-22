@@ -1,6 +1,6 @@
 {
   "caseId": "CASE-003",
-  "runtimeVersion": "1.9.1-gate10-smtp-prep",
+  "runtimeVersion": "1.9.2-gate10-smtp-egress-blocked",
   "linux": true,
   "n8nImage": "n8nio/n8n:2.38.7",
   "postgresImage": "postgres:16",
@@ -405,13 +405,13 @@
     "overridePersistsDestinationHash": true,
     "overridePersistsMaskedDestination": true,
     "rawCodePersisted": false,
-    "liveWorkflowCountAtInspection": 15,
-    "liveCredentialCountAtInspection": 5,
-    "liveMailCredentialConfigured": false,
+    "liveWorkflowCountAtInspection": 16,
+    "liveCredentialCountAtInspection": 6,
+    "liveMailCredentialConfigured": true,
     "resendRuntimeRequired": false,
-    "status": "prepared_not_certified",
+    "status": "blocked_by_railway_smtp_egress",
     "remainingProof": [
-      "configure native n8n mail credential",
+      "select reachable mail transport architecture",
       "send real test email",
       "receive verification code",
       "submit code through real WhatsApp",
@@ -423,6 +423,28 @@
     "n8nNodeVersion": 2.1,
     "credentialType": "smtp",
     "credentialName": "CASE003 SMTP OTP",
-    "liveSmtpCredentialConfigured": false
+    "liveSmtpCredentialConfigured": true,
+    "smtpCredentialBindingCertified": true,
+    "smtpEgressCertified": false,
+    "emailDeliveryCertified": false,
+    "smtpNetworkProbeDeployment": "2e6e2966-8797-45f7-94fa-7d23eff03c25",
+    "smtpNetworkProbe": {
+      "gmail465Ipv4": "ETIMEDOUT",
+      "gmail587Ipv4": "ETIMEDOUT",
+      "gmail465Ipv6": "ENETUNREACH",
+      "gmail587Ipv6": "ENETUNREACH",
+      "sendgrid2525Ipv4": "ETIMEDOUT",
+      "brevo2525Ipv4": "ETIMEDOUT"
+    },
+    "controlledTestRequestCleaned": true,
+    "controlledTestChallengeCleaned": true,
+    "controlledTestOverrideActive": false,
+    "persistedTestWorkflowScrubbed": true,
+    "runtimeTestDestinationCleared": true,
+    "runtimeTestRequestIdCleared": true,
+    "nextArchitectureChoices": [
+      "keep SMTP and move only the mail-delivery worker to a runtime with SMTP egress",
+      "keep mail delivery on Railway and explicitly switch Gate 10 transport to an HTTPS mail API"
+    ]
   }
 }
