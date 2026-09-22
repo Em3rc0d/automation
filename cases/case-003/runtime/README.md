@@ -263,3 +263,8 @@ Gate 10 deliberately uses n8n's native mail transport boundary rather than addin
 The database remains authoritative for challenge lifecycle, attempts, expiry and verification. n8n receives the internal delivery payload, sends the email, then calls `case003_mark_verification_delivery_json` with the provider result. The OTP must never be logged, committed, or returned to WhatsApp before verification.
 
 For controlled testing, `../build/gate10-test-email-override.sql` authorizes a short-lived destination override by SHA-256. It does not mutate the supplier snapshot or persist the full override address. See `gate10-email-delivery.md` and `evidence/gate10-email-transport-2026-09-21.md`.
+
+
+## Deployment portability
+
+Runtime artifacts are paired with the platform-neutral operator handbook in `../deployment/`. Use that handbook for greenfield Railway, VPS/VM Linux, Docker Compose, backup/restore, cutover and disaster-recovery procedures. The current live Railway shape is a compatibility profile, not the only supported topology.
