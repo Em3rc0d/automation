@@ -2,47 +2,86 @@
 
 ## Scope
 
-This checkpoint records the transport decision and the live n8n credential inventory before any real email is sent.
+This checkpoint records the first real Gate-10 transport attempt after a dedicated n8n SMTP credential was created.
+
+No OTP, SMTP secret, full supplier contact, or full test destination is stored in this evidence.
 
 ## Live n8n inventory
 
-Read-only credential metadata inspection on the Railway n8n runtime reported:
+The Railway n8n runtime now has:
 
 ```text
-workflows   = 15
-credentials = 5
-
-crypto          Kapso Webhook HMAC
-googlePalmApi   CASE002 Gemini API
-httpHeaderAuth  CASE002 Control Plane Internal
-httpHeaderAuth  CASE003 Supabase RPC Token
-httpHeaderAuth  KAPSO API
+workflows   = 16
+credentials = 6
 ```
 
-No Gmail OAuth2, SMTP, SendGrid, Resend, or other mail credential exists in the live n8n state.
-
-No credential secret value was read or logged.
-
-## Decision
-
-Gate 10 will use n8n-native SMTP delivery:
+The sixth credential is a dedicated n8n credential:
 
 ```text
-node       = Send Email
-node type  = n8n-nodes-base.emailSend
-version    = 2.1
-credential = smtp / CASE003 SMTP OTP
+type = smtp
+name = CASE003 SMTP OTP
 ```
 
-A Resend-specific runner and Gmail OAuth2 are not required by the selected architecture.
+Credential secret values were not read or logged.
 
-## Controlled test destination
+The additional workflow is an isolated, inactive Gate-10 SMTP test harness. After the transport attempt, the persisted test workflow was explicitly scrubbed back to inert placeholder values.
 
-A controlled test override is supported by `build/gate10-test-email-override.sql`. The override does not modify the active SAP snapshot trusted-contact field.
+## Controlled delivery attempt
 
-Only a SHA-256 destination hash and masked destination are persisted. The full test address is intentionally excluded from repository evidence.
+Gate 10 successfully reached challenge preparation for the controlled test destination:
 
-The prior unsent test challenge was cancelled after mail transport was found unavailable; it is not counted as delivery evidence.
+```text
+verification request        created
+requested invoice context   preserved
+challenge                   created
+delivery row                created
+SMTP credential binding     resolved
+raw OTP persisted           no
+SAP trusted contact edited  no
+```
+
+The email send itself did not complete. The pending test challenge/request were cancelled/failed and the test override was deactivated. No successful `DELIVERY_SENT` state was recorded.
+
+## Root-cause isolation — Railway SMTP egress
+
+A credential-free network probe was executed from the same Railway service. It did not authenticate or send mail.
+
+Observed:
+
+```text
+smtp.gmail.com       465  IPv4  ETIMEDOUT
+smtp.gmail.com       587  IPv4  ETIMEDOUT
+smtp.gmail.com       465  IPv6  ENETUNREACH
+smtp.gmail.com       587  IPv6  ENETUNREACH
+smtp.sendgrid.net   2525  IPv4  ETIMEDOUT
+smtp-relay.brevo.com 2525 IPv4  ETIMEDOUT
+```
+
+This isolates the current failure to outbound SMTP connectivity from the Railway runtime rather than to the CASE-003 challenge core or the configured SMTP credential.
+
+The successful probe deployment was:
+
+```text
+2e6e2966-8797-45f7-94fa-7d23eff03c25
+```
+
+## Privacy cleanup
+
+After the failed attempts:
+
+```text
+test verification request   cancelled
+test challenge              cancelled
+test delivery               failed
+test override               inactive
+one-shot SMTP test flag     false
+one-shot network probe flag false
+persisted test workflow     scrubbed
+runtime test destination    cleared
+runtime test request ID     cleared
+```
+
+The scrub deployment created a post-cleanup n8n backup and preserved 16 workflows / 6 credentials.
 
 ## Certification status
 
@@ -51,12 +90,20 @@ real WhatsApp verification-init     PASS
 durable VERIFICATION_REQUIRED       PASS
 challenge creation                  PASS
 invoice resume context              PASS
-SMTP credential                     PENDING
-real email delivery                 PENDING
+dedicated SMTP credential           PASS
+SMTP credential binding             PASS
+Railway SMTP egress                 BLOCKED
+real email delivery                 NOT CERTIFIED
 code receipt                        PENDING
 WhatsApp code verification          PENDING
 real identity/membership creation   PENDING
 post-auth invoice FOUND             PENDING
 ```
 
-Gate 10 is prepared, not certified.
+Gate 10 remains not certified on this Railway runtime.
+
+## Next valid paths
+
+To preserve SMTP, move only the mail-delivery worker to a runtime that permits outbound SMTP while leaving Supabase, Kapso and the main n8n orchestration on Railway.
+
+To keep all execution on Railway, use an HTTPS mail API instead of SMTP. That is an architecture choice and must not be silently substituted for the selected SMTP transport.
