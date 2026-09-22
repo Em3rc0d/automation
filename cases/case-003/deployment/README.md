@@ -44,13 +44,14 @@ The currently certified provider path uses Supabase/PostgREST RPC adapters. The 
    - [BARE-METAL-LINUX.md](BARE-METAL-LINUX.md)
 5. [DATABASE.md](DATABASE.md)
 6. [SECRETS-CREDENTIALS.md](SECRETS-CREDENTIALS.md)
-7. [MAIL-TRANSPORT.md](MAIL-TRANSPORT.md)
-8. [BACKUP-RESTORE.md](BACKUP-RESTORE.md)
-9. [MIGRATION-CUTOVER.md](MIGRATION-CUTOVER.md)
-10. [UPGRADE-ROLLBACK.md](UPGRADE-ROLLBACK.md)
-11. [SCALING.md](SCALING.md)
-12. [OBSERVABILITY-INCIDENTS.md](OBSERVABILITY-INCIDENTS.md)
-13. [PORTABILITY-CHECKLIST.md](PORTABILITY-CHECKLIST.md)
+7. [SECURITY-HARDENING.md](SECURITY-HARDENING.md)
+8. [MAIL-TRANSPORT.md](MAIL-TRANSPORT.md)
+9. [BACKUP-RESTORE.md](BACKUP-RESTORE.md)
+10. [MIGRATION-CUTOVER.md](MIGRATION-CUTOVER.md)
+11. [UPGRADE-ROLLBACK.md](UPGRADE-ROLLBACK.md)
+12. [SCALING.md](SCALING.md)
+13. [OBSERVABILITY-INCIDENTS.md](OBSERVABILITY-INCIDENTS.md)
+14. [PORTABILITY-CHECKLIST.md](PORTABILITY-CHECKLIST.md)
 
 ## Files ready to use
 
@@ -60,6 +61,7 @@ The currently certified provider path uses Supabase/PostgREST RPC adapters. The 
 - `railway.variables.example` — Railway variable inventory.
 - `scripts/preflight.sh` — non-secret host/config checks.
 - `scripts/backup-compose.sh` — local/VPS backup helper.
+- `scripts/restore-compose.sh` — destructive restore guarded by `ALLOW_RESTORE=YES`.
 - `scripts/smoke-http.sh` — post-deploy HTTP checks.
 
 ## Frozen invariants
