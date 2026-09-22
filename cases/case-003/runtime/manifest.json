@@ -480,6 +480,12 @@
     "currentRailwayCompatibilityDatabase": "sqlite-volume",
     "currentCertifiedBusinessDatabase": "supabase-postgresql-postgrest",
     "smtpOnObservedRailwayRuntime": "blocked",
-    "certificationRequiredPerEnvironment": true
+    "certificationRequiredPerEnvironment": true,
+    "security": "../deployment/SECURITY-HARDENING.md",
+    "preflightScript": "../deployment/scripts/preflight.sh",
+    "backupScript": "../deployment/scripts/backup-compose.sh",
+    "restoreScript": "../deployment/scripts/restore-compose.sh",
+    "httpSmokeScript": "../deployment/scripts/smoke-http.sh",
+    "railwayEntrypoint": "../deployment/railway/entrypoint.sh"
   }
 }
