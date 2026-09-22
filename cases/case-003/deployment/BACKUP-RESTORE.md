@@ -103,3 +103,10 @@ no unexpected outbound delivery occurs
 ## RPO/RTO
 
 Record actual measured values after restore drills. Do not invent an RPO/RTO from backup schedule alone.
+
+
+## Guarded Compose restore helper
+
+For the Docker Compose profile, `scripts/restore-compose.sh` performs checksum verification, creates a mandatory pre-restore backup, stops n8n, restores PostgreSQL and filesystem state, then restarts the stack. It refuses to run unless the operator explicitly sets `ALLOW_RESTORE=YES`.
+
+A successful script exit is not the end of the restore: run `scripts/smoke-http.sh` plus the CASE-003 gate-specific smoke tests before reconnecting provider traffic.
