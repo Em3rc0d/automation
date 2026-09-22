@@ -36,12 +36,15 @@ const all=(db,sql,p=[])=>new Promise((resolve,reject)=>db.all(sql,p,(e,r)=>e?rej
     if(!binding?.id) throw new Error('live CASE-002 Kapso HMAC credential binding missing');
 
     const db=new sqlite3.Database(dbPath(),sqlite3.OPEN_READONLY);
-    const creds=await all(db,'select id,name,type from credentials_entity where id in (?,?) order by id',[binding.id,'case003RpcAuthV1']);
+    const creds=await all(db,'select id,name,type from credentials_entity order by id');
     await new Promise(r=>db.close(()=>r()));
     const hmacCred=creds.find(c=>c.id===binding.id&&c.type==='crypto');
     const rpcCred=creds.find(c=>c.id==='case003RpcAuthV1'&&c.type==='httpHeaderAuth');
+    const smtpCreds=creds.filter(c=>c.type==='smtp'&&c.name==='CASE003 SMTP OTP');
     if(!hmacCred) throw new Error('bound Kapso crypto credential metadata missing');
     if(!rpcCred) throw new Error('CASE-003 RPC credential metadata missing');
+    if(smtpCreds.length!==1) throw new Error('CASE003 SMTP OTP credential missing or ambiguous');
+    const smtpCred=smtpCreds[0];
 
     const raw=fs.readFileSync(template,'utf8');
     const supabaseUrl=String(process.env.CASE003_SUPABASE_URL||'').trim().replace(/\/$/,'');
@@ -50,14 +53,18 @@ const all=(db,sql,p=[])=>new Promise((resolve,reject)=>db.all(sql,p,(e,r)=>e?rej
     if(!publishableKey || publishableKey.includes('__CASE003_')) throw new Error('CASE003_SUPABASE_PUBLISHABLE_KEY missing or invalid');
     const rendered=raw
       .split('__CASE003_SUPABASE_URL__').join(supabaseUrl)
-      .split('__CASE003_SUPABASE_PUBLISHABLE_KEY__').join(publishableKey);
+      .split('__CASE003_SUPABASE_PUBLISHABLE_KEY__').join(publishableKey)
+      .split('__CASE003_SMTP_CREDENTIAL_ID__').join(smtpCred.id)
+      .split('__CASE003_SMTP_CREDENTIAL_NAME__').join(smtpCred.name);
     if(rendered.includes('__CASE003_')) throw new Error('unresolved CASE003 template placeholder');
     const w=JSON.parse(rendered);
     const hmac=w.nodes.find(n=>n.id==='kapso-hmac');
-    const rpcNodes=w.nodes.filter(n=>['process-provider','verify-provider-code'].includes(n.id));
-    if(!hmac||rpcNodes.length!==2) throw new Error('Gate-9 template nodes missing');
+    const rpcNodes=w.nodes.filter(n=>['process-provider','verify-provider-code','gate10-prepare-email','gate10-mark-delivery'].includes(n.id));
+    const smtpNode=w.nodes.find(n=>n.id==='gate10-send-email');
+    if(!hmac||rpcNodes.length!==4||!smtpNode) throw new Error('Gate-9/Gate-10 template nodes missing');
     hmac.credentials={crypto:{id:hmacCred.id,name:hmacCred.name}};
     for(const n of rpcNodes) n.credentials={httpHeaderAuth:{id:rpcCred.id,name:rpcCred.name}};
+    smtpNode.credentials={smtp:{id:smtpCred.id,name:smtpCred.name}};
     fs.writeFileSync(output,JSON.stringify(w,null,2)+'\n',{mode:0o600});
     console.log('[case003-gate9] PREPARE PASS source='+sourceWorkflowId+' hmacCredentialId='+hmacCred.id+' rpcCredentialId='+rpcCred.id);
   } finally {
