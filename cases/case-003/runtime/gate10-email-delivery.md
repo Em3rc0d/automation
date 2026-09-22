@@ -96,6 +96,41 @@ Until those conditions pass, Gate 10 remains prepared but not certified.
 
 ## Current live status — 2026-09-21
 
-The live n8n instance contains 15 workflows and 5 credentials. Credential metadata inspection found no SMTP credential. Therefore no Gate-10 email transport is currently armed.
+The dedicated `CASE003 SMTP OTP` credential exists and resolves correctly from the live n8n credential store.
 
-The earlier Resend prototype was intentionally removed from the canonical runtime. Gmail OAuth2 is also not required for the selected design. The next runtime mutation is only the addition of the dedicated `CASE003 SMTP OTP` credential and the isolated Gate-10 mail workflow.
+A controlled Gate-10 attempt proved challenge creation and SMTP-node binding, but the email could not be delivered because outbound SMTP connectivity from the Railway service is unavailable in the tested network path.
+
+Credential-free probes from the same service returned:
+
+```text
+Gmail 465/IPv4   ETIMEDOUT
+Gmail 587/IPv4   ETIMEDOUT
+Gmail 465/IPv6   ENETUNREACH
+Gmail 587/IPv6   ENETUNREACH
+SendGrid 2525    ETIMEDOUT
+Brevo 2525       ETIMEDOUT
+```
+
+Therefore changing the Gmail username/app-password is not the next remediation for the observed failure. Gate 10 is blocked at the Railway SMTP-egress boundary.
+
+The failed test request/challenge were cancelled, its override was deactivated, the isolated persisted test workflow was scrubbed to inert placeholders, and the temporary destination/request runtime variables were cleared.
+
+### Deployment choices
+
+To keep SMTP:
+
+```text
+Railway n8n
+  -> internal Gate-10 handoff
+  -> external/VPS mail worker with SMTP egress
+  -> SMTP provider
+```
+
+To keep the mail worker on Railway:
+
+```text
+Railway n8n
+  -> HTTPS mail API
+```
+
+The second option changes the selected transport from SMTP to HTTPS and should be an explicit architecture decision.
