@@ -1,7 +1,3 @@
-{
-  email off
-}
-
 {$N8N_FQDN} {
   encode zstd gzip
 
