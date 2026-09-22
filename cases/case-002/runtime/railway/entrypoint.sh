@@ -567,6 +567,37 @@ if [ "${CASE003_GATE9_DISARM_ON_STARTUP:-false}" = "true" ]; then
   node /opt/case002/backup-n8n-state.js post-case003-gate9-disarm
 fi
 
+
+# CASE-003 Gate 10 one-shot SMTP delivery proof. It renders the real test
+# destination only into /tmp, executes with persisted execution saving disabled,
+# then immediately re-imports a scrubbed inactive workflow.
+if [ "${CASE003_GATE10_SMTP_TEST_ON_STARTUP:-false}" = "true" ]; then
+  echo "[case003-gate10] guarded SMTP delivery proof requested"
+  node /opt/case002/backup-n8n-state.js pre-case003-gate10-smtp-test
+  umask 077
+
+  node /opt/case002/prepare-case003-gate10-smtp-test.js render
+  n8n import:workflow --input=/tmp/case003-gate10-smtp-test.json
+
+  rm -f /tmp/case003-gate10-cli.log
+  set +e
+  N8N_LOG_OUTPUT=console n8n execute --id=case003Gate10SmtpTestV1 --rawOutput > /tmp/case003-gate10-cli.log 2>&1
+  CASE003_GATE10_RC=$?
+  set -e
+
+  node /opt/case002/prepare-case003-gate10-smtp-test.js scrub
+  n8n import:workflow --input=/tmp/case003-gate10-smtp-test.json
+
+  rm -f /tmp/case003-gate10-smtp-test.json /tmp/case003-gate10-cli.log
+  node /opt/case002/backup-n8n-state.js post-case003-gate10-smtp-test
+
+  if [ "$CASE003_GATE10_RC" -ne 0 ]; then
+    echo "[case003-gate10] SMTP workflow execution returned non-zero rc=$CASE003_GATE10_RC"
+    exit "$CASE003_GATE10_RC"
+  fi
+  echo "[case003-gate10] SMTP workflow execution completed; verify durable delivery state"
+fi
+
 # CASE-003: one-shot READ-ONLY Kapso account discovery.
 # Uses the existing KAPSO API credential, lists phone-number/webhook metadata,
 # logs no credential secret values, performs no provider mutation.
