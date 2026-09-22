@@ -102,7 +102,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const j=$input.first().json||{}; const failed=!!j.error; const id=String(j.messageId||j.response?.messageId||'').slice(0,240); const err=failed?String(j.error?.message||'smtp_delivery_failed').slice(0,120):null; return [{json:{sent:!failed,provider_message_id:id||null,error_code:err}}];"
+        "jsCode": "const j=$input.first().json||{};\nconst failed=!!j.error;\nconst raw=JSON.stringify(j.error||j);\nlet category=null;\nif(failed){\n  if(/534[- ]5\\.7\\.9|application-specific password|app password/i.test(raw)) category='SMTP_APP_PASSWORD';\n  else if(/EAUTH|535[- ]|invalid login|username and password not accepted|authentication unsuccessful/i.test(raw)) category='SMTP_AUTH';\n  else if(/ETIMEDOUT|connection timeout|greeting never received|socket timeout/i.test(raw)) category='SMTP_CONNECTION_TIMEOUT';\n  else if(/ECONNREFUSED|connection refused/i.test(raw)) category='SMTP_CONNECTION_REFUSED';\n  else if(/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(raw)) category='SMTP_DNS';\n  else if(/certificate|self[- ]signed|TLS|SSL routines|wrong version number/i.test(raw)) category='SMTP_TLS';\n  else if(/EENVELOPE|recipient.*rejected|sender.*rejected|550[- ]|553[- ]/i.test(raw)) category='SMTP_ENVELOPE';\n  else category='SMTP_DELIVERY_FAILED';\n}\nconst id=String(j.messageId||j.response?.messageId||'').slice(0,240);\nreturn [{json:{sent:!failed,provider_message_id:id||null,error_code:category}}];"
       },
       "id": "classify-email",
       "name": "Classify SMTP Delivery",
