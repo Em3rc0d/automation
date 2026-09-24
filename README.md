@@ -8,18 +8,31 @@ No estamos construyendo un “Zapier peruano”, otro n8n ni un workflow builder
 
 **Nosotros configuramos, operamos, observamos y reparamos las automatizaciones. El cliente ve sus datos, procesos, pendientes, salud y ahorro estimado.**
 
+## Invariante económico
+
+Mientras no exista un piloto/cliente pagador que financie producción, el objetivo de costo fijo productivo es **aproximadamente S/0**.
+
+- desarrollo/demos: local + fixtures + mocks;
+- no runtime persistente dedicado por cliente;
+- producción: control plane y ejecución compartidos/multi-tenant;
+- costos externos variables: client-owned cuando sea práctico o medidos/separados contractualmente;
+- infraestructura dedicada solo por excepción justificada.
+
+Ver `decisions/ADR-0007-PRE-REVENUE-ZERO-FIXED-COST.md`.
+
+
 ## Superficies
 
 - **Operator Console**: tenants, automation instances, templates, connectors, runs, incidents, approvals, métricas, costos y ahorro.
 - **Client Portal**: procesos, datos, actividad, estado, pendientes y Savings Engine.
-- **Automation Runtime**: n8n inicialmente, más workers propios donde corresponda.
+- **Automation Runtime**: runtime compartido e intercambiable seleccionado por carga/costo; n8n queda como herramienta local/factory y opción de ejecución cuando se justifique.
 - **Control Plane**: PostgreSQL/Supabase como fuente de verdad.
 
 ## Estructura de conocimiento
 
 - `brainstorming/` — problema, tesis, ICP, alcance y no-alcance.
 - `design/` — superficies, UX, roles y journeys.
-- `architecture/` — arquitectura, contratos, datos, conectores y runtime.
+- `architecture/` — arquitectura, contratos, datos, conectores y runtime; `SAVINGS-WORKFLOW-DOMAIN.md` modela la instalación customer-facing frente a sus AutomationInstances técnicos.
 - `decisions/` — ADRs y decisiones congeladas.
 - `mining-site/` — índice general de investigación, fuentes y provenance.
 - `quarries/` — extracción temática: OSS, n8n templates, AI/OCR, conectores, seguridad y mercado.
@@ -28,7 +41,11 @@ No estamos construyendo un “Zapier peruano”, otro n8n ni un workflow builder
 - `licensing/` — matriz de reutilización comercial y restricciones.
 - `commercial/` — catálogo, ICP, discovery y pricing hipótesis.
 - `docs/` — onboarding, testing y readiness operativo.
-- `workflows/` — biblioteca semántica de capacidades y adaptadores.
+- `workflows/` — capacidades, reductores de trabajo activo y catálogo de Savings Workflows instalables.
+  - `SAVINGS-WORKFLOW-CATALOG.md` — catálogo amplio de workflows que reducen trabajo humano repetitivo.
+  - `SAVINGS-WORKFLOW-REGISTRY.json` — registro machine-readable.
+  - `ACTIVE-WORK-REDUCERS.md` — patrones internos de reducción de trabajo activo.
+  - `SAVINGS-WORKFLOW-STANDARD.md` — contrato económico/técnico y estados de certificación.
 - `workflows/n8n/` — biblioteca reservada para baselines n8n que ya pasaron todo el quarry.
 - `certification/` — criterios, cobertura y certificados por snapshot.
 - `mk0/` — cierre documental y arquitectónico antes de build.
@@ -104,7 +121,8 @@ Termina cuando podemos:
 - Next.js
 - PostgreSQL / Supabase
 - Supabase Auth + RLS
-- n8n como motor inicial **solo bajo un modelo comercial/licenciamiento compatible**
+- runtime de ejecución compartido e intercambiable; selección por perfil `function` / `scheduled` / `durable` / `human_loop` / `heavy`
+- n8n permitido para diseño local, factory y casos productivos seleccionados **solo bajo un modelo comercial/licenciamiento compatible**
 - Node.js workers para lógica no apropiada para n8n
 - OpenAI API solo donde aporte
 - Vercel + Railway/VPS administrado
@@ -137,3 +155,9 @@ P1 PILOT PRODUCT                NOT YET CERTIFIED
 ```
 
 No se presenta W1/P1 como terminado hasta existir evidencia real de workflow tests, conectores, tenant isolation, runtime, restore/rollback e incident drill.
+
+## Savings Workflow Catalog
+
+El repositorio mantiene un catálogo amplio de Savings Workflows de nivel solución. Estos no aumentan artificialmente el conteo de CAPABILITY: son composiciones customer-facing de capacidades/reductores existentes.
+
+Estado inicial del catálogo: **DESIGN_READY**. `DESIGN_READY != TESTED != APPROVED_BASELINE`.

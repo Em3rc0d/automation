@@ -2,7 +2,7 @@
 
 ## Architectural rule
 
-The platform is the source of truth. n8n executes.
+The platform is the source of truth. Execution runtime is interchangeable and selected by workload, quality requirements and cost.
 
 ```text
 Client / Operator
@@ -11,9 +11,9 @@ Next.js Web + API
       ↓
 PostgreSQL / Supabase
       ↓
-AutomationEngine abstraction
+AutomationEngine / RuntimeProfile abstraction
       ↓
-n8n / Node worker
+shared function / scheduler / durable worker / heavy worker / n8n when justified
       ↓
 Gmail / WhatsApp / CRM / Drive / APIs
       ↓
@@ -32,11 +32,12 @@ Savings Engine + Portal
 - Supabase Auth
 - RLS for tenant isolation
 - Supabase Storage only where needed
-- n8n self-hosted as initial automation engine
-- Node.js worker for code-first jobs
+- shared, runtime-neutral execution by workload profile
+- local n8n for design/factory and optional production use when economics/licensing justify it
+- Node.js/TypeScript worker/function implementations for productized Savings Workflows
 - OpenAI SDK only where semantic extraction/classification adds value
-- Vercel for web
-- Railway/VPS for persistent runtime
+- web hosting selected at activation time; pre-revenue development remains local/free where practical
+- persistent Railway/VPS/runtime is **not** a pre-revenue default and is activated only when a paid workload justifies it
 - Zod + OpenAPI contracts
 - Vitest + Playwright
 
@@ -51,6 +52,26 @@ Savings Engine + Portal
 - customer-facing n8n
 - generic agent platform
 
+## Runtime economics and profiles
+
+Pre-revenue rule: fixed production infrastructure target is approximately **S/0**. Use local containers, fixtures and mocks until a paid pilot funds the minimum production runtime.
+
+Production defaults to shared multi-tenant execution; a tenant should not receive an always-on server merely because a workflow is installed.
+
+Runtime profiles:
+
+```text
+function    short event/request-driven work
+scheduled   periodic checks/reminders
+durable     waiting/retries across minutes/days
+human_loop  explicit approval/review
+heavy       OCR/batch/compute; separately metered
+```
+
+Provider/runtime implementation remains replaceable. Runtime profile is business/operational metadata; engine vendor is an implementation detail.
+
+See ADR-0007 and `workflows/SAVINGS-WORKFLOW-STANDARD.md`.
+
 ## Core entities
 
 ```text
@@ -58,6 +79,8 @@ Tenant
 User
 Membership
 AutomationTemplate
+SavingsWorkflowDefinition
+PluginInstallation
 AutomationInstance
 AutomationVersion
 ConnectorAccount
@@ -88,8 +111,9 @@ Example:
   "tenantId": "tenant-acme",
   "templateKey": "lead-followup",
   "templateVersion": 3,
-  "engine": "n8n",
-  "engineReference": "n8n-workflow-731",
+  "runtimeProfile": "function",
+  "engine": "worker",
+  "engineReference": "shared-worker:lead-followup-v3",
   "status": "active",
   "config": {
     "followUpAfterHours": 24,
@@ -103,12 +127,25 @@ Example:
 ## Engine abstraction
 
 ```ts
-export type EngineName = "n8n" | "worker" | "triggerdev" | "temporal";
+export type RuntimeProfile =
+  | "function"
+  | "scheduled"
+  | "durable"
+  | "human_loop"
+  | "heavy";
+
+export type EngineName =
+  | "worker"
+  | "n8n"
+  | "triggerdev"
+  | "temporal"
+  | "other";
 
 export interface AutomationEngine {
   execute(input: {
     tenantId: string;
     automationInstanceId: string;
+    runtimeProfile: RuntimeProfile;
     payload: unknown;
     idempotencyKey: string;
   }): Promise<{
