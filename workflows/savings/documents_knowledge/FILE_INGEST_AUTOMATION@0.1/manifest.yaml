@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-154"
+key: "FILE_INGEST_AUTOMATION"
+version: "0.1"
+name: "File Intake"
+domain: "documents_knowledge"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "file"
+manualWorkReduced: "Collect files from configured sources into one processing path"
+capabilities:
+  - "FILE_INGEST"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "file"

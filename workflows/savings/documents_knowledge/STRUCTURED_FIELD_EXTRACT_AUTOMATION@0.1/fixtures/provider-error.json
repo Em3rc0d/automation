@@ -1,0 +1,14 @@
+{
+  "fixture": "provider-error",
+  "workflowKey": "STRUCTURED_FIELD_EXTRACT_AUTOMATION",
+  "simulate": {
+    "providerResponse": 503,
+    "transient": true
+  },
+  "expected": {
+    "retryPolicyApplied": true,
+    "duplicateSideEffect": false,
+    "incidentCreatedAfterExhaustion": true,
+    "savingsEventOnFailure": false
+  }
+}

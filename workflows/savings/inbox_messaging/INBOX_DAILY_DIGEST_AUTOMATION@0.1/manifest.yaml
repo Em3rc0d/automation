@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-152"
+key: "INBOX_DAILY_DIGEST_AUTOMATION"
+version: "0.1"
+name: "Inbox Daily Digest"
+domain: "inbox_messaging"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "day"
+manualWorkReduced: "Summarize relevant inbox items into one daily brief"
+capabilities:
+  - "INBOX_DAILY_DIGEST"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "day"

@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-132"
+key: "INTERVIEW_SCHEDULE_AUTOMATION"
+version: "0.1"
+name: "Interview Scheduling"
+domain: "hr_admin"
+stage: "DESIGN_READY"
+runtimeProfile: "durable"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "interview"
+manualWorkReduced: "Coordinate available times between candidate and interviewer"
+capabilities:
+  - "INTERVIEW_SCHEDULE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "interview"

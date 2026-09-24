@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-140"
+key: "OFFBOARDING_TRIGGER_AUTOMATION"
+version: "0.1"
+name: "Offboarding Trigger"
+domain: "hr_admin"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "employee"
+manualWorkReduced: "Start the standard offboarding sequence"
+capabilities:
+  - "OFFBOARDING_TRIGGER"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "employee"
