@@ -1,0 +1,11 @@
+{
+  "fixture": "duplicate",
+  "workflowKey": "WEB_FORM_TO_RECORD_AUTOMATION",
+  "instruction": "Send same idempotencyKey twice.",
+  "expected": {
+    "firstRun": "completed",
+    "secondRun": "skipped_duplicate",
+    "sideEffectsCreated": 1,
+    "savingsEventsCreated": 1
+  }
+}

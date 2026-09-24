@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-131"
+key: "CV_EXTRACT_AUTOMATION"
+version: "0.1"
+name: "CV Data Extraction"
+domain: "hr_admin"
+stage: "DESIGN_READY"
+runtimeProfile: "heavy"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "candidate"
+manualWorkReduced: "Extract administrative CV fields instead of manual typing"
+capabilities:
+  - "CV_EXTRACT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "candidate"

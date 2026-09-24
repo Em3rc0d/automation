@@ -1,0 +1,11 @@
+{
+  "fixture": "duplicate",
+  "workflowKey": "CUSTOMER_CREATE_FROM_WIN_AUTOMATION",
+  "instruction": "Send same idempotencyKey twice.",
+  "expected": {
+    "firstRun": "completed",
+    "secondRun": "skipped_duplicate",
+    "sideEffectsCreated": 1,
+    "savingsEventsCreated": 1
+  }
+}

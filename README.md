@@ -160,4 +160,6 @@ No se presenta W1/P1 como terminado hasta existir evidencia real de workflow tes
 
 El repositorio mantiene un catálogo amplio de Savings Workflows de nivel solución. Estos no aumentan artificialmente el conteo de CAPABILITY: son composiciones customer-facing de capacidades/reductores existentes.
 
+Actualmente `workflows/savings/` contiene **233 materialized DESIGN_READY package skeletons** en 21 dominios. Cada paquete trae manifest, config/input/output contracts, fixtures, test plan, SavingsBaseline, flow plan y runbook. Ver `workflows/savings/INDEX.md`.
+
 Estado inicial del catálogo: **DESIGN_READY**. `DESIGN_READY != TESTED != APPROVED_BASELINE`.

@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-059"
+key: "RECEIPT_OCR_AUTOMATION"
+version: "0.1"
+name: "Receipt OCR Extraction"
+domain: "accounts_payable_documents"
+stage: "DESIGN_READY"
+runtimeProfile: "heavy"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "receipt"
+manualWorkReduced: "Extract receipt fields instead of manual typing"
+capabilities:
+  - "RECEIPT_OCR_EXTRACT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "receipt"

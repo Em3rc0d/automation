@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-222"
+key: "ADDITIONAL_WORK_APPROVAL_AUTOMATION"
+version: "0.1"
+name: "Additional Work Customer Approval"
+domain: "workshop_vehicle"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "approval"
+manualWorkReduced: "Send extra-work details and capture customer approval"
+capabilities:
+  - "APPROVAL_REQUEST"
+  - "APPROVAL_DECISION"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "approval"

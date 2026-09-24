@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-146"
+key: "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION"
+version: "0.1"
+name: "Email Attachment Extraction"
+domain: "inbox_messaging"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "attachment"
+manualWorkReduced: "Download and attach relevant files to the right process"
+capabilities:
+  - "EMAIL_ATTACHMENT_EXTRACT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "attachment"

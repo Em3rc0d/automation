@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-112"
+key: "SLA_WATCHDOG_AUTOMATION"
+version: "0.1"
+name: "Support SLA Watchdog"
+domain: "support"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "ticket"
+manualWorkReduced: "Review aging tickets and surface breaches before manual checking"
+capabilities:
+  - "SLA_WATCHDOG"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "ticket"

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PAYMENT_REMINDER_AUTOMATION tenant configuration",
+  "description": "DESIGN_READY skeleton; specialize before HARDENED.",
+  "type": "object",
+  "required": [
+    "enabled",
+    "dryRun",
+    "businessTimezone"
+  ],
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "dryRun": {
+      "type": "boolean",
+      "default": true
+    },
+    "businessTimezone": {
+      "type": "string",
+      "default": "America/Lima"
+    },
+    "maxRetries": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "default": 3
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60
+    },
+    "schedule": {
+      "type": "string",
+      "description": "Tenant schedule/cron."
+    }
+  },
+  "additionalProperties": true
+}

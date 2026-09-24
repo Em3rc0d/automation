@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-030"
+key: "CONTRACT_FROM_TEMPLATE_AUTOMATION"
+version: "0.1"
+name: "Contract from Template"
+domain: "quotes_contracts"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "contract"
+manualWorkReduced: "Populate an approved contract template from customer/deal data"
+capabilities:
+  - "CONTRACT_GENERATE_FROM_TEMPLATE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "contract"

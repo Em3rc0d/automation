@@ -1,0 +1,19 @@
+{
+  "fixture": "happy-path",
+  "workflowKey": "WEBHOOK_EVENT_INGEST_AUTOMATION",
+  "input": {
+    "tenantId": "tenant_fixture",
+    "idempotencyKey": "webhook_event_ingest_automation:fixture:001",
+    "occurredAt": "2026-09-24T12:00:00Z",
+    "sourceSystem": "fixture",
+    "sourceId": "source-001",
+    "payload": {
+      "note": "Replace with realistic event fixture before TESTED."
+    }
+  },
+  "expected": {
+    "status": "completed",
+    "automatedUnits": 1,
+    "savingsUnit": "event"
+  }
+}

@@ -52,6 +52,7 @@ REQUIRED_PATHS = [
     "workflows/SAVINGS-WORKFLOW-REGISTRY.json",
     "workflows/SAVINGS-WORKFLOW.schema.json",
     "workflows/savings/README.md",
+    "workflows/savings/INDEX.md",
     "workflows/n8n/README.md",
     "workflows/n8n/BASELINE-TARGETS.md",
     "quarries/workflow-quarry/README.md",
@@ -69,6 +70,7 @@ REQUIRED_PATHS = [
     "tools/report_toolbox_readiness.py",
     "factory/tools/scaffold_savings_workflows.py",
     "factory/tools/validate_savings_registry.py",
+    "factory/tools/validate_savings_packages.py",
 ]
 
 QUARRY_STAGE_DIRS = [
@@ -227,6 +229,18 @@ def validate() -> list[str]:
             if token not in text:
                 fail(errors, f"toolbox closure plan missing invariant: {token}")
 
+
+    savings_packages_validator = ROOT / "factory/tools/validate_savings_packages.py"
+    if savings_packages_validator.is_file():
+        try:
+            ns = runpy.run_path(str(savings_packages_validator))
+            packages_main = ns.get("main")
+            if not callable(packages_main):
+                fail(errors, "savings package validator missing main()")
+            elif packages_main() != 0:
+                fail(errors, "savings package materialization validation failed")
+        except Exception as exc:
+            fail(errors, f"savings package validator failed: {exc}")
 
     savings_registry_validator = ROOT / "factory/tools/validate_savings_registry.py"
     if savings_registry_validator.is_file():

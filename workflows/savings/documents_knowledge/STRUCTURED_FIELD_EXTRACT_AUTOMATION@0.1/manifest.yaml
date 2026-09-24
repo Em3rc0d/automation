@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-157"
+key: "STRUCTURED_FIELD_EXTRACT_AUTOMATION"
+version: "0.1"
+name: "Structured Field Extraction"
+domain: "documents_knowledge"
+stage: "DESIGN_READY"
+runtimeProfile: "heavy"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "document"
+manualWorkReduced: "Extract target fields into a typed schema"
+capabilities:
+  - "STRUCTURED_FIELD_EXTRACT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "document"

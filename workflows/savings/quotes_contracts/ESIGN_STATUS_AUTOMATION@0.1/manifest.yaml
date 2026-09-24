@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-033"
+key: "ESIGN_STATUS_AUTOMATION"
+version: "0.1"
+name: "E-sign Status Sync"
+domain: "quotes_contracts"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "contract"
+manualWorkReduced: "Check signature status and synchronize the result"
+capabilities:
+  - "ESIGN_STATUS_SYNC"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "contract"

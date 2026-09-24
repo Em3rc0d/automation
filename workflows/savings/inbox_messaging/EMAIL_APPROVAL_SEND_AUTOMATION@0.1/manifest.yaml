@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-150"
+key: "EMAIL_APPROVAL_SEND_AUTOMATION"
+version: "0.1"
+name: "Email Approval Send"
+domain: "inbox_messaging"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "email"
+manualWorkReduced: "Route sensitive drafts for approval and then send"
+capabilities:
+  - "EMAIL_APPROVAL_SEND"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "email"

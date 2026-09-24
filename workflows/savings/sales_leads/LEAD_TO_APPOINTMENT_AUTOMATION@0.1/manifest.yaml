@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-011"
+key: "LEAD_TO_APPOINTMENT_AUTOMATION"
+version: "0.1"
+name: "Lead to Appointment"
+domain: "sales_leads"
+stage: "DESIGN_READY"
+runtimeProfile: "durable"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "appointment"
+manualWorkReduced: "Coordinate a booking after qualification"
+capabilities:
+  - "LEAD_HANDOFF_TO_APPOINTMENT"
+  - "APPOINTMENT_REQUEST"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "appointment"

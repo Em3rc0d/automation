@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-097"
+key: "LOW_STOCK_ALERT_AUTOMATION"
+version: "0.1"
+name: "Low Stock Alert"
+domain: "orders_inventory"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "SKU"
+manualWorkReduced: "Review stock levels and notify only below configured thresholds"
+capabilities:
+  - "LOW_STOCK_ALERT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "SKU"

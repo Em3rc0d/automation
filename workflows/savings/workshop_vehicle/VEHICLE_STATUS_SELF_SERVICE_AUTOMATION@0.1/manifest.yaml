@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-221"
+key: "VEHICLE_STATUS_SELF_SERVICE_AUTOMATION"
+version: "0.1"
+name: "Vehicle Status Self-service"
+domain: "workshop_vehicle"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "query"
+manualWorkReduced: "Answer customer status queries from the current work order"
+capabilities:
+  - "WORK_STATUS_SYNC"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "query"

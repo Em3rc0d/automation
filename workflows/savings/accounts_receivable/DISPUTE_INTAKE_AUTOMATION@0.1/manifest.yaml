@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-046"
+key: "DISPUTE_INTAKE_AUTOMATION"
+version: "0.1"
+name: "Invoice Dispute Intake"
+domain: "accounts_receivable"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "dispute"
+manualWorkReduced: "Register and route a customer payment/invoice dispute"
+capabilities:
+  - "DISPUTE_INTAKE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "dispute"

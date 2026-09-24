@@ -1,0 +1,14 @@
+{
+  "fixture": "provider-error",
+  "workflowKey": "CONTRACT_REVIEW_GATE_AUTOMATION",
+  "simulate": {
+    "providerResponse": 503,
+    "transient": true
+  },
+  "expected": {
+    "retryPolicyApplied": true,
+    "duplicateSideEffect": false,
+    "incidentCreatedAfterExhaustion": true,
+    "savingsEventOnFailure": false
+  }
+}

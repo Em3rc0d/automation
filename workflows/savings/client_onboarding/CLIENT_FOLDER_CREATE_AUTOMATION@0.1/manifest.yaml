@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-120"
+key: "CLIENT_FOLDER_CREATE_AUTOMATION"
+version: "0.1"
+name: "Client Folder Creation"
+domain: "client_onboarding"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "client"
+manualWorkReduced: "Create the standard client folder structure"
+capabilities:
+  - "CLIENT_FOLDER_CREATE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "client"

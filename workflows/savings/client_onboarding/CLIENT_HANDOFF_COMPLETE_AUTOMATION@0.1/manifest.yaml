@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-129"
+key: "CLIENT_HANDOFF_COMPLETE_AUTOMATION"
+version: "0.1"
+name: "Client Handoff Completion"
+domain: "client_onboarding"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "client"
+manualWorkReduced: "Complete the configured handoff to steady-state service"
+capabilities:
+  - "CLIENT_HANDOFF_COMPLETE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "client"

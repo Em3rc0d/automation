@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-028"
+key: "QUOTE_OUTCOME_CAPTURE_AUTOMATION"
+version: "0.1"
+name: "Quote Outcome Capture"
+domain: "quotes_contracts"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "quote"
+manualWorkReduced: "Capture accepted/rejected/pending state from customer responses"
+capabilities:
+  - "QUOTE_ACCEPTANCE_CAPTURE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "quote"

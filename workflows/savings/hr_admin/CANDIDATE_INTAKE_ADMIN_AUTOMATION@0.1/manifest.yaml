@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-130"
+key: "CANDIDATE_INTAKE_ADMIN_AUTOMATION"
+version: "0.1"
+name: "Candidate Intake Administration"
+domain: "hr_admin"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "candidate"
+manualWorkReduced: "Capture candidate documents/data without making hiring decisions"
+capabilities:
+  - "CANDIDATE_INTAKE_ADMIN"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "candidate"

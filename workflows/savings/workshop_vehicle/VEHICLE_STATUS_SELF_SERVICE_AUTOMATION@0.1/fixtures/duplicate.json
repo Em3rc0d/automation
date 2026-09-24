@@ -1,0 +1,11 @@
+{
+  "fixture": "duplicate",
+  "workflowKey": "VEHICLE_STATUS_SELF_SERVICE_AUTOMATION",
+  "instruction": "Send same idempotencyKey twice.",
+  "expected": {
+    "firstRun": "completed",
+    "secondRun": "skipped_duplicate",
+    "sideEffectsCreated": 1,
+    "savingsEventsCreated": 1
+  }
+}

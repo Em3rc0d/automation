@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-223"
+key: "VEHICLE_READY_NOTIFY_AUTOMATION"
+version: "0.1"
+name: "Vehicle Ready Notification"
+domain: "workshop_vehicle"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "vehicle"
+manualWorkReduced: "Notify the customer when the work order reaches ready state"
+capabilities:
+  - "WORK_CUSTOMER_NOTIFY"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "vehicle"

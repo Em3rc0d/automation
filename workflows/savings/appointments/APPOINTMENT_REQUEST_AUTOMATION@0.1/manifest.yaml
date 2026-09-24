@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-012"
+key: "APPOINTMENT_REQUEST_AUTOMATION"
+version: "0.1"
+name: "Appointment Request Intake"
+domain: "appointments"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "request"
+manualWorkReduced: "Read a booking request and normalize required fields"
+capabilities:
+  - "APPOINTMENT_REQUEST"
+  - "APPOINTMENT_VALIDATE_REQUEST"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "request"

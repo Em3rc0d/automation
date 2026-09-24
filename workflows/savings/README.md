@@ -1,44 +1,87 @@
 # Savings Workflow Packages
 
-This directory is the materialization target for customer-facing Savings Workflow design packages.
+This directory is the **materialized DESIGN_READY skeleton library** for customer-facing Savings Workflows.
 
-The source of truth for the broad catalog is:
+Source authorities:
 
 - `../SAVINGS-WORKFLOW-REGISTRY.json`
 - `../SAVINGS-WORKFLOW-CATALOG.md`
 - `../SAVINGS-WORKFLOW-STANDARD.md`
 - `../ACTIVE-WORK-REDUCERS.md`
+- `INDEX.md`
 
-## Generate one package
+## Current materialization
 
-```bash
-python factory/tools/scaffold_savings_workflows.py \
-  --key PAYMENT_REMINDER_AUTOMATION
-```
+- **233 workflow skeletons**
+- **21 domains**
+- **12 package files per workflow**
+- all remain **DESIGN_READY**
+- **0** workflows are promoted to TESTED/APPROVED merely by being materialized
 
-## Generate the complete DESIGN_READY package tree
-
-```bash
-python factory/tools/scaffold_savings_workflows.py --all
-```
-
-The scaffolder intentionally creates:
+## Package contract
 
 ```text
-<domain>/<KEY>@0.1/
+<domain>/<KEY>@<version>/
 ├── manifest.yaml
 ├── README.md
 ├── config.schema.json
-├── fixtures/README.md
-└── evidence/README.md
+├── contracts/
+│   ├── input.schema.json
+│   └── output.schema.json
+├── fixtures/
+│   ├── happy-path.json
+│   ├── duplicate.json
+│   └── provider-error.json
+├── tests/
+│   └── TEST-PLAN.md
+├── savings/
+│   └── BASELINE.md
+├── implementation/
+│   └── flow.plan.yaml
+└── runbook/
+    └── RUNBOOK.md
 ```
 
-It does **not** create fake executable implementations and does **not** mark anything TESTED or APPROVED_BASELINE.
+## Generate / refresh one package
 
-A package can move beyond DESIGN_READY only through the repository quarry/factory/certification gates.
+```bash
+python factory/tools/scaffold_savings_workflows.py \
+  --key PAYMENT_REMINDER_AUTOMATION \
+  --force
+```
 
-## Why generated packages are not committed by default
+## Generate / refresh the complete library
 
-The registry is the canonical design inventory. Materializing hundreds of empty package directories into Git would inflate file count without adding evidence or implementation quality.
+```bash
+python factory/tools/scaffold_savings_workflows.py --all --force
+```
 
-Commit a package when it is selected for synthesis and real implementation begins. This preserves the Toolbox North Star: broad composition coverage, selective certification.
+## Why commit the skeletons now?
+
+The product has moved from a small template list to a broad **Savings Workflow design library**. Keeping the skeletons in Git gives each workflow a visible place for:
+
+- contracts;
+- tenant configuration;
+- realistic fixtures;
+- test-plan evolution;
+- SavingsBaseline definition;
+- implementation planning;
+- operational runbook.
+
+This does **not** optimize the project for workflow count. The semantic capability library remains selective and provider-neutral. These folders are solution-level compositions and design contracts.
+
+## Certification boundary
+
+Materialization is not implementation.
+
+```text
+DESIGN_READY
+→ SELECTED_FOR_SYNTHESIS
+→ HARDENED
+→ TESTED
+→ APPROVED_BASELINE
+→ CLIENT_CONFIGURED
+→ CLIENT_ACCEPTED
+```
+
+No skeleton may be described as production-ready before the corresponding gates and evidence exist.
