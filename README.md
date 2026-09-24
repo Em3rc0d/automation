@@ -32,7 +32,7 @@ Ver `decisions/ADR-0007-PRE-REVENUE-ZERO-FIXED-COST.md`.
 
 - `brainstorming/` — problema, tesis, ICP, alcance y no-alcance.
 - `design/` — superficies, UX, roles y journeys.
-- `architecture/` — arquitectura, contratos, datos, conectores y runtime.
+- `architecture/` — arquitectura, contratos, datos, conectores y runtime; `SAVINGS-WORKFLOW-DOMAIN.md` modela la instalación customer-facing frente a sus AutomationInstances técnicos.
 - `decisions/` — ADRs y decisiones congeladas.
 - `mining-site/` — índice general de investigación, fuentes y provenance.
 - `quarries/` — extracción temática: OSS, n8n templates, AI/OCR, conectores, seguridad y mercado.
