@@ -1,6 +1,6 @@
 # ADR-0002 — n8n as Initial Automation Engine
 
-Status: Accepted technically; commercial license gate remains open
+Status: Superseded as mandatory production default by ADR-0007; retained for local/factory/selected production use
 Date: 2026-09-11
 
 ## Context
@@ -51,3 +51,11 @@ AutomationEngine
 ```
 
 No customer-facing contract should expose n8n workflow/node identifiers as business semantics.
+
+## 2026-09-24 clarification
+
+ADR-0007 supersedes the assumption that every production client should be backed by a persistent self-hosted n8n runtime.
+
+n8n remains useful for local design, connector exploration, Baseline Factory execution and selected production workloads. The default customer installation model is now runtime-neutral, shared/metered and selected by workload economics.
+
+The original independence requirement in this ADR remains in force: customer/domain contracts must not depend on n8n internals.
