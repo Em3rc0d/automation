@@ -63,7 +63,7 @@ Runtime profiles:
 ```text
 function    short event/request-driven work
 scheduled   periodic checks/reminders
- durable    waiting/retries across minutes/days
+durable     waiting/retries across minutes/days
 human_loop  explicit approval/review
 heavy       OCR/batch/compute; separately metered
 ```
