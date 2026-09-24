@@ -243,7 +243,7 @@ def validate() -> list[str]:
         text = savings_standard.read_text(encoding="utf-8")
         for token in [
             "fixed production infrastructure target is approximately S/0",
-            "SHARED",
+            "shared multi-tenant runtime",
             "DESIGN_READY",
             "APPROVED_BASELINE",
             "CLIENT_ACCEPTED",
