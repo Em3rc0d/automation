@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-087"
+key: "PO_SEND_AUTOMATION"
+version: "0.1"
+name: "Purchase Order Send"
+domain: "procurement"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "purchase order"
+manualWorkReduced: "Send the approved PO to the selected supplier"
+capabilities:
+  - "PO_SEND"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "purchase order"

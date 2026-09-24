@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-106"
+key: "SUPPORT_INTAKE_AUTOMATION"
+version: "0.1"
+name: "Support Intake"
+domain: "support"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "ticket"
+manualWorkReduced: "Capture requests from email/chat/forms into a normalized support process"
+capabilities:
+  - "SUPPORT_INTAKE"
+  - "SUPPORT_NORMALIZE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "ticket"

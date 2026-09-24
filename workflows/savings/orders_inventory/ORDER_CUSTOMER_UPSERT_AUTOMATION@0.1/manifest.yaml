@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-093"
+key: "ORDER_CUSTOMER_UPSERT_AUTOMATION"
+version: "0.1"
+name: "Order Customer Upsert"
+domain: "orders_inventory"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "order"
+manualWorkReduced: "Create/update the order customer automatically"
+capabilities:
+  - "ORDER_CUSTOMER_UPSERT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "order"

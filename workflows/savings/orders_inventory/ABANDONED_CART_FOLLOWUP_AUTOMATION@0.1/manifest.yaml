@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-105"
+key: "ABANDONED_CART_FOLLOWUP_AUTOMATION"
+version: "0.1"
+name: "Abandoned Cart Follow-up"
+domain: "orders_inventory"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "cart"
+manualWorkReduced: "Detect eligible abandoned carts and follow up"
+capabilities:
+  - "ABANDONED_CART_FOLLOWUP"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "cart"

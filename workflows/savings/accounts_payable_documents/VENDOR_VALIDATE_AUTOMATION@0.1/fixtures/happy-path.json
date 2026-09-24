@@ -1,0 +1,19 @@
+{
+  "fixture": "happy-path",
+  "workflowKey": "VENDOR_VALIDATE_AUTOMATION",
+  "input": {
+    "tenantId": "tenant_fixture",
+    "idempotencyKey": "vendor_validate_automation:fixture:001",
+    "occurredAt": "2026-09-24T12:00:00Z",
+    "sourceSystem": "fixture",
+    "sourceId": "source-001",
+    "payload": {
+      "note": "Replace with realistic invoice fixture before TESTED."
+    }
+  },
+  "expected": {
+    "status": "completed",
+    "automatedUnits": 1,
+    "savingsUnit": "invoice"
+  }
+}

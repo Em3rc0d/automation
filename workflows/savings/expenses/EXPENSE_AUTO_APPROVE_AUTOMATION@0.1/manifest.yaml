@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-075"
+key: "EXPENSE_AUTO_APPROVE_AUTOMATION"
+version: "0.1"
+name: "Expense Auto-approval"
+domain: "expenses"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "expense"
+manualWorkReduced: "Auto-approve only claims that satisfy explicit policy"
+capabilities:
+  - "EXPENSE_AUTO_APPROVE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "expense"

@@ -1,0 +1,22 @@
+schemaVersion: 1
+workflowKey: "EXPENSE_MANAGER_APPROVAL_AUTOMATION"
+runtimeProfile: "human_loop"
+implementationStatus: "NOT_IMPLEMENTED"
+steps:
+  - id: "validate_input"
+    capability: "platform.input.validate"
+  - id: "idempotency_guard"
+    capability: "platform.idempotency.guard"
+  - id: "capability_1"
+    capability: "EXPENSE_MANAGER_APPROVAL"
+  - id: "approval_boundary"
+    capability: "platform.approval.wait"
+  - id: "persist_process_record"
+    capability: "platform.process_record.upsert"
+  - id: "emit_savings_event"
+    capability: "platform.savings.emit"
+  - id: "emit_execution_telemetry"
+    capability: "platform.telemetry.emit"
+failurePath:
+  incidentCapability: "ERROR_TO_INCIDENT"
+  exceptionQueue: "HUMAN_REVIEW_TASK"

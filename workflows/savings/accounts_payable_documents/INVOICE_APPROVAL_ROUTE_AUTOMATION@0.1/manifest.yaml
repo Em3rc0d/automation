@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-066"
+key: "INVOICE_APPROVAL_ROUTE_AUTOMATION"
+version: "0.1"
+name: "Invoice Approval Routing"
+domain: "accounts_payable_documents"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "invoice"
+manualWorkReduced: "Find the correct approver and route only exceptions"
+capabilities:
+  - "INVOICE_APPROVAL_ROUTE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "invoice"

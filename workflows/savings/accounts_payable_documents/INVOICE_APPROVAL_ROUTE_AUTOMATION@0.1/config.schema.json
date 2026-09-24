@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "INVOICE_APPROVAL_ROUTE_AUTOMATION tenant configuration",
+  "description": "DESIGN_READY skeleton; specialize before HARDENED.",
+  "type": "object",
+  "required": [
+    "enabled",
+    "dryRun",
+    "businessTimezone"
+  ],
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "dryRun": {
+      "type": "boolean",
+      "default": true
+    },
+    "businessTimezone": {
+      "type": "string",
+      "default": "America/Lima"
+    },
+    "maxRetries": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "default": 3
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60
+    },
+    "maxWaitHours": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 720,
+      "default": 72
+    },
+    "approvalMode": {
+      "enum": [
+        "REQUIRED_FOR_EXCEPTION",
+        "ALWAYS",
+        "DISABLED_FOR_SAFE_PATH"
+      ],
+      "default": "REQUIRED_FOR_EXCEPTION"
+    }
+  },
+  "additionalProperties": true
+}

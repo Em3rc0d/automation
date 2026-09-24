@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-100"
+key: "ORDER_STATUS_NOTIFY_AUTOMATION"
+version: "0.1"
+name: "Order Status Notification"
+domain: "orders_inventory"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "status change"
+manualWorkReduced: "Notify customers on meaningful order-state changes"
+capabilities:
+  - "ORDER_STATUS_NOTIFY"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "status change"

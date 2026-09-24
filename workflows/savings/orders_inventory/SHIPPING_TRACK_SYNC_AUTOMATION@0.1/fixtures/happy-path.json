@@ -1,0 +1,19 @@
+{
+  "fixture": "happy-path",
+  "workflowKey": "SHIPPING_TRACK_SYNC_AUTOMATION",
+  "input": {
+    "tenantId": "tenant_fixture",
+    "idempotencyKey": "shipping_track_sync_automation:fixture:001",
+    "occurredAt": "2026-09-24T12:00:00Z",
+    "sourceSystem": "fixture",
+    "sourceId": "source-001",
+    "payload": {
+      "note": "Replace with realistic shipment fixture before TESTED."
+    }
+  },
+  "expected": {
+    "status": "completed",
+    "automatedUnits": 1,
+    "savingsUnit": "shipment"
+  }
+}

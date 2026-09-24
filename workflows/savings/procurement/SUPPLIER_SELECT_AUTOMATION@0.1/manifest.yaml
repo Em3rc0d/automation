@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-084"
+key: "SUPPLIER_SELECT_AUTOMATION"
+version: "0.1"
+name: "Supplier Selection Support"
+domain: "procurement"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "request"
+manualWorkReduced: "Apply configured supplier-selection rules to routine requests"
+capabilities:
+  - "SUPPLIER_SELECT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "request"
