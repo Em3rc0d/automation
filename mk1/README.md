@@ -2,7 +2,21 @@
 
 ## Objective
 
-Prove the complete value loop with one real pilot, without building a generic automation SaaS.
+Prove the complete value loop with one real **paid or explicitly funded** pilot, without building a generic automation SaaS or carrying unnecessary fixed infrastructure before revenue.
+
+## Economic activation gate
+
+Before a paying/funded pilot:
+- production fixed-cost target is approximately S/0;
+- demos run locally or against mocks/fixtures;
+- no dedicated runtime/server/database per tenant;
+- do not activate paid persistent infrastructure merely to be ready.
+
+After payment/funding:
+- activate only the minimum shared production runtime required by the selected Savings Workflows;
+- meter provider/AI/OCR costs and prefer client-owned provider accounts where practical.
+
+See ADR-0007.
 
 ## User outcome
 
@@ -32,11 +46,13 @@ Operators can:
 - operator access path
 - isolation tests
 
-### Slice 2 — Automation catalog + instances
-- template registry
-- template version
-- tenant config
+### Slice 2 — Savings Workflow catalog + instances
+- SavingsWorkflowDefinition registry
+- workflow/template version
+- PluginInstallation / tenant config
 - connector requirements
+- runtime profile
+- SavingsBaseline binding
 - active/paused/degraded state
 
 ### Slice 3 — Connector v1
@@ -90,12 +106,17 @@ Minimum:
 - monthly aggregation
 - methodology transparency
 
-### Slice 9 — First two real automations
-Recommended starting candidates:
-1. `LEAD_CAPTURE` or `EMAIL_TO_LEAD`
-2. `EMAIL_DOCUMENT_INGEST` / invoice intake
+### Slice 9 — First two real Savings Workflows
+Select from `workflows/SAVINGS-WORKFLOW-REGISTRY.json` only after a real pilot exposes measurable repetitive work.
 
-Choice may change based on first paying pilot, but both must use the common contracts.
+Strong low-infrastructure candidates include:
+1. `LEAD_INTAKE_AUTOMATION` / `LEAD_FOLLOWUP_AUTOMATION`;
+2. `PAYMENT_REMINDER_AUTOMATION`;
+3. `APPOINTMENT_REMINDER_AUTOMATION`;
+4. `EMAIL_CLASSIFY_ROUTE_AUTOMATION`;
+5. `DOCUMENT_ARCHIVE_AUTOMATION`.
+
+Choice must follow the paying pilot's actual baseline. Both workflows must use common capabilities/contracts and remain runtime-portable.
 
 ### Slice 10 — hardening
 - security checklist
