@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Em3rc0d/automation/workflows/savings-workflow.schema.json",
+  "title": "SavingsWorkflowDefinition",
+  "type": "object",
+  "required": [
+    "key",
+    "version",
+    "name",
+    "domain",
+    "manual_work_reduced",
+    "savings_unit",
+    "runtime_profile",
+    "capabilities",
+    "stage"
+  ],
+  "properties": {
+    "key": {
+      "type": "string",
+      "pattern": "^[A-Z0-9_]+$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3
+    },
+    "domain": {
+      "type": "string"
+    },
+    "manual_work_reduced": {
+      "type": "string"
+    },
+    "savings_unit": {
+      "type": "string"
+    },
+    "runtime_profile": {
+      "enum": [
+        "function",
+        "scheduled",
+        "durable",
+        "human_loop",
+        "heavy"
+      ]
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "stage": {
+      "enum": [
+        "DESIGN_READY",
+        "SELECTED_FOR_SYNTHESIS",
+        "HARDENED",
+        "TESTED",
+        "APPROVED_BASELINE",
+        "CLIENT_CONFIGURED",
+        "CLIENT_ACCEPTED"
+      ]
+    },
+    "execution_model": {
+      "enum": [
+        "SHARED_MULTI_TENANT",
+        "DEDICATED_EXCEPTION"
+      ]
+    },
+    "pre_revenue_mode": {
+      "enum": [
+        "LOCAL_OR_MOCKED",
+        "N_A"
+      ]
+    },
+    "external_cost_policy": {
+      "enum": [
+        "CLIENT_OWNED_OR_METERED",
+        "INCLUDED_WITH_QUOTA",
+        "EXPLICIT_EXCEPTION"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
