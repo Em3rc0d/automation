@@ -29,6 +29,8 @@ REQUIRED_PATHS = [
     "decisions/ADR-0004-SECRETS-OAUTH-STRATEGY.md",
     "decisions/ADR-0005-SAVINGS-ENGINE-METHODOLOGY.md",
     "decisions/ADR-0006-MONOLITH-FIRST-DEPLOYMENT.md",
+    "decisions/ADR-0007-PRE-REVENUE-ZERO-FIXED-COST.md",
+    "decisions/ADR-0008-SAVINGS-WORKFLOW-PRODUCT-MODEL.md",
     "security/THREAT-MODEL.md",
     "security/CONNECTOR-WEBHOOK-SECURITY.md",
     "security/PII-LOGGING-DATA-HANDLING.md",
@@ -43,6 +45,11 @@ REQUIRED_PATHS = [
     "workflows/SMB-CAPABILITY-LIBRARY.md",
     "workflows/CONNECTOR-MATRIX.md",
     "workflows/TOOLBOX-NORTH-STAR.md",
+    "workflows/ACTIVE-WORK-REDUCERS.md",
+    "workflows/SAVINGS-WORKFLOW-STANDARD.md",
+    "workflows/SAVINGS-WORKFLOW-CATALOG.md",
+    "workflows/SAVINGS-WORKFLOW-REGISTRY.json",
+    "workflows/SAVINGS-WORKFLOW.schema.json",
     "workflows/n8n/README.md",
     "workflows/n8n/BASELINE-TARGETS.md",
     "quarries/workflow-quarry/README.md",
@@ -58,6 +65,8 @@ REQUIRED_PATHS = [
     "certification/TOOLBOX-READINESS-POLICY.json",
     "certification/CRITERIA.md",
     "tools/report_toolbox_readiness.py",
+    "factory/tools/scaffold_savings_workflows.py",
+    "factory/tools/validate_savings_registry.py",
 ]
 
 QUARRY_STAGE_DIRS = [
@@ -215,6 +224,32 @@ def validate() -> list[str]:
         ]:
             if token not in text:
                 fail(errors, f"toolbox closure plan missing invariant: {token}")
+
+
+    savings_registry_validator = ROOT / "factory/tools/validate_savings_registry.py"
+    if savings_registry_validator.is_file():
+        try:
+            ns = runpy.run_path(str(savings_registry_validator))
+            savings_main = ns.get("main")
+            if not callable(savings_main):
+                fail(errors, "savings workflow registry validator missing main()")
+            elif savings_main() != 0:
+                fail(errors, "savings workflow registry validation failed")
+        except Exception as exc:
+            fail(errors, f"savings workflow registry validator failed: {exc}")
+
+    savings_standard = ROOT / "workflows/SAVINGS-WORKFLOW-STANDARD.md"
+    if savings_standard.is_file():
+        text = savings_standard.read_text(encoding="utf-8")
+        for token in [
+            "fixed production infrastructure target is approximately S/0",
+            "SHARED",
+            "DESIGN_READY",
+            "APPROVED_BASELINE",
+            "CLIENT_ACCEPTED",
+        ]:
+            if token not in text:
+                fail(errors, f"savings workflow standard missing invariant: {token}")
 
     registry_path = ROOT / "quarries/workflow-quarry/registry.yaml"
     if registry_path.is_file():
