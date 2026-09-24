@@ -2,6 +2,26 @@
 
 Goal: represent common Pyme workflows as reusable templates + tenant configuration, not customer-specific spaghetti.
 
+## Product layers
+
+Do not mix semantic capabilities with customer-facing installable workflows:
+
+```text
+CAPABILITY
+→ ACTIVE WORK REDUCER
+→ SAVINGS WORKFLOW
+→ PLUGIN / SOLUTION INSTALLATION
+→ AUTOMATION INSTANCE(S)
+```
+
+- **CAPABILITY**: provider-neutral semantic primitive.
+- **ACTIVE WORK REDUCER**: reusable pattern that removes repetitive handling time.
+- **SAVINGS WORKFLOW**: coherent customer-facing process with one measurable savings unit.
+- **INSTALLATION**: tenant binding of workflow version + config + connectors + SavingsBaseline.
+- **AUTOMATION INSTANCE**: technical execution implementation(s).
+
+The broad solution catalog lives in `SAVINGS-WORKFLOW-CATALOG.md`; the machine-readable registry lives in `SAVINGS-WORKFLOW-REGISTRY.json`. A large number of Savings Workflows does not imply a large number of distinct CAPABILITY entries.
+
 ## Naming
 
 ```text
