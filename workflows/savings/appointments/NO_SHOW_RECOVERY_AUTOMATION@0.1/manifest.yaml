@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-020"
+key: "NO_SHOW_RECOVERY_AUTOMATION"
+version: "0.1"
+name: "No-show Recovery"
+domain: "appointments"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "no-show"
+manualWorkReduced: "Detect missed appointments and trigger a recovery sequence"
+capabilities:
+  - "NO_SHOW_RECOVERY"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "no-show"

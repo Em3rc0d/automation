@@ -1,0 +1,19 @@
+{
+  "fixture": "happy-path",
+  "workflowKey": "SUPPLIER_EXCEPTION_HANDOFF_AUTOMATION",
+  "input": {
+    "tenantId": "tenant_fixture",
+    "idempotencyKey": "supplier_exception_handoff_automation:fixture:001",
+    "occurredAt": "2026-09-24T12:00:00Z",
+    "sourceSystem": "fixture",
+    "sourceId": "source-001",
+    "payload": {
+      "note": "Replace with realistic exception fixture before TESTED."
+    }
+  },
+  "expected": {
+    "status": "completed",
+    "automatedUnits": 1,
+    "savingsUnit": "exception"
+  }
+}

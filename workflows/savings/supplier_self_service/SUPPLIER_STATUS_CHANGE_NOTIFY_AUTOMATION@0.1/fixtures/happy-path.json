@@ -1,0 +1,19 @@
+{
+  "fixture": "happy-path",
+  "workflowKey": "SUPPLIER_STATUS_CHANGE_NOTIFY_AUTOMATION",
+  "input": {
+    "tenantId": "tenant_fixture",
+    "idempotencyKey": "supplier_status_change_notify_automation:fixture:001",
+    "occurredAt": "2026-09-24T12:00:00Z",
+    "sourceSystem": "fixture",
+    "sourceId": "source-001",
+    "payload": {
+      "note": "Replace with realistic status change fixture before TESTED."
+    }
+  },
+  "expected": {
+    "status": "completed",
+    "automatedUnits": 1,
+    "savingsUnit": "status change"
+  }
+}

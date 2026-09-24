@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-031"
+key: "CONTRACT_REVIEW_GATE_AUTOMATION"
+version: "0.1"
+name: "Contract Review Gate"
+domain: "quotes_contracts"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "contract"
+manualWorkReduced: "Route contracts that require human/legal review"
+capabilities:
+  - "CONTRACT_REVIEW_GATE"
+  - "APPROVAL_REQUEST"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "contract"

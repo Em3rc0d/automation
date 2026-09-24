@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-017"
+key: "APPOINTMENT_RESCHEDULE_AUTOMATION"
+version: "0.1"
+name: "Appointment Reschedule"
+domain: "appointments"
+stage: "DESIGN_READY"
+runtimeProfile: "durable"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "reschedule"
+manualWorkReduced: "Find a new slot, update calendar and confirm the change"
+capabilities:
+  - "APPOINTMENT_RESCHEDULE"
+  - "AVAILABILITY_CHECK"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "reschedule"

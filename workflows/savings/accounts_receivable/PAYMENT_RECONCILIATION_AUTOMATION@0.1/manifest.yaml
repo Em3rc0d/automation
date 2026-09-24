@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-043"
+key: "PAYMENT_RECONCILIATION_AUTOMATION"
+version: "0.1"
+name: "Payment Reconciliation"
+domain: "accounts_receivable"
+stage: "DESIGN_READY"
+runtimeProfile: "function"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "payment"
+manualWorkReduced: "Match received payments to outstanding invoices"
+capabilities:
+  - "PAYMENT_RECONCILE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "payment"

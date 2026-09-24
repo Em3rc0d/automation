@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-009"
+key: "LEAD_FOLLOWUP_AUTOMATION"
+version: "0.1"
+name: "Lead Follow-up"
+domain: "sales_leads"
+stage: "DESIGN_READY"
+runtimeProfile: "durable"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "follow-up"
+manualWorkReduced: "Review pending leads and send configured follow-ups"
+capabilities:
+  - "LEAD_NURTURE_SEQUENCE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "follow-up"

@@ -1,0 +1,28 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-054"
+key: "SUPPLIER_ACCESS_REQUEST_AUTOMATION"
+version: "0.1"
+name: "Additional Supplier Access Request"
+domain: "supplier_self_service"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "access request"
+manualWorkReduced: "Route requests for new authorized supplier contacts"
+capabilities:
+  - "ACCESS_REQUEST"
+  - "ACCESS_APPROVAL"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "access request"
