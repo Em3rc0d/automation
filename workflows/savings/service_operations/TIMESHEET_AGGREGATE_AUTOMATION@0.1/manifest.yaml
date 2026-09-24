@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-207"
+key: "TIMESHEET_AGGREGATE_AUTOMATION"
+version: "0.1"
+name: "Timesheet Aggregation"
+domain: "service_operations"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "employee/day"
+manualWorkReduced: "Collect and aggregate reported hours"
+capabilities:
+  - "TIMESHEET_AGGREGATE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "employee/day"

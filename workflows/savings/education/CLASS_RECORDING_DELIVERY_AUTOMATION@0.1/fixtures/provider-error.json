@@ -1,0 +1,14 @@
+{
+  "fixture": "provider-error",
+  "workflowKey": "CLASS_RECORDING_DELIVERY_AUTOMATION",
+  "simulate": {
+    "providerResponse": 503,
+    "transient": true
+  },
+  "expected": {
+    "retryPolicyApplied": true,
+    "duplicateSideEffect": false,
+    "incidentCreatedAfterExhaustion": true,
+    "savingsEventOnFailure": false
+  }
+}

@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-220"
+key: "VEHICLE_SERVICE_REMINDER_AUTOMATION"
+version: "0.1"
+name: "Vehicle Service Reminder"
+domain: "workshop_vehicle"
+stage: "DESIGN_READY"
+runtimeProfile: "scheduled"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "vehicle"
+manualWorkReduced: "Find upcoming recommended service dates and contact the customer"
+capabilities:
+  - "SERVICE_MAINTENANCE_REMINDER"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "vehicle"

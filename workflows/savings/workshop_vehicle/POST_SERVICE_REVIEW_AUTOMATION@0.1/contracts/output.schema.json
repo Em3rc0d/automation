@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POST_SERVICE_REVIEW_AUTOMATION output",
+  "type": "object",
+  "required": [
+    "status",
+    "automatedUnits",
+    "exceptionMinutes",
+    "oversightMinutes"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "completed",
+        "attention_required",
+        "failed",
+        "skipped_duplicate"
+      ]
+    },
+    "processRecordId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approvalRequestId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "automatedUnits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exceptionMinutes": {
+      "type": "number",
+      "minimum": 0
+    },
+    "oversightMinutes": {
+      "type": "number",
+      "minimum": 0
+    },
+    "variableCost": {
+      "type": "number",
+      "minimum": 0
+    },
+    "savingsUnit": {
+      "const": "service"
+    },
+    "result": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-188"
+key: "SYNC_CONFLICT_QUEUE_AUTOMATION"
+version: "0.1"
+name: "Sync Conflict Queue"
+domain: "data_sync_it"
+stage: "DESIGN_READY"
+runtimeProfile: "human_loop"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "conflict"
+manualWorkReduced: "Create human tasks only for conflicting updates"
+capabilities:
+  - "SYNC_CONFLICT_QUEUE"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "conflict"

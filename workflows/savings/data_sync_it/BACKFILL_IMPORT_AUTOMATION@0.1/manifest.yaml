@@ -1,0 +1,27 @@
+schemaVersion: 1
+skeletonVersion: 1
+id: "SWF-189"
+key: "BACKFILL_IMPORT_AUTOMATION"
+version: "0.1"
+name: "Backfill Import"
+domain: "data_sync_it"
+stage: "DESIGN_READY"
+runtimeProfile: "heavy"
+executionModel: "SHARED_MULTI_TENANT"
+preRevenueMode: "LOCAL_OR_MOCKED"
+externalCostPolicy: "CLIENT_OWNED_OR_METERED"
+savingsUnit: "record"
+manualWorkReduced: "Bulk-import historical records using validated mappings"
+capabilities:
+  - "BACKFILL_IMPORT"
+implementation:
+  status: "NOT_IMPLEMENTED"
+  engine: "UNBOUND"
+  readyForProduction: false
+certification:
+  tested: false
+  approvedBaseline: false
+  clientAccepted: false
+savings:
+  baselineRequired: true
+  unit: "record"
