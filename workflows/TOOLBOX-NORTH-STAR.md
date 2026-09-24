@@ -19,6 +19,7 @@ Every reusable artifact MUST belong to exactly one class:
 2. **ADAPTER** — provider implementation of a connector capability, e.g. HubSpot/Pipedrive for `crm.contact.upsert`.
 3. **POLICY_CONFIG** — tenant/vertical rule, thresholds, templates, mappings, schedules, consent rules.
 4. **VERSION** — improved implementation of an existing semantic capability.
+5. **SAVINGS_WORKFLOW** — customer-facing composition that removes a coherent unit of repetitive human work and maps to a SavingsBaseline. It is composed from CAPABILITY/ADAPTER/POLICY_CONFIG artifacts and is not counted as a new capability merely because the customer-facing recipe differs.
 
 Provider, channel, locale or client variants MUST NOT become new CAPABILITY entries when the business semantic boundary is unchanged.
 
@@ -122,3 +123,16 @@ The catalog may stop at 137 or grow beyond 300. The deciding factor is coverage 
 **MINING NEVER STOPS; CERTIFICATION REMAINS SELECTIVE.**
 
 The quarry may contain thousands of discovered artifacts. The approved toolbox should contain only artifacts we would be willing to assemble into a paying client's automation system.
+
+## Broad solution catalog vs capability count
+
+The repository may maintain hundreds of DESIGN_READY Savings Workflows without violating this North Star. Those entries are solution compositions, not a numeric target for semantic capabilities.
+
+Success remains:
+- few deep reusable capabilities;
+- many valid compositions;
+- selective certification;
+- high reuse density;
+- measurable customer work reduction.
+
+`SAVINGS-WORKFLOW-CATALOG.md` is therefore allowed to be broad while `APPROVED_BASELINE` remains deliberately selective.
