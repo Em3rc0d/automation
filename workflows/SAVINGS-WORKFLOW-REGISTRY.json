@@ -1,0 +1,4453 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-24",
+  "authority": "workflows/SAVINGS-WORKFLOW-STANDARD.md",
+  "warning": "DESIGN_READY is not TESTED or APPROVED_BASELINE. Client deployment still requires quarry/factory gates and client acceptance.",
+  "count": 233,
+  "runtime_profiles": {
+    "function": "short event/request-driven execution; no dedicated always-on tenant runtime",
+    "scheduled": "timer/cron initiated execution in shared runtime",
+    "durable": "may wait/retry across minutes or days without holding a dedicated tenant server",
+    "human_loop": "durable workflow with explicit human decision",
+    "heavy": "OCR/batch/compute-heavy work; must be metered and may use an optional heavy-job runtime"
+  },
+  "entries": [
+    {
+      "id": "SWF-001",
+      "key": "LEAD_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead Intake Automation",
+      "manual_work_reduced": "Read inbound leads from forms/email/WhatsApp/ads and register them",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAD_CAPTURE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-002",
+      "key": "LEAD_NORMALIZE_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead Normalization",
+      "manual_work_reduced": "Clean and standardize name, phone, email, company and source",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAD_NORMALIZE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-003",
+      "key": "LEAD_DEDUPE_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead Deduplication",
+      "manual_work_reduced": "Search existing records before creating a duplicate",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAD_DEDUPE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-004",
+      "key": "LEAD_CRM_UPSERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead to CRM",
+      "manual_work_reduced": "Copy or update lead data in the CRM/database",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CRM_UPSERT_CONTACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-005",
+      "key": "LEAD_ROUTE_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead Assignment",
+      "manual_work_reduced": "Choose and assign the responsible salesperson by rules",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAD_ROUTE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-006",
+      "key": "LEAD_ACKNOWLEDGE_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Immediate Lead Acknowledgement",
+      "manual_work_reduced": "Write and send the first acknowledgement to a new lead",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAD_ACKNOWLEDGE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-007",
+      "key": "LEAD_OWNER_NOTIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead Owner Notification",
+      "manual_work_reduced": "Notify the assigned owner with the useful lead context",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAD_NOTIFY_OWNER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-008",
+      "key": "LEAD_SLA_WATCHDOG_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead SLA Watchdog",
+      "manual_work_reduced": "Review leads with no action inside the agreed SLA",
+      "savings_unit": "lead reviewed",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "LEAD_FOLLOWUP_WATCHDOG"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-009",
+      "key": "LEAD_FOLLOWUP_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead Follow-up",
+      "manual_work_reduced": "Review pending leads and send configured follow-ups",
+      "savings_unit": "follow-up",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "LEAD_NURTURE_SEQUENCE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-010",
+      "key": "LEAD_REACTIVATION_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Dormant Lead Reactivation",
+      "manual_work_reduced": "Find dormant/lost leads and re-engage them under policy",
+      "savings_unit": "lead",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "LEAD_REACTIVATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-011",
+      "key": "LEAD_TO_APPOINTMENT_AUTOMATION",
+      "version": "0.1",
+      "domain": "sales_leads",
+      "name": "Lead to Appointment",
+      "manual_work_reduced": "Coordinate a booking after qualification",
+      "savings_unit": "appointment",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "LEAD_HANDOFF_TO_APPOINTMENT",
+        "APPOINTMENT_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-012",
+      "key": "APPOINTMENT_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Appointment Request Intake",
+      "manual_work_reduced": "Read a booking request and normalize required fields",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "APPOINTMENT_REQUEST",
+        "APPOINTMENT_VALIDATE_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-013",
+      "key": "AVAILABILITY_REPLY_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Availability Reply",
+      "manual_work_reduced": "Check calendar availability and return valid slots",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "AVAILABILITY_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-014",
+      "key": "APPOINTMENT_BOOK_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Appointment Booking",
+      "manual_work_reduced": "Create the chosen appointment without manual calendar entry",
+      "savings_unit": "appointment",
+      "runtime_profile": "function",
+      "capabilities": [
+        "SLOT_HOLD",
+        "APPOINTMENT_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-015",
+      "key": "APPOINTMENT_CONFIRM_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Appointment Confirmation",
+      "manual_work_reduced": "Send confirmations after a successful booking",
+      "savings_unit": "appointment",
+      "runtime_profile": "function",
+      "capabilities": [
+        "APPOINTMENT_CONFIRM"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-016",
+      "key": "APPOINTMENT_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Appointment Reminder",
+      "manual_work_reduced": "Review upcoming appointments and remind attendees",
+      "savings_unit": "reminder",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "APPOINTMENT_REMIND"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-017",
+      "key": "APPOINTMENT_RESCHEDULE_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Appointment Reschedule",
+      "manual_work_reduced": "Find a new slot, update calendar and confirm the change",
+      "savings_unit": "reschedule",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "APPOINTMENT_RESCHEDULE",
+        "AVAILABILITY_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-018",
+      "key": "APPOINTMENT_CANCEL_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Appointment Cancellation",
+      "manual_work_reduced": "Cancel the event and synchronize the resulting state",
+      "savings_unit": "cancellation",
+      "runtime_profile": "function",
+      "capabilities": [
+        "APPOINTMENT_CANCEL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-019",
+      "key": "WAITLIST_FILL_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Waitlist Fill",
+      "manual_work_reduced": "Detect released slots and contact eligible waiting customers",
+      "savings_unit": "slot",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "WAITLIST_FILL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-020",
+      "key": "NO_SHOW_RECOVERY_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "No-show Recovery",
+      "manual_work_reduced": "Detect missed appointments and trigger a recovery sequence",
+      "savings_unit": "no-show",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "NO_SHOW_RECOVERY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-021",
+      "key": "POST_VISIT_FOLLOWUP_AUTOMATION",
+      "version": "0.1",
+      "domain": "appointments",
+      "name": "Post-visit Follow-up",
+      "manual_work_reduced": "Send the configured post-service follow-up",
+      "savings_unit": "visit",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "APPOINTMENT_POST_VISIT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-022",
+      "key": "QUOTE_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Request Intake",
+      "manual_work_reduced": "Convert inbound quotation requests into structured quote data",
+      "savings_unit": "quote request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "QUOTE_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-023",
+      "key": "QUOTE_PREPARE_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Preparation",
+      "manual_work_reduced": "Look up product/service data and calculate a proposed quote deterministically",
+      "savings_unit": "quote",
+      "runtime_profile": "function",
+      "capabilities": [
+        "QUOTE_CALCULATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-024",
+      "key": "QUOTE_DOCUMENT_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Document Generation",
+      "manual_work_reduced": "Create the quote document from approved templates",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "QUOTE_GENERATE_DOC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-025",
+      "key": "QUOTE_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Exception Approval",
+      "manual_work_reduced": "Detect discount/margin exceptions and route approval",
+      "savings_unit": "approval",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "QUOTE_APPROVAL",
+        "APPROVAL_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-026",
+      "key": "QUOTE_DELIVERY_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Delivery",
+      "manual_work_reduced": "Send the approved quote through the configured channel",
+      "savings_unit": "quote",
+      "runtime_profile": "function",
+      "capabilities": [
+        "QUOTE_DELIVER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-027",
+      "key": "QUOTE_FOLLOWUP_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Follow-up",
+      "manual_work_reduced": "Review pending quotes and contact customers on schedule",
+      "savings_unit": "quote",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "QUOTE_FOLLOWUP"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-028",
+      "key": "QUOTE_OUTCOME_CAPTURE_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Quote Outcome Capture",
+      "manual_work_reduced": "Capture accepted/rejected/pending state from customer responses",
+      "savings_unit": "quote",
+      "runtime_profile": "function",
+      "capabilities": [
+        "QUOTE_ACCEPTANCE_CAPTURE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-029",
+      "key": "PROPOSAL_GENERATION_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Proposal Generation",
+      "manual_work_reduced": "Build a proposal from structured commercial inputs and templates",
+      "savings_unit": "proposal",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PROPOSAL_GENERATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-030",
+      "key": "CONTRACT_FROM_TEMPLATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Contract from Template",
+      "manual_work_reduced": "Populate an approved contract template from customer/deal data",
+      "savings_unit": "contract",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CONTRACT_GENERATE_FROM_TEMPLATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-031",
+      "key": "CONTRACT_REVIEW_GATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Contract Review Gate",
+      "manual_work_reduced": "Route contracts that require human/legal review",
+      "savings_unit": "contract",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "CONTRACT_REVIEW_GATE",
+        "APPROVAL_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-032",
+      "key": "ESIGN_SEND_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "E-sign Send",
+      "manual_work_reduced": "Prepare and send the signature request",
+      "savings_unit": "contract",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ESIGN_SEND"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-033",
+      "key": "ESIGN_STATUS_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "E-sign Status Sync",
+      "manual_work_reduced": "Check signature status and synchronize the result",
+      "savings_unit": "contract",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "ESIGN_STATUS_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-034",
+      "key": "CUSTOMER_CREATE_FROM_WIN_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Won Deal to Customer",
+      "manual_work_reduced": "Create customer records after a confirmed sale",
+      "savings_unit": "customer",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CUSTOMER_CREATE_FROM_WIN"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-035",
+      "key": "DEPOSIT_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Deposit Request",
+      "manual_work_reduced": "Create and send the configured deposit request",
+      "savings_unit": "deposit",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DEPOSIT_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-036",
+      "key": "INVOICE_FROM_WIN_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Invoice from Win",
+      "manual_work_reduced": "Create the invoice/request after a confirmed sale",
+      "savings_unit": "invoice",
+      "runtime_profile": "function",
+      "capabilities": [
+        "INVOICE_CREATE_FROM_WIN"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-037",
+      "key": "PAYMENT_LINK_AUTOMATION",
+      "version": "0.1",
+      "domain": "quotes_contracts",
+      "name": "Payment Link Creation",
+      "manual_work_reduced": "Generate and send a payment link without manual portal work",
+      "savings_unit": "payment request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PAYMENT_LINK_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-038",
+      "key": "AR_OPEN_INVOICE_IMPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Open Invoice Import",
+      "manual_work_reduced": "Import open receivables from the source system",
+      "savings_unit": "invoice",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "AR_IMPORT_OPEN_INVOICES"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-039",
+      "key": "AR_AGING_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "AR Aging Calculation",
+      "manual_work_reduced": "Calculate days outstanding and aging buckets",
+      "savings_unit": "invoice",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "AR_AGING_CALCULATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-040",
+      "key": "PAYMENT_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Payment Reminder",
+      "manual_work_reduced": "Identify due/overdue invoices and send configured reminders",
+      "savings_unit": "invoice",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "PAYMENT_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-041",
+      "key": "PAYMENT_ESCALATION_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Payment Escalation",
+      "manual_work_reduced": "Move overdue invoices through configured collection tiers",
+      "savings_unit": "invoice",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "PAYMENT_ESCALATION"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-042",
+      "key": "PAYMENT_RECEIVED_SYNC_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Payment Received Sync",
+      "manual_work_reduced": "Update receivable state after payment is detected",
+      "savings_unit": "payment",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PAYMENT_RECEIVED_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-043",
+      "key": "PAYMENT_RECONCILIATION_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Payment Reconciliation",
+      "manual_work_reduced": "Match received payments to outstanding invoices",
+      "savings_unit": "payment",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PAYMENT_RECONCILE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-044",
+      "key": "COLLECTION_OWNER_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Collection Owner Alert",
+      "manual_work_reduced": "Alert the owner only for cases that need human collection work",
+      "savings_unit": "invoice",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "COLLECTION_OWNER_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-045",
+      "key": "AR_WEEKLY_SUMMARY_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "AR Weekly Summary",
+      "manual_work_reduced": "Compile weekly receivables and collection exceptions",
+      "savings_unit": "report",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "AR_WEEKLY_SUMMARY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-046",
+      "key": "DISPUTE_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_receivable",
+      "name": "Invoice Dispute Intake",
+      "manual_work_reduced": "Register and route a customer payment/invoice dispute",
+      "savings_unit": "dispute",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DISPUTE_INTAKE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-047",
+      "key": "SUPPLIER_INVOICE_STATUS_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Invoice Status Self-service",
+      "manual_work_reduced": "Look up invoice status and answer the supplier without back-office lookup",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ENTITY_SYNC_ONE_WAY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-048",
+      "key": "SUPPLIER_PAYMENT_STATUS_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Payment Status Self-service",
+      "manual_work_reduced": "Look up payment/due state and answer the supplier",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PAYMENT_STATUS_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-049",
+      "key": "SUPPLIER_PO_STATUS_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier PO Status Self-service",
+      "manual_work_reduced": "Look up purchase-order state and answer the supplier",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PO_STATUS_TRACK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-050",
+      "key": "SUPPLIER_RECEIPT_STATUS_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Receipt Status Self-service",
+      "manual_work_reduced": "Check whether goods/services have been received and report the state",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "GOODS_RECEIPT_CAPTURE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-051",
+      "key": "SUPPLIER_STATUS_CHANGE_NOTIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Status Change Notification",
+      "manual_work_reduced": "Detect important status changes and notify the supplier proactively",
+      "savings_unit": "status change",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "PO_STATUS_TRACK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-052",
+      "key": "SUPPLIER_DOCUMENT_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Document Intake",
+      "manual_work_reduced": "Receive supplier documents and attach them to the right process",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_INTAKE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-053",
+      "key": "SUPPLIER_IDENTITY_VERIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Identity Verification",
+      "manual_work_reduced": "Verify supplier identity before revealing protected status information",
+      "savings_unit": "verification",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "APPROVAL_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-054",
+      "key": "SUPPLIER_ACCESS_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Additional Supplier Access Request",
+      "manual_work_reduced": "Route requests for new authorized supplier contacts",
+      "savings_unit": "access request",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "ACCESS_REQUEST",
+        "ACCESS_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-055",
+      "key": "SUPPLIER_EXCEPTION_HANDOFF_AUTOMATION",
+      "version": "0.1",
+      "domain": "supplier_self_service",
+      "name": "Supplier Exception Handoff",
+      "manual_work_reduced": "Create a human task only when the self-service flow cannot safely resolve the request",
+      "savings_unit": "exception",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "HUMAN_REVIEW_TASK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-056",
+      "key": "INVOICE_EMAIL_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Invoice Email Intake",
+      "manual_work_reduced": "Download invoice attachments and register the source message",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_INTAKE",
+        "MEDIA_DOWNLOAD"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-057",
+      "key": "DOCUMENT_CLASSIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Document Classification",
+      "manual_work_reduced": "Open incoming documents and determine the correct document type",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_CLASSIFY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-058",
+      "key": "INVOICE_OCR_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Invoice OCR Extraction",
+      "manual_work_reduced": "Extract invoice fields instead of manual typing",
+      "savings_unit": "invoice",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "INVOICE_OCR_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-059",
+      "key": "RECEIPT_OCR_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Receipt OCR Extraction",
+      "manual_work_reduced": "Extract receipt fields instead of manual typing",
+      "savings_unit": "receipt",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "RECEIPT_OCR_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-060",
+      "key": "ACCOUNTING_NORMALIZE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Accounting Document Normalization",
+      "manual_work_reduced": "Transform extracted fields to the accounting contract",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ACCOUNTING_NORMALIZE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-061",
+      "key": "INVOICE_ARITHMETIC_VALIDATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Invoice Arithmetic Validation",
+      "manual_work_reduced": "Check subtotal/tax/discount/total arithmetic automatically",
+      "savings_unit": "invoice",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_ARITHMETIC_VALIDATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-062",
+      "key": "INVOICE_DUPLICATE_DETECT_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Invoice Duplicate Detection",
+      "manual_work_reduced": "Detect duplicate invoices before posting",
+      "savings_unit": "invoice",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_DUPLICATE_DETECT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-063",
+      "key": "VENDOR_VALIDATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Vendor Validation",
+      "manual_work_reduced": "Compare invoice vendor data against the approved vendor master",
+      "savings_unit": "invoice",
+      "runtime_profile": "function",
+      "capabilities": [
+        "VENDOR_VALIDATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-064",
+      "key": "PO_MATCH_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "PO Match",
+      "manual_work_reduced": "Compare invoice data against the purchase order",
+      "savings_unit": "invoice",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PO_MATCH"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-065",
+      "key": "THREE_WAY_MATCH_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Three-way Match",
+      "manual_work_reduced": "Compare PO, receipt and invoice before payment",
+      "savings_unit": "invoice",
+      "runtime_profile": "function",
+      "capabilities": [
+        "THREE_WAY_MATCH"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-066",
+      "key": "INVOICE_APPROVAL_ROUTE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Invoice Approval Routing",
+      "manual_work_reduced": "Find the correct approver and route only exceptions",
+      "savings_unit": "invoice",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "INVOICE_APPROVAL_ROUTE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-067",
+      "key": "ACCOUNTING_EXPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Accounting Export",
+      "manual_work_reduced": "Push validated accounting data to the target system/file",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ACCOUNTING_EXPORT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-068",
+      "key": "DOCUMENT_ARCHIVE_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Document Archive",
+      "manual_work_reduced": "Rename and store the final document automatically",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_ARCHIVE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-069",
+      "key": "DOCUMENT_EXCEPTION_REVIEW_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Document Exception Review",
+      "manual_work_reduced": "Create a review task only for low-confidence or inconsistent documents",
+      "savings_unit": "exception",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "DOCUMENT_EXCEPTION_REVIEW"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-070",
+      "key": "CPE_VALIDATE_PERU_AUTOMATION",
+      "version": "0.1",
+      "domain": "accounts_payable_documents",
+      "name": "Peru CPE Validation",
+      "manual_work_reduced": "Validate configured electronic-receipt facts against the authoritative regional source",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CPE_VALIDATE_PERU"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-071",
+      "key": "EXPENSE_SUBMIT_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Submission Intake",
+      "manual_work_reduced": "Receive and structure employee expense submissions",
+      "savings_unit": "expense",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EXPENSE_SUBMIT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-072",
+      "key": "EXPENSE_RECEIPT_EXTRACT_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Receipt Extraction",
+      "manual_work_reduced": "Extract receipt fields instead of manual typing",
+      "savings_unit": "expense",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "RECEIPT_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-073",
+      "key": "EXPENSE_POLICY_CHECK_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Policy Check",
+      "manual_work_reduced": "Evaluate routine policy rules automatically",
+      "savings_unit": "expense",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EXPENSE_POLICY_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-074",
+      "key": "EXPENSE_DUPLICATE_CHECK_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Duplicate Check",
+      "manual_work_reduced": "Detect repeated receipts/claims",
+      "savings_unit": "expense",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EXPENSE_DUPLICATE_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-075",
+      "key": "EXPENSE_AUTO_APPROVE_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Auto-approval",
+      "manual_work_reduced": "Auto-approve only claims that satisfy explicit policy",
+      "savings_unit": "expense",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EXPENSE_AUTO_APPROVE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-076",
+      "key": "EXPENSE_MANAGER_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Manager Approval",
+      "manual_work_reduced": "Route exceptions to the correct manager",
+      "savings_unit": "expense",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "EXPENSE_MANAGER_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-077",
+      "key": "EXPENSE_REGISTER_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Registration",
+      "manual_work_reduced": "Register approved expense data in the target system",
+      "savings_unit": "expense",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EXPENSE_REGISTER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-078",
+      "key": "EXPENSE_REIMBURSEMENT_STATUS_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Reimbursement Status Self-service",
+      "manual_work_reduced": "Answer employee reimbursement-status queries from source data",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EXPENSE_REIMBURSEMENT_STATUS"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-079",
+      "key": "EXPENSE_MONTHLY_REPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "expenses",
+      "name": "Expense Monthly Report",
+      "manual_work_reduced": "Compile monthly expense totals/exceptions automatically",
+      "savings_unit": "report",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "EXPENSE_MONTHLY_REPORT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-080",
+      "key": "PURCHASE_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Request Intake",
+      "manual_work_reduced": "Register procurement requests from form/email/chat",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PURCHASE_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-081",
+      "key": "PURCHASE_REQUEST_VALIDATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Request Validation",
+      "manual_work_reduced": "Check required fields and documents",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PURCHASE_REQUEST_VALIDATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-082",
+      "key": "PURCHASE_APPROVAL_ROUTE_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Approval Routing",
+      "manual_work_reduced": "Find the right approver from amount/area/rules",
+      "savings_unit": "request",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "PURCHASE_APPROVAL_ROUTE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-083",
+      "key": "BUDGET_CHECK_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Budget Check",
+      "manual_work_reduced": "Look up available budget before routing the purchase",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "BUDGET_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-084",
+      "key": "SUPPLIER_SELECT_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Supplier Selection Support",
+      "manual_work_reduced": "Apply configured supplier-selection rules to routine requests",
+      "savings_unit": "request",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "SUPPLIER_SELECT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-085",
+      "key": "PO_GENERATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Order Generation",
+      "manual_work_reduced": "Create a PO document/record from an approved request",
+      "savings_unit": "purchase order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PO_GENERATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-086",
+      "key": "PO_APPROVE_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Order Approval",
+      "manual_work_reduced": "Route high-risk/high-value PO approval",
+      "savings_unit": "purchase order",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "PO_APPROVE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-087",
+      "key": "PO_SEND_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Order Send",
+      "manual_work_reduced": "Send the approved PO to the selected supplier",
+      "savings_unit": "purchase order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "PO_SEND"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-088",
+      "key": "PO_STATUS_TRACK_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Purchase Order Status Tracking",
+      "manual_work_reduced": "Monitor open POs and surface overdue items",
+      "savings_unit": "purchase order",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "PO_STATUS_TRACK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-089",
+      "key": "GOODS_RECEIPT_CAPTURE_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Goods Receipt Capture",
+      "manual_work_reduced": "Register a confirmed receipt from a structured source",
+      "savings_unit": "receipt",
+      "runtime_profile": "function",
+      "capabilities": [
+        "GOODS_RECEIPT_CAPTURE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-090",
+      "key": "SUPPLIER_RISK_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "procurement",
+      "name": "Supplier Risk Alert",
+      "manual_work_reduced": "Check configured supplier-risk sources and alert only on relevant changes",
+      "savings_unit": "supplier",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "SUPPLIER_RISK_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-091",
+      "key": "ORDER_INGEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Order Intake",
+      "manual_work_reduced": "Capture orders from commerce/chat/email into one process",
+      "savings_unit": "order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ORDER_INGEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-092",
+      "key": "ORDER_NORMALIZE_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Order Normalization",
+      "manual_work_reduced": "Normalize customer, SKU, quantity and delivery fields",
+      "savings_unit": "order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ORDER_NORMALIZE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-093",
+      "key": "ORDER_CUSTOMER_UPSERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Order Customer Upsert",
+      "manual_work_reduced": "Create/update the order customer automatically",
+      "savings_unit": "order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ORDER_CUSTOMER_UPSERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-094",
+      "key": "INVENTORY_CHECK_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Inventory Check",
+      "manual_work_reduced": "Look up stock before confirming an order",
+      "savings_unit": "order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "INVENTORY_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-095",
+      "key": "INVENTORY_RESERVE_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Inventory Reservation",
+      "manual_work_reduced": "Reserve eligible stock without manual inventory action",
+      "savings_unit": "order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "INVENTORY_RESERVE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-096",
+      "key": "INVENTORY_SYNC_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Inventory Synchronization",
+      "manual_work_reduced": "Synchronize stock changes between systems",
+      "savings_unit": "inventory movement",
+      "runtime_profile": "function",
+      "capabilities": [
+        "INVENTORY_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-097",
+      "key": "LOW_STOCK_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Low Stock Alert",
+      "manual_work_reduced": "Review stock levels and notify only below configured thresholds",
+      "savings_unit": "SKU",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "LOW_STOCK_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-098",
+      "key": "REORDER_RECOMMEND_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Reorder Recommendation",
+      "manual_work_reduced": "Identify SKUs needing replenishment from configured rules",
+      "savings_unit": "SKU",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "REORDER_RECOMMEND"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-099",
+      "key": "FULFILLMENT_ROUTE_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Fulfillment Routing",
+      "manual_work_reduced": "Assign the order to the correct warehouse/team",
+      "savings_unit": "order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FULFILLMENT_ROUTE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-100",
+      "key": "ORDER_STATUS_NOTIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Order Status Notification",
+      "manual_work_reduced": "Notify customers on meaningful order-state changes",
+      "savings_unit": "status change",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ORDER_STATUS_NOTIFY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-101",
+      "key": "SHIPPING_TRACK_SYNC_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Shipping Tracking Sync",
+      "manual_work_reduced": "Poll/receive carrier state and update customer/order records",
+      "savings_unit": "shipment",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "SHIPPING_TRACK_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-102",
+      "key": "RETURN_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Return Request Intake",
+      "manual_work_reduced": "Register and validate a return request",
+      "savings_unit": "return",
+      "runtime_profile": "function",
+      "capabilities": [
+        "RETURN_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-103",
+      "key": "REFUND_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Refund Approval",
+      "manual_work_reduced": "Route refund exceptions for approval",
+      "savings_unit": "refund",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "REFUND_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-104",
+      "key": "POST_PURCHASE_FOLLOWUP_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Post-purchase Follow-up",
+      "manual_work_reduced": "Send configured follow-up after delivery",
+      "savings_unit": "order",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "POST_PURCHASE_FOLLOWUP"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-105",
+      "key": "ABANDONED_CART_FOLLOWUP_AUTOMATION",
+      "version": "0.1",
+      "domain": "orders_inventory",
+      "name": "Abandoned Cart Follow-up",
+      "manual_work_reduced": "Detect eligible abandoned carts and follow up",
+      "savings_unit": "cart",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "ABANDONED_CART_FOLLOWUP"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-106",
+      "key": "SUPPORT_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Support Intake",
+      "manual_work_reduced": "Capture requests from email/chat/forms into a normalized support process",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "SUPPORT_INTAKE",
+        "SUPPORT_NORMALIZE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-107",
+      "key": "TICKET_DEDUPE_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Ticket Deduplication",
+      "manual_work_reduced": "Detect repeated requests before creating duplicate tickets",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "TICKET_DEDUPE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-108",
+      "key": "TICKET_CLASSIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Ticket Classification",
+      "manual_work_reduced": "Read the request and classify category/product/topic",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "TICKET_CLASSIFY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-109",
+      "key": "TICKET_PRIORITY_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Ticket Prioritization",
+      "manual_work_reduced": "Apply explicit urgency/SLA rules",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "TICKET_PRIORITY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-110",
+      "key": "TICKET_CREATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Ticket Creation",
+      "manual_work_reduced": "Create the helpdesk ticket without retyping the request",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "TICKET_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-111",
+      "key": "TICKET_ROUTE_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Ticket Routing",
+      "manual_work_reduced": "Assign the ticket to the correct queue/owner",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "TICKET_ROUTE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-112",
+      "key": "SLA_WATCHDOG_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Support SLA Watchdog",
+      "manual_work_reduced": "Review aging tickets and surface breaches before manual checking",
+      "savings_unit": "ticket",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "SLA_WATCHDOG"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-113",
+      "key": "KB_RETRIEVE_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Support Knowledge Lookup",
+      "manual_work_reduced": "Retrieve relevant approved knowledge for a support request",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "KB_RETRIEVE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-114",
+      "key": "SUPPORT_DRAFT_REPLY_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Support Draft Reply",
+      "manual_work_reduced": "Prepare a response draft for repetitive support questions",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "SUPPORT_DRAFT_REPLY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-115",
+      "key": "SUPPORT_APPROVAL_SEND_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Support Human-approved Send",
+      "manual_work_reduced": "Route sensitive outbound replies to approval then send",
+      "savings_unit": "ticket",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "SUPPORT_HUMAN_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-116",
+      "key": "SUPPORT_ESCALATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Support Escalation",
+      "manual_work_reduced": "Escalate only cases matching configured conditions",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "SUPPORT_ESCALATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-117",
+      "key": "TICKET_CLOSE_SYNC_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Ticket Close Sync",
+      "manual_work_reduced": "Synchronize resolved/closed state across systems",
+      "savings_unit": "ticket",
+      "runtime_profile": "function",
+      "capabilities": [
+        "TICKET_CLOSE_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-118",
+      "key": "POST_TICKET_SURVEY_AUTOMATION",
+      "version": "0.1",
+      "domain": "support",
+      "name": "Post-ticket Survey",
+      "manual_work_reduced": "Send a feedback request after ticket closure",
+      "savings_unit": "ticket",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "POST_TICKET_SURVEY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-119",
+      "key": "CLIENT_RECORD_CREATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Record Creation",
+      "manual_work_reduced": "Create the customer record after a confirmed win",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_RECORD_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-120",
+      "key": "CLIENT_FOLDER_CREATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Folder Creation",
+      "manual_work_reduced": "Create the standard client folder structure",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_FOLDER_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-121",
+      "key": "CLIENT_PROJECT_CREATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Project Creation",
+      "manual_work_reduced": "Create the delivery project/workspace",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_PROJECT_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-122",
+      "key": "CLIENT_TASK_CHECKLIST_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Onboarding Checklist",
+      "manual_work_reduced": "Generate standard onboarding tasks",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_TASK_CHECKLIST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-123",
+      "key": "CLIENT_CONTRACT_START_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Contract Start",
+      "manual_work_reduced": "Kick off the configured contract-generation/signature path",
+      "savings_unit": "client",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "CLIENT_CONTRACT_START"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-124",
+      "key": "CLIENT_INITIAL_INVOICE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Initial Invoice",
+      "manual_work_reduced": "Create the initial billing action after onboarding gates pass",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_INITIAL_INVOICE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-125",
+      "key": "CLIENT_ACCESS_REQUESTS_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Access Requests",
+      "manual_work_reduced": "Request required credentials/accesses from the client",
+      "savings_unit": "client",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "CLIENT_ACCESS_REQUESTS"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-126",
+      "key": "CLIENT_WELCOME_MESSAGE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Welcome Message",
+      "manual_work_reduced": "Send the standard welcome packet/message",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_WELCOME_MESSAGE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-127",
+      "key": "KICKOFF_SCHEDULE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Kickoff Scheduling",
+      "manual_work_reduced": "Coordinate the initial project meeting",
+      "savings_unit": "client",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "KICKOFF_SCHEDULE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-128",
+      "key": "ONBOARDING_STAGE_WATCHDOG_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Onboarding Stage Watchdog",
+      "manual_work_reduced": "Detect blocked/stale onboarding stages",
+      "savings_unit": "client",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "ONBOARDING_STAGE_WATCHDOG"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-129",
+      "key": "CLIENT_HANDOFF_COMPLETE_AUTOMATION",
+      "version": "0.1",
+      "domain": "client_onboarding",
+      "name": "Client Handoff Completion",
+      "manual_work_reduced": "Complete the configured handoff to steady-state service",
+      "savings_unit": "client",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CLIENT_HANDOFF_COMPLETE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-130",
+      "key": "CANDIDATE_INTAKE_ADMIN_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Candidate Intake Administration",
+      "manual_work_reduced": "Capture candidate documents/data without making hiring decisions",
+      "savings_unit": "candidate",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CANDIDATE_INTAKE_ADMIN"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-131",
+      "key": "CV_EXTRACT_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "CV Data Extraction",
+      "manual_work_reduced": "Extract administrative CV fields instead of manual typing",
+      "savings_unit": "candidate",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "CV_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-132",
+      "key": "INTERVIEW_SCHEDULE_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Interview Scheduling",
+      "manual_work_reduced": "Coordinate available times between candidate and interviewer",
+      "savings_unit": "interview",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "INTERVIEW_SCHEDULE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-133",
+      "key": "NEW_HIRE_VALIDATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "New Hire Data Validation",
+      "manual_work_reduced": "Check required onboarding fields/documents",
+      "savings_unit": "employee",
+      "runtime_profile": "function",
+      "capabilities": [
+        "NEW_HIRE_VALIDATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-134",
+      "key": "USER_ACCOUNT_PROVISION_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "User Account Provisioning",
+      "manual_work_reduced": "Create configured accounts for a new hire",
+      "savings_unit": "employee",
+      "runtime_profile": "function",
+      "capabilities": [
+        "USER_ACCOUNT_PROVISION"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-135",
+      "key": "EMPLOYEE_ONBOARDING_CHECKLIST_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Employee Onboarding Checklist",
+      "manual_work_reduced": "Create standard onboarding tasks/access requests",
+      "savings_unit": "employee",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EMPLOYEE_ONBOARDING_CHECKLIST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-136",
+      "key": "POLICY_ACKNOWLEDGEMENT_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Policy Acknowledgement Tracking",
+      "manual_work_reduced": "Track missing policy acknowledgements and remind",
+      "savings_unit": "employee",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "POLICY_ACKNOWLEDGEMENT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-137",
+      "key": "TRAINING_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Training Reminder",
+      "manual_work_reduced": "Find overdue training items and remind employees",
+      "savings_unit": "employee",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "TRAINING_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-138",
+      "key": "LEAVE_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Leave Request Intake",
+      "manual_work_reduced": "Register employee leave requests",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "LEAVE_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-139",
+      "key": "LEAVE_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Leave Approval Routing",
+      "manual_work_reduced": "Route leave requests to the correct approver and sync result",
+      "savings_unit": "request",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "LEAVE_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-140",
+      "key": "OFFBOARDING_TRIGGER_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Offboarding Trigger",
+      "manual_work_reduced": "Start the standard offboarding sequence",
+      "savings_unit": "employee",
+      "runtime_profile": "function",
+      "capabilities": [
+        "OFFBOARDING_TRIGGER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-141",
+      "key": "ACCESS_REVOKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Access Revocation",
+      "manual_work_reduced": "Revoke configured accounts/accesses during offboarding",
+      "savings_unit": "employee",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ACCESS_REVOKE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-142",
+      "key": "OFFBOARDING_AUDIT_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Offboarding Audit",
+      "manual_work_reduced": "Verify the required offboarding actions are complete",
+      "savings_unit": "employee",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "OFFBOARDING_AUDIT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-143",
+      "key": "EMPLOYEE_DOC_EXPIRY_AUTOMATION",
+      "version": "0.1",
+      "domain": "hr_admin",
+      "name": "Employee Document Expiry Alert",
+      "manual_work_reduced": "Review employee document expirations and alert",
+      "savings_unit": "document",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "EMPLOYEE_DOC_EXPIRY_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-144",
+      "key": "MESSAGE_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Message Intake",
+      "manual_work_reduced": "Capture and normalize inbound business messages",
+      "savings_unit": "message",
+      "runtime_profile": "function",
+      "capabilities": [
+        "MESSAGE_INTAKE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-145",
+      "key": "EMAIL_CLASSIFY_ROUTE_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Email Classification and Routing",
+      "manual_work_reduced": "Classify and route incoming email automatically",
+      "savings_unit": "email",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EMAIL_CLASSIFY_ROUTE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-146",
+      "key": "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Email Attachment Extraction",
+      "manual_work_reduced": "Download and attach relevant files to the right process",
+      "savings_unit": "attachment",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EMAIL_ATTACHMENT_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-147",
+      "key": "EMAIL_TO_TASK_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Email to Task",
+      "manual_work_reduced": "Turn actionable email into a task without retyping",
+      "savings_unit": "email",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EMAIL_TO_TASK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-148",
+      "key": "EMAIL_TO_CRM_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Email to CRM",
+      "manual_work_reduced": "Register relevant email/contact activity in CRM",
+      "savings_unit": "email",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EMAIL_TO_CRM"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-149",
+      "key": "EMAIL_DRAFT_REPLY_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Email Draft Reply",
+      "manual_work_reduced": "Prepare repetitive response drafts",
+      "savings_unit": "email",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EMAIL_DRAFT_REPLY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-150",
+      "key": "EMAIL_APPROVAL_SEND_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Email Approval Send",
+      "manual_work_reduced": "Route sensitive drafts for approval and then send",
+      "savings_unit": "email",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "EMAIL_APPROVAL_SEND"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-151",
+      "key": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Unanswered Message Watchdog",
+      "manual_work_reduced": "Find conversations with no response inside SLA",
+      "savings_unit": "thread",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "UNANSWERED_MESSAGE_WATCHDOG"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-152",
+      "key": "INBOX_DAILY_DIGEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Inbox Daily Digest",
+      "manual_work_reduced": "Summarize relevant inbox items into one daily brief",
+      "savings_unit": "day",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "INBOX_DAILY_DIGEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-153",
+      "key": "MESSAGE_THREAD_DEDUPE_AUTOMATION",
+      "version": "0.1",
+      "domain": "inbox_messaging",
+      "name": "Message Thread Deduplication",
+      "manual_work_reduced": "Avoid duplicate processing of the same conversation/event",
+      "savings_unit": "message",
+      "runtime_profile": "function",
+      "capabilities": [
+        "MESSAGE_THREAD_DEDUPE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-154",
+      "key": "FILE_INGEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "File Intake",
+      "manual_work_reduced": "Collect files from configured sources into one processing path",
+      "savings_unit": "file",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FILE_INGEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-155",
+      "key": "FILE_MIME_VALIDATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "File Type Validation",
+      "manual_work_reduced": "Validate supported file types automatically",
+      "savings_unit": "file",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FILE_MIME_VALIDATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-156",
+      "key": "OCR_EXTRACT_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "OCR Extraction",
+      "manual_work_reduced": "Extract text from scans/images instead of manual transcription",
+      "savings_unit": "document",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "OCR_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-157",
+      "key": "STRUCTURED_FIELD_EXTRACT_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Structured Field Extraction",
+      "manual_work_reduced": "Extract target fields into a typed schema",
+      "savings_unit": "document",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "STRUCTURED_FIELD_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-158",
+      "key": "DOCUMENT_RENAME_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Document Renaming",
+      "manual_work_reduced": "Rename files using deterministic business rules",
+      "savings_unit": "file",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_RENAME"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-159",
+      "key": "DOCUMENT_ROUTE_FOLDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Document Folder Routing",
+      "manual_work_reduced": "Move/store documents in the correct location",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_ROUTE_FOLDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-160",
+      "key": "DOCUMENT_DEADLINE_EXTRACT_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Document Deadline Extraction",
+      "manual_work_reduced": "Extract important dates from documents",
+      "savings_unit": "document",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "DOCUMENT_DEADLINE_EXTRACT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-161",
+      "key": "DOCUMENT_EXPIRY_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Document Expiry Alert",
+      "manual_work_reduced": "Review future expirations and alert owners",
+      "savings_unit": "document",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "DOCUMENT_EXPIRY_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-162",
+      "key": "DOCUMENT_INDEX_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Document Indexing",
+      "manual_work_reduced": "Register searchable metadata automatically",
+      "savings_unit": "document",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DOCUMENT_INDEX"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-163",
+      "key": "DOCUMENT_TO_RAG_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Knowledge Ingestion",
+      "manual_work_reduced": "Prepare approved documents for searchable knowledge retrieval",
+      "savings_unit": "document",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "DOCUMENT_TO_RAG"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-164",
+      "key": "RAG_ANSWER_AUTOMATION",
+      "version": "0.1",
+      "domain": "documents_knowledge",
+      "name": "Knowledge Q&A with Evidence",
+      "manual_work_reduced": "Retrieve an answer with source evidence instead of manual document search",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "RAG_ANSWER_WITH_EVIDENCE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-165",
+      "key": "FEEDBACK_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Feedback Request",
+      "manual_work_reduced": "Send feedback requests after configured business events",
+      "savings_unit": "customer",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "FEEDBACK_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-166",
+      "key": "FEEDBACK_CAPTURE_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Feedback Capture",
+      "manual_work_reduced": "Register survey/review responses",
+      "savings_unit": "response",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FEEDBACK_CAPTURE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-167",
+      "key": "NPS_CSAT_SCORE_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "NPS/CSAT Calculation",
+      "manual_work_reduced": "Calculate configured feedback metrics",
+      "savings_unit": "response",
+      "runtime_profile": "function",
+      "capabilities": [
+        "NPS_CSAT_SCORE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-168",
+      "key": "FEEDBACK_CLASSIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Feedback Classification",
+      "manual_work_reduced": "Categorize free-text feedback for operations",
+      "savings_unit": "response",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FEEDBACK_CLASSIFY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-169",
+      "key": "DETRACTOR_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Detractor Alert",
+      "manual_work_reduced": "Surface dissatisfied customers without manual review",
+      "savings_unit": "response",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DETRACTOR_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-170",
+      "key": "POSITIVE_REVIEW_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Positive Review Request",
+      "manual_work_reduced": "Ask eligible satisfied customers for a public review",
+      "savings_unit": "customer",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "POSITIVE_REVIEW_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-171",
+      "key": "RETENTION_FOLLOWUP_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Retention Follow-up",
+      "manual_work_reduced": "Follow up configured retention-risk cases",
+      "savings_unit": "customer",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "RETENTION_FOLLOWUP"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-172",
+      "key": "RENEWAL_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Renewal Reminder",
+      "manual_work_reduced": "Find upcoming renewals and start the renewal process",
+      "savings_unit": "contract",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "RENEWAL_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-173",
+      "key": "REACTIVATION_CAMPAIGN_AUTOMATION",
+      "version": "0.1",
+      "domain": "feedback_retention",
+      "name": "Customer Reactivation",
+      "manual_work_reduced": "Find eligible inactive customers and contact them",
+      "savings_unit": "customer",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "REACTIVATION_CAMPAIGN"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-174",
+      "key": "DATA_AGGREGATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Data Aggregation",
+      "manual_work_reduced": "Collect recurring operational data from source systems",
+      "savings_unit": "report run",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "DATA_AGGREGATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-175",
+      "key": "KPI_CALCULATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "KPI Calculation",
+      "manual_work_reduced": "Calculate recurring KPIs deterministically",
+      "savings_unit": "report run",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "KPI_CALCULATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-176",
+      "key": "TREND_CALCULATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Trend Calculation",
+      "manual_work_reduced": "Calculate period-over-period trends",
+      "savings_unit": "report run",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "TREND_CALCULATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-177",
+      "key": "THRESHOLD_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Threshold Alert",
+      "manual_work_reduced": "Monitor metrics and alert only when thresholds are crossed",
+      "savings_unit": "metric check",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "THRESHOLD_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-178",
+      "key": "ANOMALY_REVIEW_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Anomaly Review Queue",
+      "manual_work_reduced": "Surface anomalous cases for human review instead of manual scanning",
+      "savings_unit": "metric check",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "ANOMALY_REVIEW"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-179",
+      "key": "DAILY_EXECUTIVE_BRIEF_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Daily Executive Brief",
+      "manual_work_reduced": "Build and deliver a daily operational brief",
+      "savings_unit": "day",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "DAILY_EXECUTIVE_BRIEF"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-180",
+      "key": "WEEKLY_EXECUTIVE_BRIEF_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Weekly Executive Brief",
+      "manual_work_reduced": "Build and deliver a weekly management brief",
+      "savings_unit": "week",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "WEEKLY_EXECUTIVE_BRIEF"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-181",
+      "key": "FINANCE_HEALTH_REPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Finance Health Report",
+      "manual_work_reduced": "Compile finance status and exceptions automatically",
+      "savings_unit": "report",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "FINANCE_HEALTH_REPORT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-182",
+      "key": "OPS_HEALTH_REPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "reporting",
+      "name": "Operations Health Report",
+      "manual_work_reduced": "Compile operations volume/SLA/exceptions automatically",
+      "savings_unit": "report",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "OPS_HEALTH_REPORT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-183",
+      "key": "ENTITY_SYNC_ONE_WAY_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "One-way Entity Sync",
+      "manual_work_reduced": "Copy approved entity changes from source to destination",
+      "savings_unit": "entity",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ENTITY_SYNC_ONE_WAY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-184",
+      "key": "ENTITY_SYNC_BIDIRECTIONAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Bidirectional Entity Sync",
+      "manual_work_reduced": "Synchronize approved fields in both directions",
+      "savings_unit": "entity",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "ENTITY_SYNC_BIDIRECTIONAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-185",
+      "key": "FIELD_MAP_TRANSFORM_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Field Mapping Transform",
+      "manual_work_reduced": "Transform fields between system schemas",
+      "savings_unit": "entity",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FIELD_MAP_TRANSFORM"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-186",
+      "key": "MASTER_DATA_DEDUPE_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Master Data Deduplication",
+      "manual_work_reduced": "Find duplicate master records",
+      "savings_unit": "record",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "MASTER_DATA_DEDUPE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-187",
+      "key": "MASTER_DATA_ENRICH_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Master Data Enrichment",
+      "manual_work_reduced": "Add configured data from approved sources",
+      "savings_unit": "record",
+      "runtime_profile": "function",
+      "capabilities": [
+        "MASTER_DATA_ENRICH"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-188",
+      "key": "SYNC_CONFLICT_QUEUE_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Sync Conflict Queue",
+      "manual_work_reduced": "Create human tasks only for conflicting updates",
+      "savings_unit": "conflict",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "SYNC_CONFLICT_QUEUE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-189",
+      "key": "BACKFILL_IMPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Backfill Import",
+      "manual_work_reduced": "Bulk-import historical records using validated mappings",
+      "savings_unit": "record",
+      "runtime_profile": "heavy",
+      "capabilities": [
+        "BACKFILL_IMPORT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-190",
+      "key": "EXPORT_BATCH_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Batch Export",
+      "manual_work_reduced": "Generate scheduled exports without manual downloads",
+      "savings_unit": "batch",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "EXPORT_BATCH"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-191",
+      "key": "DATA_QUALITY_CHECK_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Data Quality Check",
+      "manual_work_reduced": "Run recurring completeness/consistency checks",
+      "savings_unit": "record set",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "DATA_QUALITY_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-192",
+      "key": "WEBHOOK_EVENT_INGEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Webhook Event Intake",
+      "manual_work_reduced": "Verify/dedupe/store provider events",
+      "savings_unit": "event",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WEBHOOK_EVENT_INGEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-193",
+      "key": "ACCESS_REQUEST_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Access Request Intake",
+      "manual_work_reduced": "Register internal access requests",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ACCESS_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-194",
+      "key": "ACCESS_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Access Approval Routing",
+      "manual_work_reduced": "Route access requests to the correct approver",
+      "savings_unit": "request",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "ACCESS_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-195",
+      "key": "ACCOUNT_PROVISION_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Account Provisioning",
+      "manual_work_reduced": "Provision approved accounts automatically",
+      "savings_unit": "account",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ACCOUNT_PROVISION"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-196",
+      "key": "ACCOUNT_DEPROVISION_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Account Deprovisioning",
+      "manual_work_reduced": "Disable approved accounts automatically",
+      "savings_unit": "account",
+      "runtime_profile": "function",
+      "capabilities": [
+        "ACCOUNT_DEPROVISION"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-197",
+      "key": "CREDENTIAL_EXPIRY_ALERT_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Credential Expiry Alert",
+      "manual_work_reduced": "Monitor expiring integration credentials",
+      "savings_unit": "credential",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "CREDENTIAL_EXPIRY_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-198",
+      "key": "INTEGRATION_HEALTH_CHECK_AUTOMATION",
+      "version": "0.1",
+      "domain": "data_sync_it",
+      "name": "Integration Health Check",
+      "manual_work_reduced": "Check connectors and surface only degraded states",
+      "savings_unit": "connector",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "INTEGRATION_HEALTH_CHECK"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-199",
+      "key": "WORK_REQUEST_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work Request Intake",
+      "manual_work_reduced": "Register service/maintenance requests",
+      "savings_unit": "request",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_REQUEST_INTAKE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-200",
+      "key": "WORK_ORDER_CREATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work Order Creation",
+      "manual_work_reduced": "Create a work order from an accepted request",
+      "savings_unit": "work order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_ORDER_CREATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-201",
+      "key": "WORK_ASSIGN_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work Assignment",
+      "manual_work_reduced": "Assign technician/team using configured rules",
+      "savings_unit": "work order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_ASSIGN"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-202",
+      "key": "WORK_STATUS_SYNC_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work Status Synchronization",
+      "manual_work_reduced": "Synchronize work status across technician/system/customer",
+      "savings_unit": "status change",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_STATUS_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-203",
+      "key": "WORK_SLA_WATCHDOG_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work SLA Watchdog",
+      "manual_work_reduced": "Monitor overdue work orders",
+      "savings_unit": "work order",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "WORK_SLA_WATCHDOG"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-204",
+      "key": "WORK_CUSTOMER_NOTIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work Customer Notification",
+      "manual_work_reduced": "Notify customers when relevant work status changes",
+      "savings_unit": "status change",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_CUSTOMER_NOTIFY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-205",
+      "key": "WORK_COMPLETE_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Work Completion Processing",
+      "manual_work_reduced": "Close the work order and related records",
+      "savings_unit": "work order",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_COMPLETE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-206",
+      "key": "SERVICE_MAINTENANCE_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Maintenance Reminder",
+      "manual_work_reduced": "Find upcoming maintenance and contact the customer",
+      "savings_unit": "asset/customer",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "SERVICE_MAINTENANCE_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-207",
+      "key": "TIMESHEET_AGGREGATE_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Timesheet Aggregation",
+      "manual_work_reduced": "Collect and aggregate reported hours",
+      "savings_unit": "employee/day",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "TIMESHEET_AGGREGATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-208",
+      "key": "PROJECT_STATUS_BRIEF_AUTOMATION",
+      "version": "0.1",
+      "domain": "service_operations",
+      "name": "Project Status Brief",
+      "manual_work_reduced": "Compile project tasks, blockers and status",
+      "savings_unit": "project",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "PROJECT_STATUS_BRIEF"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-209",
+      "key": "STUDENT_REGISTRATION_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Student Registration",
+      "manual_work_reduced": "Copy enrollment/form/payment data into the student register",
+      "savings_unit": "student",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WEB_FORM_TO_RECORD"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-210",
+      "key": "STUDENT_GROUP_ASSIGNMENT_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Student Group Assignment",
+      "manual_work_reduced": "Assign students to the configured course/group",
+      "savings_unit": "student",
+      "runtime_profile": "function",
+      "capabilities": [
+        "FIELD_MAP_TRANSFORM"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-211",
+      "key": "CLASS_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Class Reminder",
+      "manual_work_reduced": "Review the schedule and remind the right students",
+      "savings_unit": "student/class",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "EVENT_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-212",
+      "key": "CLASS_ATTENDANCE_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Class Attendance Registration",
+      "manual_work_reduced": "Convert attendance/meeting records into the attendance register",
+      "savings_unit": "student/class",
+      "runtime_profile": "function",
+      "capabilities": [
+        "DATA_AGGREGATE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-213",
+      "key": "CLASS_MATERIAL_DELIVERY_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Post-class Material Delivery",
+      "manual_work_reduced": "Send the correct material to the correct group after class",
+      "savings_unit": "class",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "DOCUMENT_ROUTE_FOLDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-214",
+      "key": "CLASS_RECORDING_DELIVERY_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Class Recording Delivery",
+      "manual_work_reduced": "Send the recording link to the correct group",
+      "savings_unit": "class",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "MESSAGE_INTAKE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-215",
+      "key": "CLASS_MATERIAL_WATCHDOG_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Material Pending Watchdog",
+      "manual_work_reduced": "Detect classes whose material has not been uploaded",
+      "savings_unit": "class",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "THRESHOLD_ALERT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-216",
+      "key": "CLASS_RESCHEDULE_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Class Reschedule",
+      "manual_work_reduced": "Update schedule and notify enrolled students",
+      "savings_unit": "class",
+      "runtime_profile": "durable",
+      "capabilities": [
+        "APPOINTMENT_RESCHEDULE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-217",
+      "key": "CLASS_CANCEL_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Class Cancellation",
+      "manual_work_reduced": "Cancel the session and notify enrolled students",
+      "savings_unit": "class",
+      "runtime_profile": "function",
+      "capabilities": [
+        "APPOINTMENT_CANCEL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-218",
+      "key": "ASSIGNMENT_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "education",
+      "name": "Assignment Reminder",
+      "manual_work_reduced": "Find pending assignments and remind students",
+      "savings_unit": "student/task",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "EVENT_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-219",
+      "key": "VEHICLE_APPOINTMENT_INTAKE_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Vehicle Appointment Intake",
+      "manual_work_reduced": "Register workshop booking requests",
+      "savings_unit": "appointment",
+      "runtime_profile": "function",
+      "capabilities": [
+        "APPOINTMENT_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-220",
+      "key": "VEHICLE_SERVICE_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Vehicle Service Reminder",
+      "manual_work_reduced": "Find upcoming recommended service dates and contact the customer",
+      "savings_unit": "vehicle",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "SERVICE_MAINTENANCE_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-221",
+      "key": "VEHICLE_STATUS_SELF_SERVICE_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Vehicle Status Self-service",
+      "manual_work_reduced": "Answer customer status queries from the current work order",
+      "savings_unit": "query",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_STATUS_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-222",
+      "key": "ADDITIONAL_WORK_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Additional Work Customer Approval",
+      "manual_work_reduced": "Send extra-work details and capture customer approval",
+      "savings_unit": "approval",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "APPROVAL_REQUEST",
+        "APPROVAL_DECISION"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-223",
+      "key": "VEHICLE_READY_NOTIFY_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Vehicle Ready Notification",
+      "manual_work_reduced": "Notify the customer when the work order reaches ready state",
+      "savings_unit": "vehicle",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WORK_CUSTOMER_NOTIFY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-224",
+      "key": "POST_SERVICE_REVIEW_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Post-service Review",
+      "manual_work_reduced": "Request feedback after workshop service",
+      "savings_unit": "service",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "FEEDBACK_REQUEST"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-225",
+      "key": "WORKSHOP_NO_SHOW_RECOVERY_AUTOMATION",
+      "version": "0.1",
+      "domain": "workshop_vehicle",
+      "name": "Workshop No-show Recovery",
+      "manual_work_reduced": "Contact customers who missed workshop appointments",
+      "savings_unit": "no-show",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "NO_SHOW_RECOVERY"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-226",
+      "key": "CAMPAIGN_LEAD_CAPTURE_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Campaign Lead Capture",
+      "manual_work_reduced": "Capture campaign leads into the normalized lead process",
+      "savings_unit": "lead",
+      "runtime_profile": "function",
+      "capabilities": [
+        "CAMPAIGN_LEAD_CAPTURE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-227",
+      "key": "AUDIENCE_SYNC_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Audience Sync",
+      "manual_work_reduced": "Synchronize approved audiences between systems",
+      "savings_unit": "contact",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "AUDIENCE_SYNC"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-228",
+      "key": "CONTENT_APPROVAL_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Content Approval",
+      "manual_work_reduced": "Route scheduled content for configured approval",
+      "savings_unit": "content item",
+      "runtime_profile": "human_loop",
+      "capabilities": [
+        "CONTENT_APPROVAL"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-229",
+      "key": "CONTENT_SCHEDULE_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Content Scheduling",
+      "manual_work_reduced": "Publish approved content on schedule",
+      "savings_unit": "content item",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "CONTENT_SCHEDULE"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-230",
+      "key": "CAMPAIGN_REPORT_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Campaign Report",
+      "manual_work_reduced": "Compile campaign metrics automatically",
+      "savings_unit": "report",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "CAMPAIGN_REPORT"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-231",
+      "key": "EVENT_REGISTRATION_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Event Registration",
+      "manual_work_reduced": "Register event attendees from forms/messages",
+      "savings_unit": "attendee",
+      "runtime_profile": "function",
+      "capabilities": [
+        "EVENT_REGISTRATION"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-232",
+      "key": "EVENT_REMINDER_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Event Reminder",
+      "manual_work_reduced": "Send event reminders to registered attendees",
+      "savings_unit": "attendee/event",
+      "runtime_profile": "scheduled",
+      "capabilities": [
+        "EVENT_REMINDER"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    },
+    {
+      "id": "SWF-233",
+      "key": "WEB_FORM_TO_RECORD_AUTOMATION",
+      "version": "0.1",
+      "domain": "marketing_admin",
+      "name": "Web Form to Record",
+      "manual_work_reduced": "Convert form responses into the target business record",
+      "savings_unit": "submission",
+      "runtime_profile": "function",
+      "capabilities": [
+        "WEB_FORM_TO_RECORD"
+      ],
+      "customer_facing_type": "SAVINGS_WORKFLOW",
+      "stage": "DESIGN_READY",
+      "execution_model": "SHARED_MULTI_TENANT",
+      "pre_revenue_mode": "LOCAL_OR_MOCKED",
+      "external_cost_policy": "CLIENT_OWNED_OR_METERED",
+      "savings_required": true
+    }
+  ]
+}
