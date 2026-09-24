@@ -2,6 +2,36 @@
 
 This catalog is intentionally narrower than our total technical capability.
 
+
+## Savings Workflow product model
+
+El catálogo comercial se construye sobre `workflows/SAVINGS-WORKFLOW-CATALOG.md`, pero no vende capabilities técnicas. Un Savings Workflow debe reemplazar o reducir un proceso repetitivo humano medible.
+
+Ejemplos de unidad comercial:
+- cotización preparada;
+- factura procesada;
+- cita gestionada;
+- consulta de proveedor resuelta;
+- ticket clasificado/enrutado;
+- documento registrado;
+- recordatorio ejecutado.
+
+Cada instalación liga configuración, conectores, approval policy y SavingsBaseline.
+
+### Economics guardrail
+
+Antes de un piloto pagado no se activa infraestructura productiva persistente solo para estar “listos”. Producción debe preferir runtime compartido/metered y evitar servidores/proyectos dedicados por tenant. Costos variables extraordinarios de AI/OCR/WhatsApp/proveedores deben ser client-owned cuando sea práctico o tener quota/metering explícito.
+
+```text
+local proof
+→ demo
+→ baseline
+→ paid pilot
+→ minimum production runtime
+→ acceptance
+→ recurring support/optimization
+```
+
 ## LeadFlow — P0 commercial offer
 
 Promise: **do not lose inbound prospects and make follow-up measurable.**
