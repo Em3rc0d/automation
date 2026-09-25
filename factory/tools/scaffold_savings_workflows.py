@@ -24,6 +24,9 @@ def q(value: object) -> str:
 
 
 def render_manifest(x: dict) -> str:
+    implementation_status = x.get("implementation_status", "NOT_IMPLEMENTED")
+    implementation_engine = x.get("implementation_engine", "UNBOUND")
+    implementation_reference = x.get("implementation_reference")
     lines = [
         "schemaVersion: 1",
         "skeletonVersion: 1",
@@ -42,8 +45,12 @@ def render_manifest(x: dict) -> str:
         "capabilities:",
         *[f"  - {q(c)}" for c in x["capabilities"]],
         "implementation:",
-        '  status: "NOT_IMPLEMENTED"',
-        '  engine: "UNBOUND"',
+        f"  status: {q(implementation_status)}",
+        f"  engine: {q(implementation_engine)}",
+    ]
+    if implementation_reference:
+        lines.append(f"  reference: {q(implementation_reference)}")
+    lines += [
         "  readyForProduction: false",
         "certification:",
         "  tested: false",
@@ -130,9 +137,14 @@ def render_output(x: dict) -> str:
 
 def render_readme(x: dict) -> str:
     caps = "\n".join(f"- `{c}`" for c in x["capabilities"])
+    implementation_status = x.get("implementation_status", "NOT_IMPLEMENTED")
+    reference = x.get("implementation_reference")
+    reference_section = ""
+    if reference:
+        reference_section = f"""\n## Reference implementation\n\n- Status: `{implementation_status}`\n- Engine/profile: `{x.get('implementation_engine', 'UNBOUND')}`\n- Runtime code: `{reference}`\n- Reference test: `{x.get('reference_test', '')}`\n- Reference demo: `{x.get('reference_demo', '')}`\n\nThis proves executable reference behavior only; it does not change the canonical `DESIGN_READY` / factory certification state.\n"""
     return f"""# {x['name']}
 
-Status: **DESIGN_READY / NOT IMPLEMENTED / NOT CERTIFIED**
+Status: **DESIGN_READY / {implementation_status} / NOT CERTIFIED**
 
 - Key: `{x['key']}@{x['version']}`
 - Domain: `{x['domain']}`
@@ -146,7 +158,7 @@ Status: **DESIGN_READY / NOT IMPLEMENTED / NOT CERTIFIED**
 ## Capability composition
 
 {caps}
-
+{reference_section}
 ## Execution skeleton
 
 ```text
@@ -240,7 +252,8 @@ def render_flow_plan(x: dict) -> str:
         "schemaVersion: 1",
         f"workflowKey: {q(x['key'])}",
         f"runtimeProfile: {q(x['runtime_profile'])}",
-        'implementationStatus: "NOT_IMPLEMENTED"',
+        f"implementationStatus: {q(x.get('implementation_status', 'NOT_IMPLEMENTED'))}",
+        *([f"referencePath: {q(x['implementation_reference'])}"] if x.get("implementation_reference") else []),
         "steps:",
         '  - id: "validate_input"',
         '    capability: "platform.input.validate"',
