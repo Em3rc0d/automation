@@ -5,7 +5,7 @@ key: "APPOINTMENT_REMINDER_AUTOMATION"
 version: "0.1"
 name: "Appointment Reminder"
 domain: "appointments"
-stage: "DESIGN_READY"
+stage: "HARDENED"
 runtimeProfile: "scheduled"
 executionModel: "SHARED_MULTI_TENANT"
 preRevenueMode: "LOCAL_OR_MOCKED"
@@ -26,3 +26,9 @@ certification:
 savings:
   baselineRequired: true
   unit: "reminder"
+
+hardening:
+  runtimeProfile: "zero-deps-node-v1"
+  runtimeCertification: "CERTIFIED"
+  runtimeEvidenceSha: "8475fcd95817098c59cd1088b543e4881bd3fe38"
+  report: "evidence/HARDENING-REPORT.md"
