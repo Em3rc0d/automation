@@ -17,7 +17,7 @@ Convert a small high-value subset of the 233 DESIGN_READY Savings Workflow skele
 + execution/process/incident/savings telemetry
 ```
 
-The first three reference implementations are `PAYMENT_REMINDER_AUTOMATION`, `APPOINTMENT_REMINDER_AUTOMATION` and `LEAD_FOLLOWUP_AUTOMATION`, all on the same shared runtime.
+All 12 selected P0 workflows now have executable references on the same shared `zero-deps-node-v1` runtime.
 
 ## Economic invariant
 
@@ -33,17 +33,17 @@ The first three reference implementations are `PAYMENT_REMINDER_AUTOMATION`, `AP
 Source: `SELECTED-WORKFLOWS.json`.
 
 1. `PAYMENT_REMINDER_AUTOMATION` — reference implemented.
-2. `LEAD_INTAKE_AUTOMATION`
+2. `LEAD_INTAKE_AUTOMATION` — reference implemented
 3. `LEAD_FOLLOWUP_AUTOMATION` — reference implemented
-4. `UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION`
+4. `UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION` — reference implemented
 5. `APPOINTMENT_REMINDER_AUTOMATION` — reference implemented
-6. `QUOTE_FOLLOWUP_AUTOMATION`
-7. `EMAIL_CLASSIFY_ROUTE_AUTOMATION`
-8. `EMAIL_ATTACHMENT_EXTRACT_AUTOMATION`
-9. `DOCUMENT_ARCHIVE_AUTOMATION`
-10. `LOW_STOCK_ALERT_AUTOMATION`
-11. `SUPPORT_INTAKE_AUTOMATION`
-12. `RENEWAL_REMINDER_AUTOMATION`
+6. `QUOTE_FOLLOWUP_AUTOMATION` — reference implemented
+7. `EMAIL_CLASSIFY_ROUTE_AUTOMATION` — reference implemented
+8. `EMAIL_ATTACHMENT_EXTRACT_AUTOMATION` — reference implemented
+9. `DOCUMENT_ARCHIVE_AUTOMATION` — reference implemented
+10. `LOW_STOCK_ALERT_AUTOMATION` — reference implemented
+11. `SUPPORT_INTAKE_AUTOMATION` — reference implemented
+12. `RENEWAL_REMINDER_AUTOMATION` — reference implemented
 
 ## Shared runtime kit
 
@@ -51,17 +51,23 @@ Source: `SELECTED-WORKFLOWS.json`.
 
 ## Reuse proof
 
-The same `SavingsRuntime`, `MemoryIdempotencyStore`, `MemoryControlPlane`, `MemoryMessageAdapter` and Savings Engine are now reused across three different business families:
+The same shared kernel now executes **12 customer-facing workflows across 9 business domains**:
 
 ```text
-accounts receivable  → Payment Reminder
-appointments         → Appointment Reminder
-sales                → Lead Follow-up
+sales / leads              Lead Intake, Lead Follow-up
+accounts receivable        Payment Reminder
+appointments               Appointment Reminder
+inbox / messaging          Unanswered Watchdog, Email Classify, Attachment Extract
+quotes                     Quote Follow-up
+documents                  Document Archive
+inventory                  Low Stock Alert
+support                    Support Intake
+retention                  Renewal Reminder
 ```
 
-Appointment Reminder additionally reuses the calendar adapter. Lead Follow-up additionally reuses the table adapter and persists sequence progress instead of keeping an always-on waiting process.
+New business workflows reuse runtime primitives and provider-neutral adapters instead of provisioning new infrastructure. Table, message, calendar and storage adapters cover the P0 reference set.
 
-This is the intended plugin model: new business workflow logic, **not new infrastructure**.
+`LEAD_FOLLOWUP_AUTOMATION` demonstrates durable state without an always-on waiting process. The scheduled workflows demonstrate replay-safe polling. Function workflows demonstrate event-level idempotency.
 
 ## Payment Reminder reference flow
 
@@ -94,7 +100,7 @@ To close W-SAVINGS-P0:
 - [x] implement Lead Follow-up durable sequence on the same runtime;
 - [x] add duplicate/retry/failure/savings tests;
 - [x] add local demo with deterministic output;
-- [ ] implement remaining 9 selected workflows;
+- [x] implement remaining 9 selected workflows;
 - [ ] certify a non-n8n runtime profile in Baseline Factory;
 - [ ] promote selected workflows through HARDENED → TESTED → APPROVED_BASELINE;
 - [ ] bind real providers only when a paid/funded pilot requires them.
