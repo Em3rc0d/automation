@@ -15,8 +15,9 @@ manualWorkReduced: "Identify due/overdue invoices and send configured reminders"
 capabilities:
   - "PAYMENT_REMINDER"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/payment-reminder.js"
   readyForProduction: false
 certification:
   tested: false

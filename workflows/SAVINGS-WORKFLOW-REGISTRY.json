@@ -776,7 +776,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/payment-reminder.js",
+      "reference_test": "runtime/savings-p0/test/payment-reminder.test.js",
+      "reference_demo": "runtime/savings-p0/demo/payment-reminder/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-041",

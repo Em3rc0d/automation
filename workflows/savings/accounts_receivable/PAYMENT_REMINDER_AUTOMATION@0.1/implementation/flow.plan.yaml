@@ -1,7 +1,8 @@
 schemaVersion: 1
 workflowKey: "PAYMENT_REMINDER_AUTOMATION"
 runtimeProfile: "scheduled"
-implementationStatus: "NOT_IMPLEMENTED"
+implementationStatus: "REFERENCE_IMPLEMENTED"
+referencePath: "runtime/savings-p0/src/workflows/payment-reminder.js"
 steps:
   - id: "validate_input"
     capability: "platform.input.validate"

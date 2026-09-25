@@ -80,6 +80,29 @@
         "INCLUDED_WITH_QUOTA",
         "EXPLICIT_EXCEPTION"
       ]
+    },
+    "implementation_status": {
+      "enum": [
+        "NOT_IMPLEMENTED",
+        "REFERENCE_IMPLEMENTED"
+      ]
+    },
+    "implementation_engine": {
+      "type": "string"
+    },
+    "implementation_reference": {
+      "type": "string"
+    },
+    "reference_test": {
+      "type": "string"
+    },
+    "reference_demo": {
+      "type": "string"
+    },
+    "reference_certification_boundary": {
+      "enum": [
+        "NOT_FACTORY_CERTIFIED"
+      ]
     }
   },
   "additionalProperties": true

@@ -62,6 +62,15 @@ REQUIRED_PATHS = [
     "quarries/workflow-quarry/no-pass-verified/README.md",
     "mk0/README.md",
     "mk1/README.md",
+    "runtime/README.md",
+    "runtime/savings-p0/package.json",
+    "runtime/savings-p0/RUNTIME-PROFILE.md",
+    "runtime/savings-p0/src/runtime.js",
+    "w-savings-p0/README.md",
+    "w-savings-p0/STATUS.md",
+    "w-savings-p0/SELECTED-WORKFLOWS.json",
+    "w-savings-p0/tools/validate_wave.py",
+    ".github/workflows/savings-p0-validation.yml",
     "certification/COVERAGE-MATRIX.md",
     "certification/CAPABILITY-COVERAGE-MAP.md",
     "certification/TOOLBOX-CLOSURE-PLAN.md",
@@ -229,6 +238,18 @@ def validate() -> list[str]:
             if token not in text:
                 fail(errors, f"toolbox closure plan missing invariant: {token}")
 
+
+    w_savings_p0_validator = ROOT / "w-savings-p0/tools/validate_wave.py"
+    if w_savings_p0_validator.is_file():
+        try:
+            ns = runpy.run_path(str(w_savings_p0_validator))
+            wave_main = ns.get("main")
+            if not callable(wave_main):
+                fail(errors, "W-SAVINGS-P0 validator missing main()")
+            elif wave_main() != 0:
+                fail(errors, "W-SAVINGS-P0 structural validation failed")
+        except Exception as exc:
+            fail(errors, f"W-SAVINGS-P0 validator failed: {exc}")
 
     savings_packages_validator = ROOT / "factory/tools/validate_savings_packages.py"
     if savings_packages_validator.is_file():

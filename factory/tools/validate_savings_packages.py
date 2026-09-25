@@ -60,13 +60,22 @@ def main() -> int:
                 f'stage: "{item["stage"]}"',
                 f'runtimeProfile: "{item["runtime_profile"]}"',
                 f'savingsUnit: "{item["savings_unit"]}"',
-                'status: "NOT_IMPLEMENTED"',
+                f'status: "{item.get("implementation_status", "NOT_IMPLEMENTED")}"',
                 "readyForProduction: false",
                 "approvedBaseline: false",
             ]
             for token in required_tokens:
                 if token not in text:
                     errors.append(f"{item['key']} manifest missing invariant: {token}")
+
+            reference = item.get("implementation_reference")
+            if reference:
+                if f'reference: "{reference}"' not in text:
+                    errors.append(f"{item['key']} manifest missing implementation reference")
+                if not (ROOT / reference).is_file():
+                    errors.append(f"{item['key']} implementation reference missing: {reference}")
+                if item.get("implementation_status") != "REFERENCE_IMPLEMENTED":
+                    errors.append(f"{item['key']} implementation reference requires REFERENCE_IMPLEMENTED status")
 
         for rel in [
             "config.schema.json",
@@ -90,6 +99,9 @@ def main() -> int:
                 errors.append(f"{item['key']} flow plan key mismatch")
             if item["runtime_profile"] not in text:
                 errors.append(f"{item['key']} flow plan runtime mismatch")
+            expected_implementation_status = item.get("implementation_status", "NOT_IMPLEMENTED")
+            if expected_implementation_status not in text:
+                errors.append(f"{item['key']} flow plan implementation status mismatch")
             for capability in item["capabilities"]:
                 if capability not in text:
                     errors.append(f"{item['key']} flow plan missing capability {capability}")

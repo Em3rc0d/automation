@@ -1,0 +1,36 @@
+name: Savings P0 Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  zero-cost-reference-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate wave structure
+        run: python w-savings-p0/tools/validate_wave.py
+      - name: Validate Savings Workflow registry
+        run: python factory/tools/validate_savings_registry.py
+      - name: Validate materialized Savings Workflow packages
+        run: python factory/tools/validate_savings_packages.py
+      - name: Run zero-dependency Node tests
+        working-directory: runtime/savings-p0
+        run: node --test test/*.test.js
+      - name: Prove Payment Reminder demo
+        working-directory: runtime/savings-p0
+        run: node demo/payment-reminder/run.js --assert

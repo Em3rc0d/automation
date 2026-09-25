@@ -3,12 +3,14 @@
   "workflowKey": "PAYMENT_REMINDER_AUTOMATION",
   "simulate": {
     "providerResponse": 503,
-    "transient": true
+    "transientFailuresBeforeSuccess": 1
   },
   "expected": {
     "retryPolicyApplied": true,
+    "providerAttempts": 2,
+    "messagesSent": 1,
     "duplicateSideEffect": false,
-    "incidentCreatedAfterExhaustion": true,
-    "savingsEventOnFailure": false
+    "incidentCreated": false,
+    "savingsEventsCreated": 1
   }
 }

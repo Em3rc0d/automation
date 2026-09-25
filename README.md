@@ -50,6 +50,8 @@ Ver `decisions/ADR-0007-PRE-REVENUE-ZERO-FIXED-COST.md`.
 - `certification/` — criterios, cobertura y certificados por snapshot.
 - `mk0/` — cierre documental y arquitectónico antes de build.
 - `mk1/` — primer producto operable con un cliente piloto.
+- `runtime/` — implementaciones/runtime profiles; `runtime/savings-p0/` prueba ejecución local sin infraestructura pagada.
+- `w-savings-p0/` — wave de 12 Savings Workflows baratos/transversales; Payment Reminder es la primera referencia ejecutable.
 
 ## Workflow Quarry
 
@@ -125,7 +127,7 @@ Termina cuando podemos:
 - n8n permitido para diseño local, factory y casos productivos seleccionados **solo bajo un modelo comercial/licenciamiento compatible**
 - Node.js workers para lógica no apropiada para n8n
 - OpenAI API solo donde aporte
-- Vercel + Railway/VPS administrado
+- hosting/runtime productivo se elige al activar un piloto pagado; Vercel/Railway/VPS son opciones, no costo pre-revenue obligatorio
 - Zod/OpenAPI para contratos
 - Vitest + Playwright
 
@@ -151,6 +153,7 @@ El repositorio tiene CI en `.github/workflows/repository-certification.yml` para
 K0 KNOWLEDGE / ARCHITECTURE     CLOSED
 WORKFLOW QUARRY                 CONTINUOUS
 W1 APPROVED BASELINE LIBRARY    NOT YET CERTIFIED
+W-SAVINGS-P0 REFERENCE WAVE      1/12 EXECUTABLE REFERENCES
 P1 PILOT PRODUCT                NOT YET CERTIFIED
 ```
 
@@ -163,3 +166,5 @@ El repositorio mantiene un catálogo amplio de Savings Workflows de nivel soluci
 Actualmente `workflows/savings/` contiene **233 materialized DESIGN_READY package skeletons** en 21 dominios. Cada paquete trae manifest, config/input/output contracts, fixtures, test plan, SavingsBaseline, flow plan y runbook. Ver `workflows/savings/INDEX.md`.
 
 Estado inicial del catálogo: **DESIGN_READY**. `DESIGN_READY != TESTED != APPROVED_BASELINE`.
+
+`PAYMENT_REMINDER_AUTOMATION` ya tiene una referencia ejecutable bajo `runtime/savings-p0/`, con idempotencia, retries, ProcessRecord, Incident, SavingsEvent, tests y demo local. Sigue `readyForProduction: false` hasta que el nuevo runtime profile sea certificado por la Baseline Factory.
