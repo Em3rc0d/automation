@@ -1,6 +1,6 @@
 # Runtime Profile — `zero-deps-node-v1`
 
-Status: **W-SAVINGS-P0 REFERENCE PROFILE — NOT YET FACTORY-CERTIFIED**
+Status: **FACTORY-CERTIFIED RUNTIME PROFILE — WORKFLOWS STILL REQUIRE INDIVIDUAL PROMOTION**
 
 Purpose: prove customer-facing Savings Workflows can execute locally and in CI without n8n, Docker services, paid hosting or third-party libraries.
 
@@ -27,9 +27,22 @@ Purpose: prove customer-facing Savings Workflows can execute locally and in CI w
 - technical details are represented by trace reference, not exposed as customer-safe text;
 - failed runs release execution idempotency so a repaired dependency can be replayed safely, relying on side-effect idempotency to prevent duplication.
 
-## Certification consequence
+## Factory certification
 
-This profile does not inherit `n8n-base-js-v1` certification. W-SAVINGS-P0 CI is reference evidence only. A future factory seal must explicitly certify this profile before any package is promoted to `APPROVED_BASELINE` on it.
+`zero-deps-node-v1` is independently factory-certified. It does not inherit the n8n profile seal.
+
+Evidence:
+- exact main evidence SHA: `8475fcd95817098c59cd1088b543e4881bd3fe38`;
+- Baseline Factory Validation run: `36087356818`;
+- factory job: `107922114438` — SUCCESS;
+- profile job: `107922514846` — SUCCESS;
+- Node: `20.19.5`;
+- suite: **44 tests / 44 pass / 0 fail**;
+- hardening-readiness validator: PASS;
+- runtime smoke: PASS;
+- certificate: `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`.
+
+This certifies the execution substrate/package boundary. It does **not** automatically promote the 12 workflows beyond their current lifecycle stage.
 
 
 ## Current reference coverage
@@ -48,4 +61,4 @@ The reference surface exercises:
 - deterministic rule evaluation;
 - variable-cost attribution.
 
-This broader evidence still does not constitute Baseline Factory certification by itself.
+The reference coverage is now backed by the explicit factory profile certificate; individual workflow TESTED/APPROVED evidence remains separate.
