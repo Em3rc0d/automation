@@ -5,7 +5,7 @@ key: "LEAD_INTAKE_AUTOMATION"
 version: "0.1"
 name: "Lead Intake Automation"
 domain: "sales_leads"
-stage: "DESIGN_READY"
+stage: "HARDENED"
 runtimeProfile: "function"
 executionModel: "SHARED_MULTI_TENANT"
 preRevenueMode: "LOCAL_OR_MOCKED"
@@ -26,3 +26,9 @@ certification:
 savings:
   baselineRequired: true
   unit: "lead"
+
+hardening:
+  runtimeProfile: "zero-deps-node-v1"
+  runtimeCertification: "CERTIFIED"
+  runtimeEvidenceSha: "8475fcd95817098c59cd1088b543e4881bd3fe38"
+  report: "evidence/HARDENING-REPORT.md"
