@@ -24,3 +24,6 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local tenant installation bundles / client-specific config references
+.local/

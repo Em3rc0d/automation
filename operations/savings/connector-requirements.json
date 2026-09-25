@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "authority": "operations/savings/README.md",
+  "workflows": {
+    "PAYMENT_REMINDER_AUTOMATION": [
+      {
+        "capability": "records.accounts_receivable.read",
+        "adapterRole": "invoiceSource"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ],
+    "LEAD_INTAKE_AUTOMATION": [
+      {
+        "capability": "records.leads.write",
+        "adapterRole": "leadSource"
+      }
+    ],
+    "LEAD_FOLLOWUP_AUTOMATION": [
+      {
+        "capability": "records.leads.read_write",
+        "adapterRole": "leadSource"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ],
+    "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION": [
+      {
+        "capability": "records.threads.read",
+        "adapterRole": "threadSource"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ],
+    "APPOINTMENT_REMINDER_AUTOMATION": [
+      {
+        "capability": "calendar.events.read",
+        "adapterRole": "calendarAdapter"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ],
+    "QUOTE_FOLLOWUP_AUTOMATION": [
+      {
+        "capability": "records.quotes.read",
+        "adapterRole": "quoteSource"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ],
+    "EMAIL_CLASSIFY_ROUTE_AUTOMATION": [
+      {
+        "capability": "email.inbound",
+        "adapterRole": "trigger"
+      },
+      {
+        "capability": "records.email_routes.write",
+        "adapterRole": "routeStore"
+      }
+    ],
+    "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION": [
+      {
+        "capability": "email.inbound",
+        "adapterRole": "trigger"
+      },
+      {
+        "capability": "storage.objects.write",
+        "adapterRole": "storageAdapter"
+      }
+    ],
+    "DOCUMENT_ARCHIVE_AUTOMATION": [
+      {
+        "capability": "storage.objects.write",
+        "adapterRole": "storageAdapter"
+      }
+    ],
+    "LOW_STOCK_ALERT_AUTOMATION": [
+      {
+        "capability": "records.inventory.read",
+        "adapterRole": "inventorySource"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ],
+    "SUPPORT_INTAKE_AUTOMATION": [
+      {
+        "capability": "records.tickets.write",
+        "adapterRole": "ticketStore"
+      }
+    ],
+    "RENEWAL_REMINDER_AUTOMATION": [
+      {
+        "capability": "records.contracts.read",
+        "adapterRole": "contractSource"
+      },
+      {
+        "capability": "messaging.send",
+        "adapterRole": "messageAdapter"
+      }
+    ]
+  }
+}
