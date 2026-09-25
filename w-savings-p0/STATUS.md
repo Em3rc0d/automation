@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Reference library complete and canonical test evidence closed: **12/12 executable references, 12/12 HARDENED and 12/12 TESTED on a FACTORY-CERTIFIED runtime.**
+W-SAVINGS-P0 baseline library closed: **12/12 executable references, HARDENED, TESTED and APPROVED_BASELINE on a FACTORY-CERTIFIED zero-cost runtime.**
 
 ```text
 Selected workflows          12/12
@@ -11,7 +11,7 @@ Local adapter primitives     4/4
 Reference implementations   12/12
 Canonical HARDENED          12/12
 Canonical TESTED            12/12
-Canonical APPROVED_BASELINE   0/12
+Canonical APPROVED_BASELINE  12/12
 Paid infrastructure required NO
 ```
 
@@ -69,3 +69,14 @@ Evidence:
 - all deterministic demos asserted successfully.
 
 The workflows are TESTED but not yet APPROVED_BASELINE.
+
+
+## Approved baseline library
+
+All 12 selected workflows now have immutable approval records under `workflows/approved/savings/`.
+
+Approval preserves two identities:
+- canonical TESTED source commit: `f7dc2478855ac06dd9aaabbbae4e8a3657365802`;
+- exact executable test evidence SHA: `c4488c852261d09f54561a623f4f96296280e096`.
+
+APPROVED_BASELINE remains a reusable repository starting point, not tenant production acceptance. Real connectors, scopes, tenant baseline and client fixtures remain mandatory before CLIENT_ACCEPTED.
