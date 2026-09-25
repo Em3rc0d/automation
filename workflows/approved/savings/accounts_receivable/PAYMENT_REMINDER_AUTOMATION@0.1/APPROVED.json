@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "key": "PAYMENT_REMINDER_AUTOMATION",
+  "version": "0.1",
+  "name": "Payment Reminder",
+  "domain": "accounts_receivable",
+  "lifecycleStage": "APPROVED_BASELINE",
+  "packagePath": "workflows/savings/accounts_receivable/PAYMENT_REMINDER_AUTOMATION@0.1",
+  "implementationReference": "runtime/savings-p0/src/workflows/payment-reminder.js",
+  "runtimeProfile": "zero-deps-node-v1",
+  "runtimeCertification": {
+    "state": "CERTIFIED",
+    "certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+    "evidenceSha": "8475fcd95817098c59cd1088b543e4881bd3fe38"
+  },
+  "testedSnapshot": {
+    "sourceCommit": "f7dc2478855ac06dd9aaabbbae4e8a3657365802",
+    "evidenceSha": "c4488c852261d09f54561a623f4f96296280e096",
+    "workflow": "Savings P0 Validation",
+    "runId": 36089328606,
+    "jobId": 107928100134,
+    "command": "npm run validate",
+    "tests": 44,
+    "passed": 44,
+    "failed": 0
+  },
+  "savingsUnit": "invoice",
+  "clientGateRequired": true,
+  "immutableVersion": true,
+  "approvalMechanism": "repository_pull_request_merge_to_main"
+}
