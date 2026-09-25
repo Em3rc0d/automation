@@ -6,22 +6,30 @@ Updated: 2026-09-24
 Selected workflows          12/12
 Reference runtime kit        DONE
 Local adapter primitives     3/3
-Reference implementations    1/12
+Reference implementations    3/12
 Canonical APPROVED_BASELINE  0/12
 Paid infrastructure required NO
 ```
 
-## Implemented reference
+## Implemented references
 
-`PAYMENT_REMINDER_AUTOMATION`
+1. `PAYMENT_REMINDER_AUTOMATION`
+   - code: `runtime/savings-p0/src/workflows/payment-reminder.js`
+   - package: `workflows/savings/accounts_receivable/PAYMENT_REMINDER_AUTOMATION@0.1/`
 
-Evidence path:
+2. `APPOINTMENT_REMINDER_AUTOMATION`
+   - code: `runtime/savings-p0/src/workflows/appointment-reminder.js`
+   - package: `workflows/savings/appointments/APPOINTMENT_REMINDER_AUTOMATION@0.1/`
 
+3. `LEAD_FOLLOWUP_AUTOMATION`
+   - code: `runtime/savings-p0/src/workflows/lead-followup.js`
+   - package: `workflows/savings/sales_leads/LEAD_FOLLOWUP_AUTOMATION@0.1/`
+
+Shared evidence:
 - runtime: `runtime/savings-p0/src/`
-- workflow: `runtime/savings-p0/src/workflows/payment-reminder.js`
 - tests: `runtime/savings-p0/test/`
-- demo: `runtime/savings-p0/demo/payment-reminder/`
-- workflow package: `workflows/savings/accounts_receivable/PAYMENT_REMINDER_AUTOMATION@0.1/`
+- demos: `runtime/savings-p0/demo/`
+- CI: `.github/workflows/savings-p0-validation.yml`
 
 ## Important boundary
 
