@@ -1,0 +1,35 @@
+[
+  {
+    "id": "lead-001",
+    "tenantId": "tenant-demo",
+    "name": "Prospecto Uno",
+    "company": "Empresa Uno",
+    "status": "open",
+    "createdAt": "2026-09-22T10:00:00Z",
+    "contact": { "channel": "email", "address": "lead+one@example.test" }
+  },
+  {
+    "id": "lead-002",
+    "tenantId": "tenant-demo",
+    "name": "Prospecto Sin Contacto",
+    "status": "open",
+    "createdAt": "2026-09-22T10:00:00Z",
+    "contact": { "channel": "email", "address": "" }
+  },
+  {
+    "id": "lead-003",
+    "tenantId": "tenant-demo",
+    "name": "Cliente Ganado",
+    "status": "won",
+    "createdAt": "2026-09-20T10:00:00Z",
+    "contact": { "channel": "email", "address": "won@example.test" }
+  },
+  {
+    "id": "lead-004",
+    "tenantId": "tenant-demo",
+    "name": "Prospecto Nuevo",
+    "status": "open",
+    "createdAt": "2026-09-24T08:00:00Z",
+    "contact": { "channel": "email", "address": "new@example.test" }
+  }
+]
