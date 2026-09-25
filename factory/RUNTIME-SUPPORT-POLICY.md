@@ -2,7 +2,7 @@
 
 Status: **F1 AUTHORITY**
 
-The Baseline Factory does not claim universal compatibility with every optional n8n execution mode or community node. F1 certifies one explicit runtime profile and blocks candidates that need untested execution infrastructure.
+The Baseline Factory does not claim universal compatibility with arbitrary execution modes. The original F1 seal certifies `n8n-base-js-v1`; additional profiles require explicit same-SHA factory evidence and a profile certificate before they become certified scope.
 
 ## Certified base profile — `n8n-base-js-v1`
 
@@ -68,19 +68,36 @@ runtime:
 
 The W1/W2 static validators reject Python Code configuration and undeclared/non-base node packages under this profile.
 
+## Certification candidate — `zero-deps-node-v1`
+
+The repository is currently re-running the full factory gate to add a second explicit runtime profile:
+
+- engine: Node.js
+- pinned test version: `20.19.5`
+- module system: ESM
+- runtime package: `runtime/savings-p0/`
+- package dependencies: none
+- network required by reference tests/demos: no
+- dedicated paid infrastructure required: no
+- reference wave: W-SAVINGS-P0 / 12 workflows
+- provider bindings: not part of this profile; only provider-neutral local adapters are exercised
+- source-network boundary: direct HTTP/HTTPS/socket/fetch/child-process/environment access is forbidden by profile validation
+
+Authority files:
+
+- `factory/runtime-profiles/zero-deps-node-v1/profile.json`
+- `factory/runtime-profiles/zero-deps-node-v1/validate_profile.py`
+- `factory/runtime-profiles/zero-deps-node-v1/smoke.js`
+
+Until the same exact push SHA passes the expanded `Baseline Factory Validation` and a certificate is committed, this profile remains **CANDIDATE / NOT FACTORY-CERTIFIED**.
+
 ## Upgrade rule
 
-Changing the n8n pinned version, changing the managed `$env` boundary, or adding another runtime profile invalidates the relevant F1 runtime evidence and requires re-running the full factory certification gate.
+Changing the n8n pinned version, changing the managed `$env` boundary, materially changing a certified profile, or adding another runtime profile invalidates the relevant runtime evidence and requires re-running the full factory certification gate on the exact evidence SHA.
 
 
-## Reference profiles outside F1
+## Reference profiles outside certified scope
 
-The repository may contain executable reference profiles under `runtime/` without changing F1 certification.
-
-Current example:
-
-- `zero-deps-node-v1` under `runtime/savings-p0/`.
-
-Such a profile may have its own CI and deterministic tests, but it remains **NOT FACTORY-CERTIFIED** until a dedicated factory gate proves its runtime, packaging, security and promotion rules.
+The repository may contain executable reference profiles under `runtime/`. A reference profile remains outside certified factory scope until its explicit profile gate and certificate close.
 
 Reference evidence must not be relabeled as `TESTED` or `APPROVED_BASELINE` merely because unit/integration tests pass.
