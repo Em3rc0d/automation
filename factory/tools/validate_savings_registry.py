@@ -124,6 +124,16 @@ def main() -> int:
                 if int(testing.get("fail_count", -1)) != 0:
                     errors.append(f"{item['key']} testing fail_count must be 0")
 
+        if item["stage"] in {"APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}:
+            approval = item.get("approval")
+            if not isinstance(approval, dict) or approval.get("decision") != "APPROVED_BASELINE":
+                errors.append(f"{item['key']} {item['stage']} requires APPROVED_BASELINE metadata")
+            else:
+                for field in ["baseline_record", "promotion_evidence"]:
+                    rel = approval.get(field)
+                    if not rel or not (ROOT / rel).is_file():
+                        errors.append(f"{item['key']} approval {field} missing: {rel}")
+
     if len(entries) < 100:
         errors.append("catalog unexpectedly small; expected broad solution-level registry")
 
