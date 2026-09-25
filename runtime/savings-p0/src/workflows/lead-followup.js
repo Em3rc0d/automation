@@ -13,6 +13,10 @@ function parseIso(value, name) {
   return date;
 }
 
+function completedStagesFor(lead) {
+  return Array.isArray(lead?.followup?.completedStages) ? lead.followup.completedStages : [];
+}
+
 function normalizedStage(stage, index) {
   if (!stage || !Number.isFinite(Number(stage.delayHours)) || Number(stage.delayHours) < 0) {
     throw new PermanentError(`follow-up stage ${index} has invalid delayHours`, {
@@ -51,7 +55,7 @@ export function evaluateLeadFollowup(lead, { asOf, stages, minSpacingHours = 12 
   const now = parseIso(asOf, "asOf");
   const anchor = parseIso(anchorAt, "followupAnchorAt");
   const elapsedHours = (now - anchor) / HOUR_MS;
-  const completedStages = new Set(lead.followup?.completedStages ?? []);
+  const completedStages = new Set(completedStagesFor(lead));
 
   if (lead.followup?.lastFollowupAt) {
     const last = parseIso(lead.followup.lastFollowupAt, "lastFollowupAt");
@@ -124,7 +128,7 @@ export function buildLeadFollowupHandler({ messageAdapter, leadSource, config })
     });
 
     const completedStages = Array.from(new Set([
-      ...(lead.followup?.completedStages ?? []),
+      ...completedStagesFor(lead),
       stage.key,
     ]));
     await leadSource.upsert({
@@ -190,6 +194,16 @@ export async function runLeadFollowupBatch({
     { key: "h168", delayHours: 168, templateKey: "lead-followup-7d-v1" },
   ];
   const minSpacingHours = Number(config.minSpacingHours ?? 12);
+  if (!Array.isArray(stages) || stages.length === 0) {
+    throw new TypeError("stages must be a non-empty array");
+  }
+  if (!Number.isFinite(minSpacingHours) || minSpacingHours < 0) {
+    throw new TypeError("minSpacingHours must be >= 0");
+  }
+  const stageKeys = stages.map((stage, index) => normalizedStage(stage, index).key);
+  if (new Set(stageKeys).size !== stageKeys.length) {
+    throw new TypeError("stage keys must be unique");
+  }
   const leads = await leadSource.list({ tenantId });
   const handler = buildLeadFollowupHandler({ messageAdapter, leadSource, config });
   const executions = [];
