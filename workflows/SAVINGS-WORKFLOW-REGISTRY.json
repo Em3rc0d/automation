@@ -35,7 +35,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/lead-intake.js",
       "reference_test": "runtime/savings-p0/test/lead-intake.test.js",
       "reference_demo": "runtime/savings-p0/demo/lead-intake/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-002",
@@ -193,7 +195,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/lead-followup.js",
       "reference_test": "runtime/savings-p0/test/lead-followup.test.js",
       "reference_demo": "runtime/savings-p0/demo/lead-followup/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-010",
@@ -335,7 +339,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/appointment-reminder.js",
       "reference_test": "runtime/savings-p0/test/appointment-reminder.test.js",
       "reference_demo": "runtime/savings-p0/demo/appointment-reminder/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-017",
@@ -552,7 +558,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/quote-followup.js",
       "reference_test": "runtime/savings-p0/test/quote-followup.test.js",
       "reference_demo": "runtime/savings-p0/demo/quote-followup/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-028",
@@ -806,7 +814,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/payment-reminder.js",
       "reference_test": "runtime/savings-p0/test/payment-reminder.test.js",
       "reference_demo": "runtime/savings-p0/demo/payment-reminder/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-041",
@@ -1346,7 +1356,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/document-archive.js",
       "reference_test": "runtime/savings-p0/test/document-archive.test.js",
       "reference_demo": "runtime/savings-p0/demo/document-archive/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-069",
@@ -1903,7 +1915,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/low-stock-alert.js",
       "reference_test": "runtime/savings-p0/test/low-stock-alert.test.js",
       "reference_demo": "runtime/savings-p0/demo/low-stock-alert/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-098",
@@ -2081,7 +2095,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/support-intake.js",
       "reference_test": "runtime/savings-p0/test/support-intake.test.js",
       "reference_demo": "runtime/savings-p0/demo/support-intake/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-107",
@@ -2828,7 +2844,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/email-classify-route.js",
       "reference_test": "runtime/savings-p0/test/email-classify-route.test.js",
       "reference_demo": "runtime/savings-p0/demo/email-classify-route/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-146",
@@ -2853,7 +2871,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/email-attachment-extract.js",
       "reference_test": "runtime/savings-p0/test/email-attachment-extract.test.js",
       "reference_demo": "runtime/savings-p0/demo/email-attachment-extract/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-147",
@@ -2954,7 +2974,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/unanswered-message-watchdog.js",
       "reference_test": "runtime/savings-p0/test/unanswered-message-watchdog.test.js",
       "reference_demo": "runtime/savings-p0/demo/unanswered-message-watchdog/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-152",
@@ -3359,7 +3381,9 @@
       "implementation_reference": "runtime/savings-p0/src/workflows/renewal-reminder.js",
       "reference_test": "runtime/savings-p0/test/renewal-reminder.test.js",
       "reference_demo": "runtime/savings-p0/demo/renewal-reminder/run.js",
-      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
+      "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
+      "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+      "runtime_certification_run_id": 36087356818
     },
     {
       "id": "SWF-173",

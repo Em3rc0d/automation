@@ -1,6 +1,6 @@
 # Runtime Profile — zero-deps-node-v1
 
-Status: **FACTORY CERTIFICATION CANDIDATE**
+Status: **FACTORY-CERTIFIED**
 
 This profile exists to certify the code-first shared runtime used by W-SAVINGS-P0 without requiring n8n, Docker services, paid hosting or provider credentials.
 
@@ -35,9 +35,9 @@ Explicitly forbidden in source under this profile:
 
 Provider access in production must remain behind separately reviewed adapters. The P0 in-memory adapters are reference/test implementations, not live provider bindings.
 
-## Same-SHA certification gate
+## Certification evidence
 
-A profile may become FACTORY-CERTIFIED only when the exact SHA passes:
+The profile became FACTORY-CERTIFIED after exact main SHA `8475fcd95817098c59cd1088b543e4881bd3fe38` passed:
 
 1. repository/K0 invariants;
 2. existing n8n F1 factory gate;
@@ -50,7 +50,7 @@ A profile may become FACTORY-CERTIFIED only when the exact SHA passes:
 9. tracked-secret guard;
 10. evidence artifact upload.
 
-The certificate is created only after a successful **push-event** Baseline Factory Validation run on the exact evidence SHA.
+Evidence run: `36087356818`; profile job: `107922514846`; suite: **44/44 passing**; certificate: `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`.
 
 ## Important scope
 

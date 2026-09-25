@@ -2,12 +2,12 @@
 
 Updated: 2026-09-24
 
-Reference library complete: **12/12 executable references; canonical promotion pending runtime certification.**
+Reference library complete: **12/12 executable references on a FACTORY-CERTIFIED runtime; canonical workflow promotion is next.**
 
 ```text
 Selected workflows          12/12
 Reference runtime kit        DONE
-Local adapter primitives     3/3
+Local adapter primitives     4/4
 Reference implementations   12/12
 Canonical APPROVED_BASELINE  0/12
 Paid infrastructure required NO
@@ -41,4 +41,4 @@ Shared evidence:
 
 ## Important boundary
 
-Passing W-SAVINGS-P0 CI proves the zero-dependency reference implementation on Node. It does not inherit F1 `n8n-base-js-v1` certification and does not silently promote the workflow to the quarry's TESTED or APPROVED stages.
+`zero-deps-node-v1` is now independently FACTORY-CERTIFIED. This still does not silently promote any workflow to HARDENED, TESTED or APPROVED_BASELINE; those are separate per-workflow gates.

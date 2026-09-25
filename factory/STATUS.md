@@ -24,21 +24,34 @@ P1 PILOT PRODUCT              NOT OPEN
 
 Certificate: `certification/F1-FACTORY-CERTIFICATE.md`.
 
-## Runtime extension in certification
+## Certified runtime extension
 
-Candidate profile: `zero-deps-node-v1`
+Certified profile: `zero-deps-node-v1`
 
 ```text
 Reference workflows          12/12 executable
 Runtime dependencies          0
 Paid test infrastructure      0
-Factory profile certificate   PENDING
+Factory profile certificate   CERTIFIED
 Canonical workflow approval   0/12
 ```
 
-The original `n8n-base-js-v1` F1 certificate remains historical evidence for its original scope. The repository is now re-running the full factory gate before extending certified scope to the Node profile.
+The original `n8n-base-js-v1` F1 certificate remains historical evidence for its original scope. The factory's certified scope now also includes `zero-deps-node-v1` under `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`.
 
-## Certified runtime profile
+### zero-deps-node-v1 evidence
+
+- zero-deps evidence SHA: `8475fcd95817098c59cd1088b543e4881bd3fe38`
+- Baseline Factory Validation: `36087356818`
+- factory job: `107922114438` — SUCCESS
+- profile job: `107922514846` — SUCCESS
+- profile artifact: `10843959001`
+- profile digest: `sha256:dc88223294c020b87ffe5f35c01f29d576d75fb897ef4521122bba81ed87c64c`
+- tests: **44/44 PASS**
+- certificate: `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`
+
+## Certified runtime profiles
+
+### n8n-base-js-v1
 
 - profile: `n8n-base-js-v1`
 - engine: n8n
@@ -48,7 +61,17 @@ The original `n8n-base-js-v1` F1 certificate remains historical evidence for its
 - supported base nodes: built-in `n8n-nodes-base.*`
 - Code node language in this profile: JavaScript
 
-Python Code, arbitrary community nodes, undeclared binaries/custom images and live third-party credentials are outside this F1 profile until separately implemented and certified.
+Python Code, arbitrary community nodes, undeclared binaries/custom images and live third-party credentials are outside the n8n F1 profile until separately implemented and certified.
+
+### zero-deps-node-v1
+
+- profile: `zero-deps-node-v1`
+- engine: Node.js
+- pinned certification runtime: `20.19.5`
+- dependencies: 0
+- paid test infrastructure: 0
+- direct network/provider bindings: excluded
+- reference workflows: 12/12
 
 ## Factory capabilities proven by F1
 

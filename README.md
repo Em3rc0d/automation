@@ -51,7 +51,7 @@ Ver `decisions/ADR-0007-PRE-REVENUE-ZERO-FIXED-COST.md`.
 - `mk0/` — cierre documental y arquitectónico antes de build.
 - `mk1/` — primer producto operable con un cliente piloto.
 - `runtime/` — implementaciones/runtime profiles; `runtime/savings-p0/` prueba ejecución local sin infraestructura pagada.
-- `w-savings-p0/` — wave de 12 Savings Workflows baratos/transversales; Payment Reminder es la primera referencia ejecutable.
+- `w-savings-p0/` — wave de 12 Savings Workflows baratos/transversales; 12/12 tienen referencia ejecutable sobre el runtime certificado `zero-deps-node-v1`.
 
 ## Workflow Quarry
 
@@ -167,4 +167,4 @@ Actualmente `workflows/savings/` contiene **233 materialized DESIGN_READY packag
 
 Estado inicial del catálogo: **DESIGN_READY**. `DESIGN_READY != TESTED != APPROVED_BASELINE`.
 
-Los **12/12 workflows de W-SAVINGS-P0** ya tienen referencias ejecutables bajo `runtime/savings-p0/`. Reutilizan el mismo runtime, idempotencia, retries, ProcessRecord, Incident, SavingsEvent y adapters provider-neutral de tabla, mensajería, calendario y storage. Siguen `readyForProduction: false` hasta que `zero-deps-node-v1` sea certificado por la Baseline Factory.
+Los **12/12 workflows de W-SAVINGS-P0** ya tienen referencias ejecutables bajo `runtime/savings-p0/`. `zero-deps-node-v1` está **FACTORY-CERTIFIED** con Node 20.19.5, 44/44 tests y evidence SHA `8475fcd95817098c59cd1088b543e4881bd3fe38`. Los workflows siguen `readyForProduction: false` hasta pasar sus gates individuales HARDENED → TESTED → APPROVED_BASELINE.

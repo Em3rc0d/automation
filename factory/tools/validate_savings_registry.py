@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "workflows" / "SAVINGS-WORKFLOW-REGISTRY.json"
+PROFILE = ROOT / "factory/runtime-profiles/zero-deps-node-v1/profile.json"
 
 REQUIRED = {
     "id","key","version","domain","name","manual_work_reduced","savings_unit",
@@ -21,6 +22,11 @@ def main() -> int:
     errors: list[str] = []
     try:
         doc = json.loads(REGISTRY.read_text(encoding="utf-8"))
+        profile_state = (
+            json.loads(PROFILE.read_text(encoding="utf-8")).get("certificationState")
+            if PROFILE.is_file()
+            else "CANDIDATE"
+        )
     except Exception as exc:
         print(f"SAVINGS REGISTRY VALIDATION: FAIL\n- invalid JSON: {exc}")
         return 1
@@ -72,8 +78,17 @@ def main() -> int:
                     errors.append(f"REFERENCE_IMPLEMENTED missing {field}: {item['key']}")
                 elif not (ROOT / rel).is_file():
                     errors.append(f"{field} does not exist for {item['key']}: {rel}")
-            if item.get("reference_certification_boundary") != "NOT_FACTORY_CERTIFIED":
-                errors.append(f"reference implementation must declare NOT_FACTORY_CERTIFIED boundary: {item['key']}")
+            expected_boundary = (
+                "FACTORY_CERTIFIED_RUNTIME"
+                if item.get("implementation_engine") == "zero-deps-node-v1"
+                and profile_state == "CERTIFIED"
+                else "NOT_FACTORY_CERTIFIED"
+            )
+            if item.get("reference_certification_boundary") != expected_boundary:
+                errors.append(
+                    f"reference certification boundary mismatch for {item['key']}: "
+                    f"expected={expected_boundary} actual={item.get('reference_certification_boundary')}"
+                )
         elif implementation_reference:
             errors.append(f"implementation_reference requires REFERENCE_IMPLEMENTED status: {item['key']}")
 

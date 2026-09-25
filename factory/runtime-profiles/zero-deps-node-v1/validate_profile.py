@@ -33,11 +33,27 @@ def main() -> int:
         "moduleSystem": "esm",
         "referenceWave": "W-SAVINGS-P0",
         "expectedReferenceWorkflows": 12,
-        "certificationState": "CANDIDATE",
     }
     for key, value in expected.items():
         if profile.get(key) != value:
             errors.append(f"profile {key} mismatch: expected={value!r} actual={profile.get(key)!r}")
+
+    certification_state = profile.get("certificationState")
+    if certification_state not in {"CANDIDATE", "CERTIFIED"}:
+        errors.append(f"invalid certificationState: {certification_state!r}")
+
+    certificate = ROOT / "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md"
+    certification = profile.get("certification") or {}
+    if certification_state == "CERTIFIED":
+        if not certificate.is_file():
+            errors.append("CERTIFIED profile requires certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md")
+        for field in [
+            "evidenceSha", "runId", "factoryJobId", "profileJobId",
+            "profileArtifactId", "profileArtifactDigest",
+            "factoryArtifactId", "factoryArtifactDigest",
+        ]:
+            if not certification.get(field):
+                errors.append(f"CERTIFIED profile missing certification.{field}")
 
     dependency_policy = profile.get("dependencyPolicy", {})
     if dependency_policy.get("runtimeDependencies") != []:
@@ -108,8 +124,16 @@ def main() -> int:
             continue
         if item.get("implementation_engine") != "zero-deps-node-v1":
             errors.append(f"wrong implementation engine for {key}: {item.get('implementation_engine')}")
-        if item.get("reference_certification_boundary") != "NOT_FACTORY_CERTIFIED":
-            errors.append(f"{key} must remain NOT_FACTORY_CERTIFIED until certificate commit")
+        expected_boundary = (
+            "FACTORY_CERTIFIED_RUNTIME"
+            if certification_state == "CERTIFIED"
+            else "NOT_FACTORY_CERTIFIED"
+        )
+        if item.get("reference_certification_boundary") != expected_boundary:
+            errors.append(
+                f"{key} certification boundary mismatch: "
+                f"expected={expected_boundary} actual={item.get('reference_certification_boundary')}"
+            )
         for field in ["implementation_reference", "reference_test", "reference_demo"]:
             rel = item.get(field)
             if not rel or not (ROOT / rel).is_file():
@@ -124,7 +148,7 @@ def main() -> int:
     print("ZERO-DEPS NODE PROFILE VALIDATION: PASS")
     print(f"profile=zero-deps-node-v1 node=20.19.5 source_files={len(source_files)}")
     print("dependencies=0 network_required=false paid_infrastructure_required=false")
-    print("reference_workflows=12 certification_state=CANDIDATE")
+    print(f"reference_workflows=12 certification_state={certification_state}")
     return 0
 
 
