@@ -145,7 +145,7 @@ export function buildLeadFollowupHandler({ messageAdapter, leadSource, config })
       status: "completed",
       metrics: {
         eligibleUnits: 1,
-        automatedUnits: sent.duplicate ? 0 : 1,
+        automatedUnits: 1,
         exceptionMinutes: 0,
         oversightMinutes: 0,
         variableCost: Number(sent.variableCostPen ?? 0),
