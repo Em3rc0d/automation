@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "profile": "zero-deps-node-v1",
+  "engine": "node",
+  "testedVersion": "20.19.5",
+  "moduleSystem": "esm",
+  "entryPackage": "runtime/savings-p0/package.json",
+  "sourceRoot": "runtime/savings-p0/src",
+  "testRoot": "runtime/savings-p0/test",
+  "demoRoot": "runtime/savings-p0/demo",
+  "dependencyPolicy": {
+    "runtimeDependencies": [],
+    "devDependencies": [],
+    "networkRequiredForTests": false,
+    "networkRequiredForReferenceExecution": false
+  },
+  "infrastructurePolicy": {
+    "paidInfrastructureRequiredForTests": false,
+    "dedicatedTenantRuntimeRequired": false
+  },
+  "allowedNodeBuiltinsInSource": [
+    "node:crypto"
+  ],
+  "forbiddenSourceCapabilities": [
+    "node:http",
+    "node:https",
+    "node:net",
+    "node:tls",
+    "node:dgram",
+    "node:child_process",
+    "fetch(",
+    "process.env"
+  ],
+  "referenceWave": "W-SAVINGS-P0",
+  "expectedReferenceWorkflows": 12,
+  "certificationState": "CANDIDATE"
+}
