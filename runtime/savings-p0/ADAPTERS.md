@@ -42,3 +42,25 @@ await calendar.upsert({ tenantId, event })
 Reference: `src/adapters/memory-calendar.js`.
 
 Real Gmail/Google Sheets/Calendar adapters are **not** required to prove P0 locally. Provider binding occurs only when a paying/funded pilot justifies it.
+
+
+## Storage adapter
+
+Used for attachment extraction and document archival.
+
+```js
+await storage.put({
+  tenantId,
+  path,
+  content,
+  metadata,
+  idempotencyKey
+})
+
+await storage.get({ tenantId, path })
+await storage.list({ tenantId, prefix? })
+```
+
+Reference: `src/adapters/memory-storage.js`.
+
+The adapter owns storage-side idempotency. A retry after a downstream failure must not create a second stored object.
