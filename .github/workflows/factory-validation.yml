@@ -107,16 +107,19 @@ jobs:
 
       - name: Validate zero-deps Node profile
         run: |
+          set -o pipefail
           python factory/runtime-profiles/zero-deps-node-v1/validate_profile.py | tee zero-deps-node-v1-static.log
 
       - name: Validate Savings wave and package structure
         run: |
+          set -o pipefail
           python w-savings-p0/tools/validate_wave.py | tee zero-deps-node-v1-wave.log
           python factory/tools/validate_savings_registry.py | tee -a zero-deps-node-v1-wave.log
           python factory/tools/validate_savings_packages.py | tee -a zero-deps-node-v1-wave.log
 
       - name: Validate code-first Savings hardening readiness
         run: |
+          set -o pipefail
           python factory/tools/validate_savings_hardening_readiness.py | tee zero-deps-node-v1-hardening.log
 
       - name: Run complete zero-dependency reference suite
