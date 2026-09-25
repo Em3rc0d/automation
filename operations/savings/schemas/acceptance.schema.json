@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SavingsInstallationAcceptance",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "checks",
+    "notes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "configReviewed",
+        "connectorScopesVerified",
+        "baselineAgreed",
+        "costPolicyAccepted",
+        "rollbackReviewed",
+        "productionDryRunPassed",
+        "clientFixturePassed",
+        "clientApprovalRecorded"
+      ],
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SavingsWorkflowInstallation",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "installationId",
+    "tenantId",
+    "workflowKey",
+    "workflowVersion",
+    "approvedBaselineRecord",
+    "runtimeProfile",
+    "state",
+    "dedicatedInfrastructure",
+    "providerCostPolicy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "installationId": {
+      "type": "string"
+    },
+    "tenantId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowKey": {
+      "type": "string"
+    },
+    "workflowVersion": {
+      "type": "string"
+    },
+    "approvedBaselineRecord": {
+      "type": "string"
+    },
+    "runtimeProfile": {
+      "const": "zero-deps-node-v1"
+    },
+    "state": {
+      "enum": [
+        "DRAFT",
+        "CLIENT_CONFIGURED",
+        "CLIENT_ACCEPTED"
+      ]
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "configuredAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "acceptedAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dedicatedInfrastructure": {
+      "type": "boolean",
+      "default": false
+    },
+    "providerCostPolicy": {
+      "enum": [
+        "CLIENT_OWNED_OR_METERED",
+        "INCLUDED_WITH_QUOTA",
+        "EXPLICIT_EXCEPTION"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

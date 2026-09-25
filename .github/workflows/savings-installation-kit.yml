@@ -1,0 +1,24 @@
+name: Savings Installation Kit Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  installation-kit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run installer unit tests
+        run: python -m unittest discover -s tools/savings/tests -p 'test_*.py' -v
+      - name: List approved baselines
+        run: python tools/savings/install_approved.py list
