@@ -79,7 +79,6 @@ def main() -> int:
                 "profile": "zero-deps-node-v1",
                 "engine": "node",
                 "testedVersion": "20.19.5",
-                "certificationState": "CANDIDATE",
                 "expectedReferenceWorkflows": 12,
             }
             for key, value in expected.items():
@@ -87,6 +86,15 @@ def main() -> int:
                     errors.append(
                         f"zero-deps Node profile manifest {key} mismatch: expected={value!r} actual={data.get(key)!r}"
                     )
+            certification_state = data.get("certificationState")
+            if certification_state not in {"CANDIDATE", "CERTIFIED"}:
+                errors.append(
+                    f"zero-deps Node profile certificationState invalid: {certification_state!r}"
+                )
+            if certification_state == "CERTIFIED":
+                certificate = ROOT / "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md"
+                if not certificate.is_file():
+                    errors.append("CERTIFIED zero-deps Node profile lacks certificate")
             if data.get("dependencyPolicy", {}).get("runtimeDependencies") != []:
                 errors.append("zero-deps Node profile runtimeDependencies must be empty")
             if data.get("infrastructurePolicy", {}).get("paidInfrastructureRequiredForTests") is not False:
