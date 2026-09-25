@@ -101,7 +101,8 @@
     },
     "reference_certification_boundary": {
       "enum": [
-        "NOT_FACTORY_CERTIFIED"
+        "NOT_FACTORY_CERTIFIED",
+        "FACTORY_CERTIFIED_RUNTIME"
       ]
     }
   },
