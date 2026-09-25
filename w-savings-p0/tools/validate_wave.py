@@ -66,7 +66,7 @@ def main() -> int:
             errors.append(f"reference package missing: {key}")
             continue
         text = manifest.read_text(encoding="utf-8")
-        for token in [key, "DESIGN_READY", 'status: "REFERENCE_IMPLEMENTED"', "readyForProduction: false"]:
+        for token in [key, item["stage"], 'status: "REFERENCE_IMPLEMENTED"', "readyForProduction: false"]:
             if token not in text:
                 errors.append(f"{key} manifest missing boundary: {token}")
         if item.get("implementation_status") != "REFERENCE_IMPLEMENTED":
