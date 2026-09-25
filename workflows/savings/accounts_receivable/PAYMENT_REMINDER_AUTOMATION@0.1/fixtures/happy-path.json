@@ -1,17 +1,26 @@
 {
   "fixture": "happy-path",
   "workflowKey": "PAYMENT_REMINDER_AUTOMATION",
-  "input": {
+  "asOfDate": "2026-09-24",
+  "config": {
+    "reminderOffsetsDays": [-3, 0, 7, 15],
+    "defaultChannel": "email",
+    "templateKey": "payment-reminder-v1"
+  },
+  "invoice": {
+    "id": "invoice-happy-001",
     "tenantId": "tenant_fixture",
-    "idempotencyKey": "payment_reminder_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic invoice fixture before TESTED."
-    }
+    "invoiceNumber": "F001-001",
+    "customerName": "Fixture Customer",
+    "status": "open",
+    "dueDate": "2026-09-24",
+    "amount": 100,
+    "currency": "PEN",
+    "contact": { "channel": "email", "address": "fixture@example.test" }
   },
   "expected": {
+    "eligible": true,
+    "offsetDays": 0,
     "status": "completed",
     "automatedUnits": 1,
     "savingsUnit": "invoice"

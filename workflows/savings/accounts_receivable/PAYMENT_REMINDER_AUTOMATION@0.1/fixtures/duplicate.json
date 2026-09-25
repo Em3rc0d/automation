@@ -1,11 +1,14 @@
 {
   "fixture": "duplicate",
   "workflowKey": "PAYMENT_REMINDER_AUTOMATION",
-  "instruction": "Send same idempotencyKey twice.",
+  "invoiceId": "invoice-duplicate-001",
+  "offsetDays": 0,
+  "executionIdempotencyKey": "payment-reminder:invoice-duplicate-001:offset:0",
+  "sideEffectIdempotencyKey": "tenant_fixture:payment-reminder:invoice-duplicate-001:offset:0",
   "expected": {
     "firstRun": "completed",
     "secondRun": "skipped_duplicate",
-    "sideEffectsCreated": 1,
+    "messagesSent": 1,
     "savingsEventsCreated": 1
   }
 }
