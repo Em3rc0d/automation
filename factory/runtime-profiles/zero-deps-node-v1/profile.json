@@ -33,5 +33,20 @@
   ],
   "referenceWave": "W-SAVINGS-P0",
   "expectedReferenceWorkflows": 12,
-  "certificationState": "CANDIDATE"
+  "certificationState": "CERTIFIED",
+  "certification": {
+    "evidenceSha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+    "workflow": "Baseline Factory Validation",
+    "runId": 36087356818,
+    "factoryJobId": 107922114438,
+    "profileJobId": 107922514846,
+    "profileArtifactId": 10843959001,
+    "profileArtifactDigest": "sha256:dc88223294c020b87ffe5f35c01f29d576d75fb897ef4521122bba81ed87c64c",
+    "factoryArtifactId": 10844431638,
+    "factoryArtifactDigest": "sha256:203f96e1d7e27e5998aebf629f4286b294709cc974df92f4bd49f5489ec63b9c",
+    "testCount": 44,
+    "passCount": 44,
+    "failCount": 0,
+    "certifiedAt": "2026-09-25"
+  }
 }
