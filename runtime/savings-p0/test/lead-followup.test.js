@@ -9,6 +9,7 @@ import {
   runLeadFollowupBatch,
 } from "../src/workflows/lead-followup.js";
 import { calculateSavings } from "../src/savings.js";
+import { RetryableError } from "../src/errors.js";
 
 function makeRuntime(clock = "2026-09-24T12:00:00Z") {
   const controlPlane = new MemoryControlPlane({ idFactory: sequentialIdFactory("l") });
@@ -177,5 +178,50 @@ test("transient provider failure retries lead follow-up and persists stage once"
   assert.equal(messages.sent.length, 1);
   assert.equal(controlPlane.savingsEvents.length, 1);
   const updated = (await leads.list({ tenantId: "t" })).find((x) => x.id === "retry");
+  assert.deepEqual(updated.followup.completedStages, ["h24"]);
+});
+
+
+test("post-send source failure reuses provider idempotency and still counts one automated unit", async () => {
+  const { runtime, controlPlane } = makeRuntime();
+  const table = new MemoryTableAdapter([
+    {
+      id: "post-send-retry",
+      tenantId: "t",
+      name: "Post Send Retry",
+      status: "open",
+      createdAt: "2026-09-22T10:00:00Z",
+      contact: { channel: "email", address: "post-send@example.test" },
+    },
+  ]);
+  let failOnce = true;
+  const leadSource = {
+    list: (args) => table.list(args),
+    upsert: async (args) => {
+      if (failOnce) {
+        failOnce = false;
+        throw new RetryableError("simulated source write failure", { code: "SOURCE_503" });
+      }
+      return table.upsert(args);
+    },
+  };
+  const messages = new MemoryMessageAdapter({ costPerMessagePen: 0.02 });
+
+  const batch = await runLeadFollowupBatch({
+    runtime,
+    leadSource,
+    messageAdapter: messages,
+    tenantId: "t",
+    automationInstanceId: "lead-followup",
+    asOf: "2026-09-24T12:00:00Z",
+    config: { stages, minSpacingHours: 12 },
+  });
+
+  assert.equal(batch.executions[0].status, "completed");
+  assert.equal(messages.sent.length, 1);
+  assert.equal(controlPlane.incidents.length, 0);
+  assert.equal(controlPlane.savingsEvents.length, 1);
+  assert.equal(controlPlane.savingsEvents[0].automatedUnits, 1);
+  const updated = (await table.list({ tenantId: "t" })).find((x) => x.id === "post-send-retry");
   assert.deepEqual(updated.followup.completedStages, ["h24"]);
 });
