@@ -1,14 +1,13 @@
 {
   "fixture": "happy-path",
   "workflowKey": "LOW_STOCK_ALERT_AUTOMATION",
-  "input": {
-    "tenantId": "tenant_fixture",
-    "idempotencyKey": "low_stock_alert_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic SKU fixture before TESTED."
+  "inventoryItem": {
+    "id": "sku-fixture",
+    "sku": "SKU-1",
+    "onHand": 2,
+    "reorderPoint": 5,
+    "alertContact": {
+      "address": "ops@example.test"
     }
   },
   "expected": {

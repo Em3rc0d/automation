@@ -15,8 +15,9 @@ manualWorkReduced: "Read inbound leads from forms/email/WhatsApp/ads and registe
 capabilities:
   - "LEAD_CAPTURE"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/lead-intake.js"
   readyForProduction: false
 certification:
   tested: false

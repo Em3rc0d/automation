@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "RENEWAL_REMINDER_AUTOMATION tenant configuration",
-  "description": "DESIGN_READY skeleton; specialize before HARDENED.",
   "type": "object",
   "required": [
     "enabled",
@@ -21,22 +20,34 @@
       "type": "string",
       "default": "America/Lima"
     },
-    "maxRetries": {
-      "type": "integer",
+    "reminderOffsetsDays": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "default": [
+        30,
+        7,
+        0
+      ]
+    },
+    "missingContactExceptionMinutes": {
+      "type": "number",
       "minimum": 0,
-      "maximum": 10,
       "default": 3
     },
-    "timeoutSeconds": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 3600,
-      "default": 60
+    "defaultChannel": {
+      "enum": [
+        "email",
+        "whatsapp",
+        "sms"
+      ],
+      "default": "email"
     },
-    "schedule": {
+    "templateKey": {
       "type": "string",
-      "description": "Tenant schedule/cron."
+      "default": "renewal-reminder-v1"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

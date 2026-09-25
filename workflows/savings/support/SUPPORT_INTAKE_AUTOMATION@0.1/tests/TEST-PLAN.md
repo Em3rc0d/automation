@@ -1,7 +1,16 @@
 # Test Plan — Support Intake
 
-Status: **SKELETON / NO TEST EVIDENCE YET**
+Status: **REFERENCE TESTS IMPLEMENTED / CANONICAL TESTED GATE NOT CLAIMED**
 
-Required: happy path; malformed input; duplicate; transient/permanent provider failure; credential expiry; tenant isolation; retry/timeout; variable cost capture; SavingsEvent exactly once; exception/oversight minutes; rollback/replay without double counting.
+Reference tests: `runtime/savings-p0/test/support-intake.test.js`.
 
-Runtime-specific profile: `function`. Savings unit: `ticket`.
+Reference behavior under test:
+- accept inbound support request;
+- normalize subject/body/channel;
+- derive stable ticket ID from source event;
+- upsert ticket once;
+- emit ticket savings unit;
+- duplicate execution does not double-count savings;
+- tenant-scoped execution and provider-neutral adapter boundaries are preserved.
+
+Canonical TESTED/APPROVED_BASELINE promotion still requires factory certification of `zero-deps-node-v1`.

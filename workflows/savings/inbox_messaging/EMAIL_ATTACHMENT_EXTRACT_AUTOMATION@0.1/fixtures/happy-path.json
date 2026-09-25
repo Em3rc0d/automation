@@ -1,15 +1,17 @@
 {
   "fixture": "happy-path",
   "workflowKey": "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION",
-  "input": {
-    "tenantId": "tenant_fixture",
-    "idempotencyKey": "email_attachment_extract_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic attachment fixture before TESTED."
-    }
+  "email": {
+    "id": "fixture-mail",
+    "attachments": [
+      {
+        "id": "a1",
+        "name": "invoice.pdf",
+        "mimeType": "application/pdf",
+        "sizeBytes": 20,
+        "content": "fixture"
+      }
+    ]
   },
   "expected": {
     "status": "completed",

@@ -1,9 +1,5 @@
 # Runbook — Document Archive
 
-Monitor success/failure, last success, connector health, automated `document`, exceptions, variable cost and incidents.
+Verify document ID/date/type, generated path, storage permissions and prior object before replay.
 
-Common failures: credential expiry, provider outage, malformed/stale source data, replay, config mismatch, tenant mismatch, cost spike.
-
-Operator: inspect tenant/workflow/trace → pause unsafe installation → repair dependency/config → replay with original idempotency → verify process and SavingsEvent count → audit customer-visible impact.
-
-Define rollback and reconciliation before APPROVED_BASELINE.
+Operator invariant: preserve tenant scope and original idempotency semantics when replaying. Verify ProcessRecord and SavingsEvent cardinality after repair. Do not convert exception work into false automated savings.

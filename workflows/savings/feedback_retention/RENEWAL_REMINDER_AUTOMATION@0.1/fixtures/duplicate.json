@@ -1,11 +1,9 @@
 {
   "fixture": "duplicate",
   "workflowKey": "RENEWAL_REMINDER_AUTOMATION",
-  "instruction": "Send same idempotencyKey twice.",
+  "instruction": "Replay same contract at same renewal offset.",
   "expected": {
-    "firstRun": "completed",
-    "secondRun": "skipped_duplicate",
-    "sideEffectsCreated": 1,
-    "savingsEventsCreated": 1
+    "duplicateSideEffect": false,
+    "savingsDoubleCount": false
   }
 }

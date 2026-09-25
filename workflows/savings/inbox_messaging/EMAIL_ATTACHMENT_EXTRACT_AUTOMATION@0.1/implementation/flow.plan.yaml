@@ -1,14 +1,13 @@
 schemaVersion: 1
 workflowKey: "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION"
 runtimeProfile: "function"
-implementationStatus: "NOT_IMPLEMENTED"
+implementationStatus: "REFERENCE_IMPLEMENTED"
+referencePath: "runtime/savings-p0/src/workflows/email-attachment-extract.js"
 steps:
-  - id: "validate_input"
-    capability: "platform.input.validate"
+  - id: "business_1"
+    capability: "EMAIL_ATTACHMENT_EXTRACT"
   - id: "idempotency_guard"
     capability: "platform.idempotency.guard"
-  - id: "capability_1"
-    capability: "EMAIL_ATTACHMENT_EXTRACT"
   - id: "persist_process_record"
     capability: "platform.process_record.upsert"
   - id: "emit_savings_event"

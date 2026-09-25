@@ -1,14 +1,13 @@
 schemaVersion: 1
 workflowKey: "DOCUMENT_ARCHIVE_AUTOMATION"
 runtimeProfile: "function"
-implementationStatus: "NOT_IMPLEMENTED"
+implementationStatus: "REFERENCE_IMPLEMENTED"
+referencePath: "runtime/savings-p0/src/workflows/document-archive.js"
 steps:
-  - id: "validate_input"
-    capability: "platform.input.validate"
+  - id: "business_1"
+    capability: "DOCUMENT_ARCHIVE"
   - id: "idempotency_guard"
     capability: "platform.idempotency.guard"
-  - id: "capability_1"
-    capability: "DOCUMENT_ARCHIVE"
   - id: "persist_process_record"
     capability: "platform.process_record.upsert"
   - id: "emit_savings_event"

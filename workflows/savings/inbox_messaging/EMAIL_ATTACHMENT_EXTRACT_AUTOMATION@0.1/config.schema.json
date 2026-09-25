@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION tenant configuration",
-  "description": "DESIGN_READY skeleton; specialize before HARDENED.",
   "type": "object",
   "required": [
     "enabled",
@@ -21,18 +20,22 @@
       "type": "string",
       "default": "America/Lima"
     },
-    "maxRetries": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 10,
-      "default": 3
+    "allowedMimeTypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     },
-    "timeoutSeconds": {
+    "maxBytes": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 3600,
-      "default": 60
+      "default": 10000000
+    },
+    "prefix": {
+      "type": "string",
+      "default": "email-attachments"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

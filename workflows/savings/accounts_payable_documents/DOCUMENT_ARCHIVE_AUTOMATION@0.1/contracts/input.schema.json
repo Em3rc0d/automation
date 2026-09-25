@@ -1,41 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "DOCUMENT_ARCHIVE_AUTOMATION input",
+  "title": "DOCUMENT_ARCHIVE_AUTOMATION invocation",
   "type": "object",
   "required": [
     "tenantId",
-    "idempotencyKey",
-    "occurredAt",
-    "payload"
+    "automationInstanceId",
+    "document"
   ],
   "properties": {
     "tenantId": {
       "type": "string",
       "minLength": 1
     },
-    "idempotencyKey": {
+    "automationInstanceId": {
       "type": "string",
-      "minLength": 8
+      "minLength": 1
     },
-    "occurredAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "sourceSystem": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "sourceId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "payload": {
-      "type": "object",
-      "description": "Workflow-specific document payload."
+    "document": {
+      "type": "object"
     }
   },
   "additionalProperties": false

@@ -1,15 +1,11 @@
 {
   "fixture": "happy-path",
   "workflowKey": "SUPPORT_INTAKE_AUTOMATION",
-  "input": {
-    "tenantId": "tenant_fixture",
-    "idempotencyKey": "support_intake_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic ticket fixture before TESTED."
-    }
+  "request": {
+    "sourceSystem": "whatsapp",
+    "sourceId": "fixture-1",
+    "message": "Equipo no enciende",
+    "channel": "whatsapp"
   },
   "expected": {
     "status": "completed",

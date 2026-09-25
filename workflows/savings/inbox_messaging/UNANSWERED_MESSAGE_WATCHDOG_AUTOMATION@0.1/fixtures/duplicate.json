@@ -1,11 +1,9 @@
 {
   "fixture": "duplicate",
   "workflowKey": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
-  "instruction": "Send same idempotencyKey twice.",
+  "instruction": "Replay the same thread with unchanged lastInboundAt.",
   "expected": {
-    "firstRun": "completed",
-    "secondRun": "skipped_duplicate",
-    "sideEffectsCreated": 1,
-    "savingsEventsCreated": 1
+    "duplicateSideEffect": false,
+    "savingsDoubleCount": false
   }
 }

@@ -15,8 +15,9 @@ manualWorkReduced: "Classify and route incoming email automatically"
 capabilities:
   - "EMAIL_CLASSIFY_ROUTE"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/email-classify-route.js"
   readyForProduction: false
 certification:
   tested: false

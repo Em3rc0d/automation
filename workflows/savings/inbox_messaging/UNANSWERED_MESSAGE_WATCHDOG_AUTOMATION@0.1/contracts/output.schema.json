@@ -2,58 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION output",
   "type": "object",
-  "required": [
-    "status",
-    "automatedUnits",
-    "exceptionMinutes",
-    "oversightMinutes"
-  ],
   "properties": {
-    "status": {
-      "enum": [
-        "completed",
-        "attention_required",
-        "failed",
-        "skipped_duplicate"
-      ]
+    "scannedThreads": {
+      "type": "integer"
     },
-    "processRecordId": {
-      "type": [
-        "string",
-        "null"
-      ]
+    "eligible": {
+      "type": "integer"
     },
-    "approvalRequestId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "automatedUnits": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "exceptionMinutes": {
-      "type": "number",
-      "minimum": 0
-    },
-    "oversightMinutes": {
-      "type": "number",
-      "minimum": 0
-    },
-    "variableCost": {
-      "type": "number",
-      "minimum": 0
-    },
-    "savingsUnit": {
-      "const": "thread"
-    },
-    "result": {
-      "type": [
-        "object",
-        "null"
-      ]
+    "executions": {
+      "type": "array"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

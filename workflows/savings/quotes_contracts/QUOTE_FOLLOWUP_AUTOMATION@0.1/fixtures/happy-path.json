@@ -1,16 +1,7 @@
 {
   "fixture": "happy-path",
   "workflowKey": "QUOTE_FOLLOWUP_AUTOMATION",
-  "input": {
-    "tenantId": "tenant_fixture",
-    "idempotencyKey": "quote_followup_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic quote fixture before TESTED."
-    }
-  },
+  "asOf": "2026-09-24T12:00:00Z",
   "expected": {
     "status": "completed",
     "automatedUnits": 1,
