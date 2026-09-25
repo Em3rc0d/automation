@@ -6,7 +6,7 @@ Runtime vendors are implementation details behind platform/domain contracts.
 
 ### `savings-p0 / zero-deps-node-v1`
 
-Reference-only profile for W-SAVINGS-P0.
+Factory-certified code-first profile used by W-SAVINGS-P0 references.
 
 - Node.js standard library only;
 - no paid infrastructure;
@@ -15,7 +15,7 @@ Reference-only profile for W-SAVINGS-P0.
 - in-memory adapters/control plane for deterministic evidence;
 - executable references: all 12 W-SAVINGS-P0 workflows across sales, receivables, appointments, inbox, quotes, documents, inventory, support and retention.
 
-This profile is **not yet Baseline Factory certified**. It exists to prove that Savings Workflows can be productized without making n8n or persistent hosting a per-client prerequisite.
+This profile is **Baseline Factory certified** under `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`. Individual Savings Workflows still require HARDENED → TESTED → APPROVED_BASELINE promotion.
 
 See `runtime/savings-p0/RUNTIME-PROFILE.md`.
 
