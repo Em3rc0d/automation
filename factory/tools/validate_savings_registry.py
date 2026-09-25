@@ -39,6 +39,14 @@ def main() -> int:
     if doc.get("count") != len(entries):
         errors.append(f"count mismatch: document={doc.get('count')} actual={len(entries)}")
 
+    selected_path = ROOT / "w-savings-p0/SELECTED-WORKFLOWS.json"
+    selected_keys = set()
+    if selected_path.is_file():
+        selected_keys = {
+            item["key"]
+            for item in json.loads(selected_path.read_text(encoding="utf-8")).get("workflows", [])
+        }
+
     ids: set[str] = set()
     keys: set[str] = set()
     for i, item in enumerate(entries, 1):
@@ -54,8 +62,9 @@ def main() -> int:
         keys.add(item["key"])
         if item["runtime_profile"] not in RUNTIMES:
             errors.append(f"invalid runtime profile for {item['key']}: {item['runtime_profile']}")
-        if item["stage"] != "DESIGN_READY":
-            errors.append(f"catalog entry must remain DESIGN_READY until promoted through gates: {item['key']}")
+        allowed_stages = {"DESIGN_READY", "SELECTED_FOR_SYNTHESIS", "HARDENED", "TESTED", "APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}
+        if item["stage"] not in allowed_stages:
+            errors.append(f"invalid lifecycle stage for {item['key']}: {item['stage']}")
         if item["execution_model"] != "SHARED_MULTI_TENANT":
             errors.append(f"default catalog execution model must be SHARED_MULTI_TENANT: {item['key']}")
         if item["pre_revenue_mode"] != "LOCAL_OR_MOCKED":
@@ -92,6 +101,18 @@ def main() -> int:
         elif implementation_reference:
             errors.append(f"implementation_reference requires REFERENCE_IMPLEMENTED status: {item['key']}")
 
+        if item["key"] not in selected_keys and item["stage"] != "DESIGN_READY":
+            errors.append(f"non-selected catalog entry must remain DESIGN_READY: {item['key']}")
+
+        if item["stage"] in {"HARDENED", "TESTED", "APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}:
+            hardening = item.get("hardening")
+            if not isinstance(hardening, dict):
+                errors.append(f"{item['key']} lifecycle stage {item['stage']} requires hardening metadata")
+            else:
+                report = hardening.get("report")
+                if not report or not (ROOT / report).is_file():
+                    errors.append(f"{item['key']} hardening report missing: {report}")
+
     if len(entries) < 100:
         errors.append("catalog unexpectedly small; expected broad solution-level registry")
 
@@ -103,7 +124,7 @@ def main() -> int:
 
     print("SAVINGS REGISTRY VALIDATION: PASS")
     print(f"entries={len(entries)} unique_keys={len(keys)}")
-    print("scope=design registry only; no TESTED/APPROVED_BASELINE claim")
+    print("scope=lifecycle-aware registry validation")
     return 0
 
 
