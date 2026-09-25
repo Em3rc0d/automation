@@ -175,3 +175,19 @@ Los **12/12 workflows de W-SAVINGS-P0** ya tienen referencias ejecutables bajo `
 Los 12 workflows de la primera ola de costo casi cero ya alcanzaron `APPROVED_BASELINE` sobre `zero-deps-node-v1`.
 
 Cada baseline aprobado conserva un registro inmutable en `workflows/approved/savings/` apuntando al snapshot TESTED y a su evidencia CI exacta. Esto **no** salta el gate del cliente: conectores reales, permisos, baseline acordado, fixtures del tenant y aceptación siguen siendo obligatorios.
+
+
+## Zero-cost installation kit
+
+Los 12 `APPROVED_BASELINE` se pueden convertir en bundles locales de instalación sin provisionar infraestructura:
+
+```bash
+python tools/savings/install_approved.py list
+python tools/savings/install_approved.py scaffold \
+  --workflow PAYMENT_REMINDER_AUTOMATION \
+  --tenant acme-demo
+python tools/savings/install_approved.py doctor \
+  --bundle .local/installations/acme-demo/PAYMENT_REMINDER_AUTOMATION@0.1
+```
+
+El bundle separa `config`, connector bindings por `credref:`, SavingsBaseline y acceptance gates. `CLIENT_CONFIGURED` y `CLIENT_ACCEPTED` son bloqueados hasta completar sus requisitos; el installer no levanta Railway/n8n/servidores por cliente.
