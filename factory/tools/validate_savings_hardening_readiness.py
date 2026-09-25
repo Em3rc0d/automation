@@ -83,12 +83,17 @@ def main() -> int:
                 errors.append(f"{key} missing reference file {field}")
 
         manifest = (package / "manifest.yaml").read_text(encoding="utf-8")
+        expected_approved = (
+            "approvedBaseline: true"
+            if item.get("stage") in {"APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}
+            else "approvedBaseline: false"
+        )
         for token in [
             f'key: "{key}"',
             'status: "REFERENCE_IMPLEMENTED"',
             'engine: "zero-deps-node-v1"',
             "readyForProduction: false",
-            "approvedBaseline: false",
+            expected_approved,
         ]:
             if token not in manifest:
                 errors.append(f"{key} manifest missing {token!r}")
