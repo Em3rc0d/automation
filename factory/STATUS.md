@@ -24,6 +24,20 @@ P1 PILOT PRODUCT              NOT OPEN
 
 Certificate: `certification/F1-FACTORY-CERTIFICATE.md`.
 
+## Runtime extension in certification
+
+Candidate profile: `zero-deps-node-v1`
+
+```text
+Reference workflows          12/12 executable
+Runtime dependencies          0
+Paid test infrastructure      0
+Factory profile certificate   PENDING
+Canonical workflow approval   0/12
+```
+
+The original `n8n-base-js-v1` F1 certificate remains historical evidence for its original scope. The repository is now re-running the full factory gate before extending certified scope to the Node profile.
+
 ## Certified runtime profile
 
 - profile: `n8n-base-js-v1`
