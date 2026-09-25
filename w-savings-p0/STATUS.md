@@ -2,7 +2,7 @@
 
 Updated: 2026-09-24
 
-Reference library complete and canonical hardening started: **12/12 executable references on a FACTORY-CERTIFIED runtime; 12/12 now HARDENED.**
+Reference library complete and canonical test evidence closed: **12/12 executable references, 12/12 HARDENED and 12/12 TESTED on a FACTORY-CERTIFIED runtime.**
 
 ```text
 Selected workflows          12/12
@@ -10,7 +10,7 @@ Reference runtime kit        DONE
 Local adapter primitives     4/4
 Reference implementations   12/12
 Canonical HARDENED          12/12
-Canonical TESTED             0/12
+Canonical TESTED            12/12
 Canonical APPROVED_BASELINE   0/12
 Paid infrastructure required NO
 ```
@@ -55,3 +55,17 @@ All 12 selected workflows now carry:
 - certified runtime evidence binding to `zero-deps-node-v1` SHA `8475fcd95817098c59cd1088b543e4881bd3fe38`.
 
 This is the first canonical business-workflow lifecycle promotion. Next is exact-SHA TESTED evidence; no workflow is APPROVED_BASELINE yet.
+
+
+## Canonical test evidence
+
+All 12 selected workflows now have `evidence/TEST-REPORT.md` tied to exact HARDENED evidence SHA `e7bc6152bce2b6bd5fce6a222c6c3077b3c386f0`.
+
+Evidence:
+- Savings P0 Validation run: `36089006956`;
+- job: `107927102957`;
+- command: `npm run validate`;
+- Node suite: **44 tests / 44 pass / 0 fail**;
+- all deterministic demos asserted successfully.
+
+The workflows are TESTED but not yet APPROVED_BASELINE.
