@@ -12,7 +12,7 @@
     {
       "key": "LEAD_INTAKE_AUTOMATION",
       "priority": 2,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "high cross-vertical reuse and simple input normalization"
     },
     {
@@ -24,7 +24,7 @@
     {
       "key": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
       "priority": 4,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "scheduled scan with low compute and strong operational value"
     },
     {
@@ -36,43 +36,43 @@
     {
       "key": "QUOTE_FOLLOWUP_AUTOMATION",
       "priority": 6,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "scheduled follow-up without document generation dependency"
     },
     {
       "key": "EMAIL_CLASSIFY_ROUTE_AUTOMATION",
       "priority": 7,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "broad inbox work reducer; deterministic rules first"
     },
     {
       "key": "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION",
       "priority": 8,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "removes repetitive attachment handling without requiring OCR"
     },
     {
       "key": "DOCUMENT_ARCHIVE_AUTOMATION",
       "priority": 9,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "cheap deterministic rename/store/index workflow"
     },
     {
       "key": "LOW_STOCK_ALERT_AUTOMATION",
       "priority": 10,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "scheduled rule-based scan with table adapter"
     },
     {
       "key": "SUPPORT_INTAKE_AUTOMATION",
       "priority": 11,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "normalizes repetitive inbound support registration"
     },
     {
       "key": "RENEWAL_REMINDER_AUTOMATION",
       "priority": 12,
-      "status": "SELECTED",
+      "status": "REFERENCE_IMPLEMENTED",
       "reason": "scheduled reminder with simple source data and measurable units"
     }
   ]

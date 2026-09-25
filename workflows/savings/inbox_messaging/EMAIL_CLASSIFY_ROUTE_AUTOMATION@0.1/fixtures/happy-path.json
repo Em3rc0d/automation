@@ -1,14 +1,12 @@
 {
   "fixture": "happy-path",
   "workflowKey": "EMAIL_CLASSIFY_ROUTE_AUTOMATION",
-  "input": {
-    "tenantId": "tenant_fixture",
-    "idempotencyKey": "email_classify_route_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic email fixture before TESTED."
+  "email": {
+    "id": "fixture-mail",
+    "subject": "Factura F001",
+    "body": "Adjunto comprobante",
+    "from": {
+      "address": "supplier@example.test"
     }
   },
   "expected": {

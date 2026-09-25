@@ -15,8 +15,9 @@ manualWorkReduced: "Review pending quotes and contact customers on schedule"
 capabilities:
   - "QUOTE_FOLLOWUP"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/quote-followup.js"
   readyForProduction: false
 certification:
   tested: false

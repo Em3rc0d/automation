@@ -9,8 +9,18 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "demo:payment-reminder": "node demo/payment-reminder/run.js",
-    "validate": "node --test test/*.test.js && node demo/payment-reminder/run.js --assert && node demo/appointment-reminder/run.js --assert && node demo/lead-followup/run.js --assert",
+    "validate": "node --test test/*.test.js && node demo/run-all.js --assert",
     "demo:appointment-reminder": "node demo/appointment-reminder/run.js",
-    "demo:lead-followup": "node demo/lead-followup/run.js"
+    "demo:lead-followup": "node demo/lead-followup/run.js",
+    "demo:all": "node demo/run-all.js",
+    "demo:lead-intake": "node demo/lead-intake/run.js",
+    "demo:unanswered-message-watchdog": "node demo/unanswered-message-watchdog/run.js",
+    "demo:quote-followup": "node demo/quote-followup/run.js",
+    "demo:email-classify-route": "node demo/email-classify-route/run.js",
+    "demo:email-attachment-extract": "node demo/email-attachment-extract/run.js",
+    "demo:document-archive": "node demo/document-archive/run.js",
+    "demo:low-stock-alert": "node demo/low-stock-alert/run.js",
+    "demo:support-intake": "node demo/support-intake/run.js",
+    "demo:renewal-reminder": "node demo/renewal-reminder/run.js"
   }
 }

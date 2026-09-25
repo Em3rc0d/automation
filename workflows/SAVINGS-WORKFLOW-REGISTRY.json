@@ -29,7 +29,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/lead-intake.js",
+      "reference_test": "runtime/savings-p0/test/lead-intake.test.js",
+      "reference_demo": "runtime/savings-p0/demo/lead-intake/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-002",
@@ -540,7 +546,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/quote-followup.js",
+      "reference_test": "runtime/savings-p0/test/quote-followup.test.js",
+      "reference_demo": "runtime/savings-p0/demo/quote-followup/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-028",
@@ -1328,7 +1340,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/document-archive.js",
+      "reference_test": "runtime/savings-p0/test/document-archive.test.js",
+      "reference_demo": "runtime/savings-p0/demo/document-archive/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-069",
@@ -1879,7 +1897,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/low-stock-alert.js",
+      "reference_test": "runtime/savings-p0/test/low-stock-alert.test.js",
+      "reference_demo": "runtime/savings-p0/demo/low-stock-alert/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-098",
@@ -2051,7 +2075,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/support-intake.js",
+      "reference_test": "runtime/savings-p0/test/support-intake.test.js",
+      "reference_demo": "runtime/savings-p0/demo/support-intake/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-107",
@@ -2792,7 +2822,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/email-classify-route.js",
+      "reference_test": "runtime/savings-p0/test/email-classify-route.test.js",
+      "reference_demo": "runtime/savings-p0/demo/email-classify-route/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-146",
@@ -2811,7 +2847,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/email-attachment-extract.js",
+      "reference_test": "runtime/savings-p0/test/email-attachment-extract.test.js",
+      "reference_demo": "runtime/savings-p0/demo/email-attachment-extract/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-147",
@@ -2906,7 +2948,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/unanswered-message-watchdog.js",
+      "reference_test": "runtime/savings-p0/test/unanswered-message-watchdog.test.js",
+      "reference_demo": "runtime/savings-p0/demo/unanswered-message-watchdog/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-152",
@@ -3305,7 +3353,13 @@
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
-      "savings_required": true
+      "savings_required": true,
+      "implementation_status": "REFERENCE_IMPLEMENTED",
+      "implementation_engine": "zero-deps-node-v1",
+      "implementation_reference": "runtime/savings-p0/src/workflows/renewal-reminder.js",
+      "reference_test": "runtime/savings-p0/test/renewal-reminder.test.js",
+      "reference_demo": "runtime/savings-p0/demo/renewal-reminder/run.js",
+      "reference_certification_boundary": "NOT_FACTORY_CERTIFIED"
     },
     {
       "id": "SWF-173",

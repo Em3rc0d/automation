@@ -1,34 +1,30 @@
 # Document Archive
 
-Status: **DESIGN_READY / NOT IMPLEMENTED / NOT CERTIFIED**
+Status: **DESIGN_READY / REFERENCE_IMPLEMENTED / NOT FACTORY-CERTIFIED**
 
 - Key: `DOCUMENT_ARCHIVE_AUTOMATION@0.1`
 - Domain: `accounts_payable_documents`
 - Runtime: `function`
 - Savings unit: `document`
+- Runtime profile: `zero-deps-node-v1`
 
 ## Human active work reduced
 
 Rename and store the final document automatically.
 
-## Capability composition
+## Reference behavior
 
-- `DOCUMENT_ARCHIVE`
+- accept structured document
+- derive deterministic tenant archive path
+- sanitize path segments
+- store idempotently
+- record archive ProcessRecord and SavingsEvent
 
-## Execution skeleton
+## Executable evidence
 
-```text
-trigger → validate → idempotency → capabilities → optional approval/exception → process record → SavingsEvent → telemetry
-```
+- code: `runtime/savings-p0/src/workflows/document-archive.js`
+- tests: `runtime/savings-p0/test/document-archive.test.js`
+- demo: `runtime/savings-p0/demo/document-archive/run.js --assert`
+- CI: `.github/workflows/savings-p0-validation.yml`
 
-## Before production
-
-- [ ] real baseline measured;
-- [ ] source of truth identified;
-- [ ] adapters/config bound;
-- [ ] schemas specialized;
-- [ ] retries/timeouts/idempotency tested;
-- [ ] duplicate/provider-error/credential-expiry paths tested;
-- [ ] savings counted once per business unit;
-- [ ] HARDENED → TESTED → APPROVED_BASELINE;
-- [ ] tenant acceptance passed.
+This package remains `DESIGN_READY` and `readyForProduction: false` until the runtime is factory-certified and canonical promotion gates are passed.

@@ -15,8 +15,9 @@ manualWorkReduced: "Review stock levels and notify only below configured thresho
 capabilities:
   - "LOW_STOCK_ALERT"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/low-stock-alert.js"
   readyForProduction: false
 certification:
   tested: false

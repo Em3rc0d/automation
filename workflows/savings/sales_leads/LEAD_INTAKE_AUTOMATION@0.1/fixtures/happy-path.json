@@ -1,15 +1,11 @@
 {
   "fixture": "happy-path",
   "workflowKey": "LEAD_INTAKE_AUTOMATION",
-  "input": {
-    "tenantId": "tenant_fixture",
-    "idempotencyKey": "lead_intake_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic lead fixture before TESTED."
-    }
+  "inbound": {
+    "sourceSystem": "web-form",
+    "sourceId": "fixture-1",
+    "name": "Fixture Lead",
+    "email": "fixture@example.test"
   },
   "expected": {
     "status": "completed",

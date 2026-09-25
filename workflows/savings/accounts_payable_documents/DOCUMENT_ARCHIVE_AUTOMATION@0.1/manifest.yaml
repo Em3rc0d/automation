@@ -15,8 +15,9 @@ manualWorkReduced: "Rename and store the final document automatically"
 capabilities:
   - "DOCUMENT_ARCHIVE"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/document-archive.js"
   readyForProduction: false
 certification:
   tested: false

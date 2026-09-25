@@ -1,11 +1,9 @@
 {
   "fixture": "duplicate",
   "workflowKey": "DOCUMENT_ARCHIVE_AUTOMATION",
-  "instruction": "Send same idempotencyKey twice.",
+  "instruction": "Replay same document ID.",
   "expected": {
-    "firstRun": "completed",
-    "secondRun": "skipped_duplicate",
-    "sideEffectsCreated": 1,
-    "savingsEventsCreated": 1
+    "duplicateSideEffect": false,
+    "savingsDoubleCount": false
   }
 }

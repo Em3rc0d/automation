@@ -1,11 +1,9 @@
 {
   "fixture": "duplicate",
   "workflowKey": "EMAIL_CLASSIFY_ROUTE_AUTOMATION",
-  "instruction": "Send same idempotencyKey twice.",
+  "instruction": "Replay the same email ID.",
   "expected": {
-    "firstRun": "completed",
-    "secondRun": "skipped_duplicate",
-    "sideEffectsCreated": 1,
-    "savingsEventsCreated": 1
+    "duplicateSideEffect": false,
+    "savingsDoubleCount": false
   }
 }

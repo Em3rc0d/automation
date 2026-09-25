@@ -1,41 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "LOW_STOCK_ALERT_AUTOMATION input",
+  "title": "LOW_STOCK_ALERT_AUTOMATION invocation",
   "type": "object",
   "required": [
     "tenantId",
-    "idempotencyKey",
-    "occurredAt",
-    "payload"
+    "automationInstanceId"
   ],
   "properties": {
     "tenantId": {
       "type": "string",
       "minLength": 1
     },
-    "idempotencyKey": {
+    "automationInstanceId": {
       "type": "string",
-      "minLength": 8
-    },
-    "occurredAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "sourceSystem": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "sourceId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "payload": {
-      "type": "object",
-      "description": "Workflow-specific SKU payload."
+      "minLength": 1
     }
   },
   "additionalProperties": false

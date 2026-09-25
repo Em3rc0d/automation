@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION tenant configuration",
-  "description": "DESIGN_READY skeleton; specialize before HARDENED.",
   "type": "object",
   "required": [
     "enabled",
@@ -21,22 +20,28 @@
       "type": "string",
       "default": "America/Lima"
     },
-    "maxRetries": {
-      "type": "integer",
+    "slaHours": {
+      "type": "number",
+      "minimum": 0.1,
+      "default": 4
+    },
+    "missingOwnerExceptionMinutes": {
+      "type": "number",
       "minimum": 0,
-      "maximum": 10,
-      "default": 3
+      "default": 2
     },
-    "timeoutSeconds": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 3600,
-      "default": 60
+    "defaultChannel": {
+      "enum": [
+        "email",
+        "whatsapp",
+        "sms"
+      ],
+      "default": "email"
     },
-    "schedule": {
+    "templateKey": {
       "type": "string",
-      "description": "Tenant schedule/cron."
+      "default": "unanswered-message-alert-v1"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

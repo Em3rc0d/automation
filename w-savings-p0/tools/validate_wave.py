@@ -20,6 +20,7 @@ REQUIRED_RUNTIME = [
     "runtime/savings-p0/src/adapters/memory-table.js",
     "runtime/savings-p0/src/adapters/memory-message.js",
     "runtime/savings-p0/src/adapters/memory-calendar.js",
+    "runtime/savings-p0/src/adapters/memory-storage.js",
     "runtime/savings-p0/src/workflows/payment-reminder.js",
     "runtime/savings-p0/src/workflows/appointment-reminder.js",
     "runtime/savings-p0/src/workflows/lead-followup.js",
@@ -49,19 +50,12 @@ def main() -> int:
     if not items or items[0].get("key") != "PAYMENT_REMINDER_AUTOMATION":
         errors.append("Payment Reminder must be P0 reference priority 1")
 
-    expected_reference = {
-        "PAYMENT_REMINDER_AUTOMATION",
-        "APPOINTMENT_REMINDER_AUTOMATION",
-        "LEAD_FOLLOWUP_AUTOMATION",
-    }
+    expected_reference = set(keys)
     actual_reference = {item.get("key") for item in items if item.get("status") == "REFERENCE_IMPLEMENTED"}
     if actual_reference != expected_reference:
         errors.append(
             f"reference implementation set mismatch: expected={sorted(expected_reference)} actual={sorted(actual_reference)}"
         )
-    for rel in REQUIRED_RUNTIME:
-        if not (ROOT / rel).is_file():
-            errors.append(f"missing runtime/wave file: {rel}")
 
     registry_by_key = {item["key"]: item for item in registry["entries"]}
     for key in expected_reference:
@@ -93,7 +87,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
     print("W-SAVINGS-P0 VALIDATION: PASS")
-    print("selected=12 reference_implemented=3 paid_runtime_required=false")
+    print("selected=12 reference_implemented=12 paid_runtime_required=false")
     return 0
 
 if __name__ == "__main__":

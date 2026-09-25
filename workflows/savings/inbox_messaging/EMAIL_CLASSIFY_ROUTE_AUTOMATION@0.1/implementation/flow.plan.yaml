@@ -1,14 +1,13 @@
 schemaVersion: 1
 workflowKey: "EMAIL_CLASSIFY_ROUTE_AUTOMATION"
 runtimeProfile: "function"
-implementationStatus: "NOT_IMPLEMENTED"
+implementationStatus: "REFERENCE_IMPLEMENTED"
+referencePath: "runtime/savings-p0/src/workflows/email-classify-route.js"
 steps:
-  - id: "validate_input"
-    capability: "platform.input.validate"
+  - id: "business_1"
+    capability: "EMAIL_CLASSIFY_ROUTE"
   - id: "idempotency_guard"
     capability: "platform.idempotency.guard"
-  - id: "capability_1"
-    capability: "EMAIL_CLASSIFY_ROUTE"
   - id: "persist_process_record"
     capability: "platform.process_record.upsert"
   - id: "emit_savings_event"

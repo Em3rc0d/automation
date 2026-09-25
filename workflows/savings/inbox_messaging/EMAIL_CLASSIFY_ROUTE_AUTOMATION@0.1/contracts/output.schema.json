@@ -2,58 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "EMAIL_CLASSIFY_ROUTE_AUTOMATION output",
   "type": "object",
-  "required": [
-    "status",
-    "automatedUnits",
-    "exceptionMinutes",
-    "oversightMinutes"
-  ],
   "properties": {
-    "status": {
-      "enum": [
-        "completed",
-        "attention_required",
-        "failed",
-        "skipped_duplicate"
-      ]
+    "category": {
+      "type": "string"
     },
-    "processRecordId": {
-      "type": [
-        "string",
-        "null"
-      ]
+    "queue": {
+      "type": "string"
     },
-    "approvalRequestId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "automatedUnits": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "exceptionMinutes": {
-      "type": "number",
-      "minimum": 0
-    },
-    "oversightMinutes": {
-      "type": "number",
-      "minimum": 0
-    },
-    "variableCost": {
-      "type": "number",
-      "minimum": 0
-    },
-    "savingsUnit": {
-      "const": "email"
-    },
-    "result": {
-      "type": [
-        "object",
-        "null"
-      ]
+    "ruleKey": {
+      "type": "string"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

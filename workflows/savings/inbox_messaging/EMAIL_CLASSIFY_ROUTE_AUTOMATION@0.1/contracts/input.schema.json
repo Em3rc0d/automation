@@ -1,41 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "EMAIL_CLASSIFY_ROUTE_AUTOMATION input",
+  "title": "EMAIL_CLASSIFY_ROUTE_AUTOMATION invocation",
   "type": "object",
   "required": [
     "tenantId",
-    "idempotencyKey",
-    "occurredAt",
-    "payload"
+    "automationInstanceId",
+    "email"
   ],
   "properties": {
     "tenantId": {
       "type": "string",
       "minLength": 1
     },
-    "idempotencyKey": {
+    "automationInstanceId": {
       "type": "string",
-      "minLength": 8
+      "minLength": 1
     },
-    "occurredAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "sourceSystem": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "sourceId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "payload": {
-      "type": "object",
-      "description": "Workflow-specific email payload."
+    "email": {
+      "type": "object"
     }
   },
   "additionalProperties": false

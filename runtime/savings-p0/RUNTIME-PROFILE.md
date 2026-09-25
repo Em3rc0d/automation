@@ -30,3 +30,22 @@ Purpose: prove customer-facing Savings Workflows can execute locally and in CI w
 ## Certification consequence
 
 This profile does not inherit `n8n-base-js-v1` certification. W-SAVINGS-P0 CI is reference evidence only. A future factory seal must explicitly certify this profile before any package is promoted to `APPROVED_BASELINE` on it.
+
+
+## Current reference coverage
+
+`zero-deps-node-v1` now executes all **12/12 W-SAVINGS-P0 reference workflows** across nine business domains using the same kernel.
+
+The reference surface exercises:
+- event/function execution;
+- scheduled polling;
+- persisted durable sequence state;
+- table/message/calendar/storage adapters;
+- bounded retries;
+- provider-side idempotency;
+- ProcessRecord / Incident / SavingsEvent telemetry;
+- missing-data exception accounting;
+- deterministic rule evaluation;
+- variable-cost attribution.
+
+This broader evidence still does not constitute Baseline Factory certification by itself.

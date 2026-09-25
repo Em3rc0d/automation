@@ -13,11 +13,17 @@ Reference-only profile for W-SAVINGS-P0.
 - no npm dependencies;
 - local/CI execution;
 - in-memory adapters/control plane for deterministic evidence;
-- executable references:
-  - `PAYMENT_REMINDER_AUTOMATION`;
-  - `APPOINTMENT_REMINDER_AUTOMATION`;
-  - `LEAD_FOLLOWUP_AUTOMATION`.
+- executable references: all 12 W-SAVINGS-P0 workflows across sales, receivables, appointments, inbox, quotes, documents, inventory, support and retention.
 
 This profile is **not yet Baseline Factory certified**. It exists to prove that Savings Workflows can be productized without making n8n or persistent hosting a per-client prerequisite.
 
 See `runtime/savings-p0/RUNTIME-PROFILE.md`.
+
+
+P0 adapter surface now includes:
+- `MemoryTableAdapter`;
+- `MemoryMessageAdapter`;
+- `MemoryCalendarAdapter`;
+- `MemoryStorageAdapter`.
+
+These are deterministic local/factory reference adapters, not production provider bindings.
