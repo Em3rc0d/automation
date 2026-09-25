@@ -5,7 +5,7 @@ key: "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION"
 version: "0.1"
 name: "Unanswered Message Watchdog"
 domain: "inbox_messaging"
-stage: "DESIGN_READY"
+stage: "HARDENED"
 runtimeProfile: "scheduled"
 executionModel: "SHARED_MULTI_TENANT"
 preRevenueMode: "LOCAL_OR_MOCKED"
@@ -26,3 +26,9 @@ certification:
 savings:
   baselineRequired: true
   unit: "thread"
+
+hardening:
+  runtimeProfile: "zero-deps-node-v1"
+  runtimeCertification: "CERTIFIED"
+  runtimeEvidenceSha: "8475fcd95817098c59cd1088b543e4881bd3fe38"
+  report: "evidence/HARDENING-REPORT.md"
