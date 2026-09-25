@@ -115,6 +115,10 @@ jobs:
           python factory/tools/validate_savings_registry.py | tee -a zero-deps-node-v1-wave.log
           python factory/tools/validate_savings_packages.py | tee -a zero-deps-node-v1-wave.log
 
+      - name: Validate code-first Savings hardening readiness
+        run: |
+          python factory/tools/validate_savings_hardening_readiness.py | tee zero-deps-node-v1-hardening.log
+
       - name: Run complete zero-dependency reference suite
         working-directory: runtime/savings-p0
         run: |
@@ -147,5 +151,6 @@ jobs:
             zero-deps-node-v1-evidence.txt
             zero-deps-node-v1-static.log
             zero-deps-node-v1-wave.log
+            zero-deps-node-v1-hardening.log
             zero-deps-node-v1-runtime.log
             zero-deps-node-v1-smoke.log
