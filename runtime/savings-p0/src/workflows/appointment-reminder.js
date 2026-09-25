@@ -41,7 +41,7 @@ export function evaluateAppointmentReminder(event, { asOf, reminderOffsetsMinute
 
   const sorted = [...reminderOffsetsMinutes].sort((a, b) => b - a);
   const stageMinutes = sorted.find((offset) =>
-    minutesToStart <= offset && minutesToStart > offset - scanWindowMinutes
+    minutesToStart <= offset && minutesToStart >= offset - scanWindowMinutes
   );
 
   return stageMinutes === undefined
