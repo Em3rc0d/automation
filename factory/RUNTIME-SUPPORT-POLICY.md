@@ -71,3 +71,16 @@ The W1/W2 static validators reject Python Code configuration and undeclared/non-
 ## Upgrade rule
 
 Changing the n8n pinned version, changing the managed `$env` boundary, or adding another runtime profile invalidates the relevant F1 runtime evidence and requires re-running the full factory certification gate.
+
+
+## Reference profiles outside F1
+
+The repository may contain executable reference profiles under `runtime/` without changing F1 certification.
+
+Current example:
+
+- `zero-deps-node-v1` under `runtime/savings-p0/`.
+
+Such a profile may have its own CI and deterministic tests, but it remains **NOT FACTORY-CERTIFIED** until a dedicated factory gate proves its runtime, packaging, security and promotion rules.
+
+Reference evidence must not be relabeled as `TESTED` or `APPROVED_BASELINE` merely because unit/integration tests pass.
