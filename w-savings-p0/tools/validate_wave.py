@@ -77,7 +77,7 @@ def main() -> int:
                 errors.append(f"{key} missing executable reference field/file: {field}")
 
     profile = (ROOT / "runtime/savings-p0/RUNTIME-PROFILE.md").read_text(encoding="utf-8") if (ROOT / "runtime/savings-p0/RUNTIME-PROFILE.md").is_file() else ""
-    for token in ["NOT YET FACTORY-CERTIFIED", "no `npm install` required", "no network required"]:
+    for token in ["FACTORY-CERTIFIED RUNTIME PROFILE", "no `npm install` required", "no network required"]:
         if token not in profile:
             errors.append(f"runtime profile missing boundary: {token}")
 
