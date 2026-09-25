@@ -1,0 +1,57 @@
+[
+  {
+    "id": "inv-001",
+    "tenantId": "tenant-demo",
+    "invoiceNumber": "F001-1001",
+    "customerName": "Cliente Uno",
+    "status": "open",
+    "dueDate": "2026-09-24",
+    "amount": 850,
+    "currency": "PEN",
+    "contact": { "channel": "email", "address": "billing+one@example.test" }
+  },
+  {
+    "id": "inv-002",
+    "tenantId": "tenant-demo",
+    "invoiceNumber": "F001-1002",
+    "customerName": "Cliente Dos",
+    "status": "open",
+    "dueDate": "2026-09-17",
+    "amount": 1320,
+    "currency": "PEN",
+    "contact": { "channel": "email", "address": "billing+two@example.test" }
+  },
+  {
+    "id": "inv-003",
+    "tenantId": "tenant-demo",
+    "invoiceNumber": "F001-1003",
+    "customerName": "Cliente Pagado",
+    "status": "paid",
+    "dueDate": "2026-09-24",
+    "amount": 500,
+    "currency": "PEN",
+    "contact": { "channel": "email", "address": "paid@example.test" }
+  },
+  {
+    "id": "inv-004",
+    "tenantId": "tenant-demo",
+    "invoiceNumber": "F001-1004",
+    "customerName": "Cliente Sin Contacto",
+    "status": "open",
+    "dueDate": "2026-09-24",
+    "amount": 420,
+    "currency": "PEN",
+    "contact": { "channel": "email", "address": "" }
+  },
+  {
+    "id": "inv-005",
+    "tenantId": "tenant-demo",
+    "invoiceNumber": "F001-1005",
+    "customerName": "Cliente Futuro",
+    "status": "open",
+    "dueDate": "2026-10-01",
+    "amount": 210,
+    "currency": "PEN",
+    "contact": { "channel": "email", "address": "future@example.test" }
+  }
+]

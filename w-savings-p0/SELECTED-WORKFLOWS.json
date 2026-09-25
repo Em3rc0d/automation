@@ -1,0 +1,19 @@
+{
+  "wave": "W-SAVINGS-P0",
+  "updated": "2026-09-24",
+  "selection_rule": "low fixed cost, broad SMB reuse, measurable repetitive human work, local demo capability",
+  "workflows": [
+    { "key": "PAYMENT_REMINDER_AUTOMATION", "priority": 1, "status": "REFERENCE_IMPLEMENTED", "reason": "deterministic, scheduled, immediate Savings Engine unit, no AI/OCR required" },
+    { "key": "LEAD_INTAKE_AUTOMATION", "priority": 2, "status": "SELECTED", "reason": "high cross-vertical reuse and simple input normalization" },
+    { "key": "LEAD_FOLLOWUP_AUTOMATION", "priority": 3, "status": "SELECTED", "reason": "repetitive follow-up work with measurable message units" },
+    { "key": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION", "priority": 4, "status": "SELECTED", "reason": "scheduled scan with low compute and strong operational value" },
+    { "key": "APPOINTMENT_REMINDER_AUTOMATION", "priority": 5, "status": "SELECTED", "reason": "repetitive scheduling communication; calendar adapter path" },
+    { "key": "QUOTE_FOLLOWUP_AUTOMATION", "priority": 6, "status": "SELECTED", "reason": "scheduled follow-up without document generation dependency" },
+    { "key": "EMAIL_CLASSIFY_ROUTE_AUTOMATION", "priority": 7, "status": "SELECTED", "reason": "broad inbox work reducer; deterministic rules first" },
+    { "key": "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION", "priority": 8, "status": "SELECTED", "reason": "removes repetitive attachment handling without requiring OCR" },
+    { "key": "DOCUMENT_ARCHIVE_AUTOMATION", "priority": 9, "status": "SELECTED", "reason": "cheap deterministic rename/store/index workflow" },
+    { "key": "LOW_STOCK_ALERT_AUTOMATION", "priority": 10, "status": "SELECTED", "reason": "scheduled rule-based scan with table adapter" },
+    { "key": "SUPPORT_INTAKE_AUTOMATION", "priority": 11, "status": "SELECTED", "reason": "normalizes repetitive inbound support registration" },
+    { "key": "RENEWAL_REMINDER_AUTOMATION", "priority": 12, "status": "SELECTED", "reason": "scheduled reminder with simple source data and measurable units" }
+  ]
+}
