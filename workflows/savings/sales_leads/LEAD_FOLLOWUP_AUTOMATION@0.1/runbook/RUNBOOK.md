@@ -1,9 +1,14 @@
 # Runbook — Lead Follow-up
 
-Monitor success/failure, last success, connector health, automated `follow-up`, exceptions, variable cost and incidents.
+Monitor source freshness, number of open leads scanned, due stages, messages sent, missing contacts, do-not-contact exclusions, provider retries, incidents and variable cost.
 
-Common failures: credential expiry, provider outage, malformed/stale source data, replay, config mismatch, tenant mismatch, cost spike.
+Common failures:
+1. lead source connector stale;
+2. message provider unavailable;
+3. missing/invalid contact;
+4. follow-up anchor timestamp missing;
+5. status/consent not synchronized;
+6. stage configuration changed incompatibly;
+7. stage state persisted but outbound result uncertain.
 
-Operator: inspect tenant/workflow/trace → pause unsafe installation → repair dependency/config → replay with original idempotency → verify process and SavingsEvent count → audit customer-visible impact.
-
-Define rollback and reconciliation before APPROVED_BASELINE.
+Operator response: inspect tenant + lead + stage + trace → preserve consent guard → repair connector/config → replay with the same stage idempotency key → verify exactly one outbound action and one counted SavingsEvent.

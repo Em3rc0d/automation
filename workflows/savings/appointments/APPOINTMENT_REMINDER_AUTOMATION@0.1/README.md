@@ -1,6 +1,6 @@
 # Appointment Reminder
 
-Status: **DESIGN_READY / NOT IMPLEMENTED / NOT CERTIFIED**
+Status: **DESIGN_READY / REFERENCE_IMPLEMENTED / NOT FACTORY-CERTIFIED**
 
 - Key: `APPOINTMENT_REMINDER_AUTOMATION@0.1`
 - Domain: `appointments`
@@ -11,24 +11,27 @@ Status: **DESIGN_READY / NOT IMPLEMENTED / NOT CERTIFIED**
 
 Review upcoming appointments and remind attendees.
 
-## Capability composition
+## Reference implementation
 
-- `APPOINTMENT_REMIND`
+- Runtime: `zero-deps-node-v1`
+- Code: `runtime/savings-p0/src/workflows/appointment-reminder.js`
+- Tests: `runtime/savings-p0/test/appointment-reminder.test.js`
+- Demo: `runtime/savings-p0/demo/appointment-reminder/run.js`
+- Adapter reuse: `MemoryCalendarAdapter` + `MemoryMessageAdapter`
 
-## Execution skeleton
+## Behavior
 
 ```text
-trigger → validate → idempotency → capabilities → optional approval/exception → process record → SavingsEvent → telemetry
+calendar events
+→ tenant/time-window scan
+→ skip cancelled/completed
+→ match reminder stage
+→ one unit per attendee reminder
+→ missing contact => attention + exception minutes
+→ idempotent send
+→ ProcessRecord + SavingsEvent + ExecutionEvent
 ```
 
-## Before production
+A repeated scheduler run at the same reminder stage does not resend or double-count savings.
 
-- [ ] real baseline measured;
-- [ ] source of truth identified;
-- [ ] adapters/config bound;
-- [ ] schemas specialized;
-- [ ] retries/timeouts/idempotency tested;
-- [ ] duplicate/provider-error/credential-expiry paths tested;
-- [ ] savings counted once per business unit;
-- [ ] HARDENED → TESTED → APPROVED_BASELINE;
-- [ ] tenant acceptance passed.
+Reference evidence does not promote this package to canonical TESTED or APPROVED_BASELINE.

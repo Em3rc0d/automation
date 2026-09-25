@@ -1,14 +1,6 @@
 {
   "fixture": "provider-error",
   "workflowKey": "LEAD_FOLLOWUP_AUTOMATION",
-  "simulate": {
-    "providerResponse": 503,
-    "transient": true
-  },
-  "expected": {
-    "retryPolicyApplied": true,
-    "duplicateSideEffect": false,
-    "incidentCreatedAfterExhaustion": true,
-    "savingsEventOnFailure": false
-  }
+  "simulate": { "providerResponse": 503, "transientFailuresBeforeSuccess": 1 },
+  "expected": { "providerAttempts": 2, "messagesSent": 1, "stagePersisted": true }
 }

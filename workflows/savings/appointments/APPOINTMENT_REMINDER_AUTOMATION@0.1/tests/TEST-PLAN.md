@@ -1,7 +1,17 @@
 # Test Plan — Appointment Reminder
 
-Status: **SKELETON / NO TEST EVIDENCE YET**
+Status: **REFERENCE TESTS IMPLEMENTED / CANONICAL TESTED GATE NOT CLAIMED**
 
-Required: happy path; malformed input; duplicate; transient/permanent provider failure; credential expiry; tenant isolation; retry/timeout; variable cost capture; SavingsEvent exactly once; exception/oversight minutes; rollback/replay without double counting.
+Reference tests: `runtime/savings-p0/test/appointment-reminder.test.js`.
 
-Runtime-specific profile: `scheduled`. Savings unit: `reminder`.
+Covered:
+- configured reminder windows;
+- cancelled appointment exclusion;
+- one reminder per attendee;
+- missing-contact exception minutes;
+- duplicate scheduler replay;
+- transient provider retry;
+- ProcessRecord and SavingsEvent generation;
+- variable provider cost attribution.
+
+Canonical TESTED/APPROVED promotion still requires factory certification of `zero-deps-node-v1`.

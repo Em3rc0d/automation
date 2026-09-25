@@ -1,11 +1,7 @@
 {
   "fixture": "duplicate",
   "workflowKey": "APPOINTMENT_REMINDER_AUTOMATION",
-  "instruction": "Send same idempotencyKey twice.",
-  "expected": {
-    "firstRun": "completed",
-    "secondRun": "skipped_duplicate",
-    "sideEffectsCreated": 1,
-    "savingsEventsCreated": 1
-  }
+  "executionIdempotencyKey": "appointment-reminder:appt-fixture-001:attendee-001:stage:120",
+  "sideEffectIdempotencyKey": "tenant_fixture:appointment-reminder:appt-fixture-001:attendee-001:stage:120",
+  "expected": { "messagesSent": 1, "savingsEventsCreated": 1 }
 }

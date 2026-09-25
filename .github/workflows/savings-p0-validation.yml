@@ -28,9 +28,6 @@ jobs:
         run: python factory/tools/validate_savings_registry.py
       - name: Validate materialized Savings Workflow packages
         run: python factory/tools/validate_savings_packages.py
-      - name: Run zero-dependency Node tests
+      - name: Run zero-dependency tests and all reference demos
         working-directory: runtime/savings-p0
-        run: node --test test/*.test.js
-      - name: Prove Payment Reminder demo
-        working-directory: runtime/savings-p0
-        run: node demo/payment-reminder/run.js --assert
+        run: npm run validate

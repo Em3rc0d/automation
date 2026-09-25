@@ -296,8 +296,10 @@ Define rollback and reconciliation before APPROVED_BASELINE.
 """
 
 
-def materialize(x: dict, out_root: Path, force: bool) -> Path:
+def materialize(x: dict, out_root: Path, force: bool, replace_reference: bool) -> Path | None:
     package = out_root / x["domain"] / f"{x['key']}@{x['version']}"
+    if package.exists() and x.get("implementation_status") == "REFERENCE_IMPLEMENTED" and not replace_reference:
+        return None
     if package.exists() and not force:
         raise FileExistsError(f"refusing to overwrite existing package: {package}")
     package.mkdir(parents=True, exist_ok=True)
@@ -330,6 +332,11 @@ def main() -> int:
     scope.add_argument("--all", action="store_true")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--replace-reference",
+        action="store_true",
+        help="Dangerous: allow generic scaffold regeneration to overwrite REFERENCE_IMPLEMENTED packages.",
+    )
     args = parser.parse_args()
 
     items = load_registry()
@@ -337,11 +344,21 @@ def main() -> int:
     if not selected:
         raise SystemExit(f"unknown Savings Workflow key: {args.key}")
 
+    materialized = 0
+    preserved = 0
     for item in selected:
-        path = materialize(item, args.out, args.force)
+        path = materialize(item, args.out, args.force, args.replace_reference)
+        if path is None:
+            preserved += 1
+            print(f"preserved_reference={item['key']}")
+            continue
+        materialized += 1
         print(path.relative_to(ROOT) if path.is_relative_to(ROOT) else path)
 
-    print(f"materialized={len(selected)} stage=DESIGN_READY production_ready=false")
+    print(
+        f"materialized={materialized} preserved_reference={preserved} "
+        "stage=DESIGN_READY production_ready=false"
+    )
     return 0
 
 

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "appt-001",
+    "tenantId": "tenant-demo",
+    "title": "Mantenimiento preventivo",
+    "status": "confirmed",
+    "startsAt": "2026-09-25T12:00:00Z",
+    "location": "Taller Demo",
+    "attendees": [
+      { "id": "cust-001", "name": "Cliente Uno", "contact": { "channel": "email", "address": "appt+one@example.test" } }
+    ]
+  },
+  {
+    "id": "appt-002",
+    "tenantId": "tenant-demo",
+    "title": "Asesoría",
+    "status": "scheduled",
+    "startsAt": "2026-09-24T14:00:00Z",
+    "attendees": [
+      { "id": "cust-002", "name": "Cliente Dos", "contact": { "channel": "email", "address": "appt+two@example.test" } }
+    ]
+  },
+  {
+    "id": "appt-003",
+    "tenantId": "tenant-demo",
+    "title": "Revisión",
+    "status": "scheduled",
+    "startsAt": "2026-09-24T14:00:00Z",
+    "attendees": [
+      { "id": "cust-003", "name": "Cliente Sin Contacto", "contact": { "channel": "email", "address": "" } }
+    ]
+  },
+  {
+    "id": "appt-004",
+    "tenantId": "tenant-demo",
+    "title": "Cancelada",
+    "status": "cancelled",
+    "startsAt": "2026-09-24T14:00:00Z",
+    "attendees": [
+      { "id": "cust-004", "name": "Cliente Cuatro", "contact": { "channel": "email", "address": "cancelled@example.test" } }
+    ]
+  }
+]

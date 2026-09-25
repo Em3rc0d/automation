@@ -1,42 +1,29 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "APPOINTMENT_REMINDER_AUTOMATION tenant configuration",
-  "description": "DESIGN_READY skeleton; specialize before HARDENED.",
   "type": "object",
-  "required": [
-    "enabled",
-    "dryRun",
-    "businessTimezone"
-  ],
+  "required": ["enabled", "dryRun", "businessTimezone", "reminderOffsetsMinutes", "scanWindowMinutes"],
   "properties": {
-    "enabled": {
-      "type": "boolean",
-      "default": true
+    "enabled": { "type": "boolean", "default": true },
+    "dryRun": { "type": "boolean", "default": true },
+    "businessTimezone": { "type": "string", "default": "America/Lima" },
+    "schedule": { "type": "string", "default": "*/30 * * * *" },
+    "reminderOffsetsMinutes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 1, "maximum": 10080 },
+      "default": [1440, 120]
     },
-    "dryRun": {
-      "type": "boolean",
-      "default": true
-    },
-    "businessTimezone": {
-      "type": "string",
-      "default": "America/Lima"
-    },
-    "maxRetries": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 10,
-      "default": 3
-    },
-    "timeoutSeconds": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 3600,
-      "default": 60
-    },
-    "schedule": {
-      "type": "string",
-      "description": "Tenant schedule/cron."
+    "scanWindowMinutes": { "type": "integer", "minimum": 1, "maximum": 1440, "default": 30 },
+    "missingContactExceptionMinutes": { "type": "number", "minimum": 0, "maximum": 120, "default": 2 },
+    "defaultChannel": { "enum": ["email", "whatsapp", "sms"], "default": "email" },
+    "templateKey": { "type": "string", "minLength": 1, "default": "appointment-reminder-v1" },
+    "maxRetries": { "type": "integer", "minimum": 0, "maximum": 10, "default": 3 },
+    "providerCostPolicy": {
+      "enum": ["CLIENT_OWNED_OR_METERED", "INCLUDED_WITH_QUOTA", "EXPLICIT_EXCEPTION"],
+      "default": "CLIENT_OWNED_OR_METERED"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }
