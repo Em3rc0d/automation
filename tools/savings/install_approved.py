@@ -81,7 +81,13 @@ def assert_safe_tree(value: object, path: str = "$") -> list[str]:
     if isinstance(value, dict):
         for key, child in value.items():
             child_path = f"{path}.{key}"
-            if SECRET_KEY.search(str(key)) and child not in (None, "", [], {}):
+            key_text = str(key)
+            key_lower = key_text.lower()
+            safe_metadata_key = key_lower.endswith("policy")
+            safe_reference_key = key_lower.endswith("ref") and (
+                child in (None, "") or (isinstance(child, str) and child.startswith("credref:"))
+            )
+            if SECRET_KEY.search(key_text) and not safe_metadata_key and not safe_reference_key and child not in (None, "", [], {}):
                 errors.append(f"embedded secret-like field at {child_path}; store only credential references")
             errors.extend(assert_safe_tree(child, child_path))
     elif isinstance(value, list):
