@@ -5,7 +5,7 @@ key: "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION"
 version: "0.1"
 name: "Email Attachment Extraction"
 domain: "inbox_messaging"
-stage: "DESIGN_READY"
+stage: "HARDENED"
 runtimeProfile: "function"
 executionModel: "SHARED_MULTI_TENANT"
 preRevenueMode: "LOCAL_OR_MOCKED"
@@ -26,3 +26,9 @@ certification:
 savings:
   baselineRequired: true
   unit: "attachment"
+
+hardening:
+  runtimeProfile: "zero-deps-node-v1"
+  runtimeCertification: "CERTIFIED"
+  runtimeEvidenceSha: "8475fcd95817098c59cd1088b543e4881bd3fe38"
+  report: "evidence/HARDENING-REPORT.md"
