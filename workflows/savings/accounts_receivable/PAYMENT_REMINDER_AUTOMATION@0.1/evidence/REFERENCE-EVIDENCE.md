@@ -10,9 +10,14 @@ Reference runtime: `zero-deps-node-v1`.
 - workflow: `runtime/savings-p0/src/workflows/payment-reminder.js`
 - table adapter: `runtime/savings-p0/src/adapters/memory-table.js`
 - message adapter: `runtime/savings-p0/src/adapters/memory-message.js`
-- tests: `runtime/savings-p0/test/*.test.js`
+- tests: `runtime/savings-p0/test/payment-reminder.test.js`
+- shared runtime tests: `runtime/savings-p0/test/runtime.test.js`, `runtime/savings-p0/test/retry.test.js`
 - deterministic demo: `runtime/savings-p0/demo/payment-reminder/run.js --assert`
 - CI: `.github/workflows/savings-p0-validation.yml`
+
+## Current suite note
+
+The original package note recorded 13/13 tests when Payment Reminder was first authored. The shared W-SAVINGS-P0 suite has since expanded; canonical test counts come from the exact CI evidence SHA used for TESTED promotion, not from this historical reference note.
 
 ## Authoring verification
 
