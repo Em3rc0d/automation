@@ -86,6 +86,7 @@ REQUIRED_PATHS = [
     "factory/runtime-profiles/zero-deps-node-v1/smoke.js",
     "factory/SAVINGS-PACKAGE-CONTRACT.md",
     "factory/tools/validate_savings_hardening_readiness.py",
+    "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
 ]
 
 QUARRY_STAGE_DIRS = [
