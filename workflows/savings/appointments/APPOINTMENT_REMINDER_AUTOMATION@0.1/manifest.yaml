@@ -5,7 +5,7 @@ key: "APPOINTMENT_REMINDER_AUTOMATION"
 version: "0.1"
 name: "Appointment Reminder"
 domain: "appointments"
-stage: "TESTED"
+stage: "APPROVED_BASELINE"
 runtimeProfile: "scheduled"
 executionModel: "SHARED_MULTI_TENANT"
 preRevenueMode: "LOCAL_OR_MOCKED"
@@ -21,7 +21,7 @@ implementation:
   readyForProduction: false
 certification:
   tested: false
-  approvedBaseline: false
+  approvedBaseline: true
   clientAccepted: false
 savings:
   baselineRequired: true
@@ -46,3 +46,13 @@ testing:
   passCount: 44
   failCount: 0
   report: "evidence/TEST-REPORT.md"
+
+approval:
+  decision: "APPROVED_BASELINE"
+  mechanism: "repository_pull_request_merge_to_main"
+  testedSourceCommit: "f7dc2478855ac06dd9aaabbbae4e8a3657365802"
+  testEvidenceSha: "c4488c852261d09f54561a623f4f96296280e096"
+  testRunId: 36089328606
+  testJobId: 107928100134
+  baselineRecord: "workflows/approved/savings/appointments/APPOINTMENT_REMINDER_AUTOMATION@0.1/APPROVED.json"
+  promotionEvidence: "workflows/approved/savings/appointments/APPOINTMENT_REMINDER_AUTOMATION@0.1/PROMOTION.md"
