@@ -2,14 +2,16 @@
 
 Updated: 2026-09-24
 
-Reference library complete: **12/12 executable references on a FACTORY-CERTIFIED runtime; canonical workflow promotion is next.**
+Reference library complete and canonical hardening started: **12/12 executable references on a FACTORY-CERTIFIED runtime; 12/12 now HARDENED.**
 
 ```text
 Selected workflows          12/12
 Reference runtime kit        DONE
 Local adapter primitives     4/4
 Reference implementations   12/12
-Canonical APPROVED_BASELINE  0/12
+Canonical HARDENED          12/12
+Canonical TESTED             0/12
+Canonical APPROVED_BASELINE   0/12
 Paid infrastructure required NO
 ```
 
@@ -42,3 +44,14 @@ Shared evidence:
 ## Important boundary
 
 `zero-deps-node-v1` is now independently FACTORY-CERTIFIED. This still does not silently promote any workflow to HARDENED, TESTED or APPROVED_BASELINE; those are separate per-workflow gates.
+
+
+## Canonical hardening
+
+All 12 selected workflows now carry:
+- registry stage `HARDENED`;
+- manifest stage `HARDENED`;
+- `evidence/HARDENING-REPORT.md`;
+- certified runtime evidence binding to `zero-deps-node-v1` SHA `8475fcd95817098c59cd1088b543e4881bd3fe38`.
+
+This is the first canonical business-workflow lifecycle promotion. Next is exact-SHA TESTED evidence; no workflow is APPROVED_BASELINE yet.
