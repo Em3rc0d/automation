@@ -82,6 +82,7 @@ REQUIRED_PATHS = [
     "factory/tools/validate_savings_packages.py",
     "factory/tools/validate_savings_hardened.py",
     "factory/tools/validate_savings_tested.py",
+    "factory/tools/validate_savings_approved.py",
     "factory/runtime-profiles/zero-deps-node-v1/profile.json",
     "factory/runtime-profiles/zero-deps-node-v1/README.md",
     "factory/runtime-profiles/zero-deps-node-v1/validate_profile.py",
@@ -259,6 +260,18 @@ def validate() -> list[str]:
                 fail(errors, "W-SAVINGS-P0 structural validation failed")
         except Exception as exc:
             fail(errors, f"W-SAVINGS-P0 validator failed: {exc}")
+
+    savings_approved_validator = ROOT / "factory/tools/validate_savings_approved.py"
+    if savings_approved_validator.is_file():
+        try:
+            ns = runpy.run_path(str(savings_approved_validator))
+            approved_main = ns.get("main")
+            if not callable(approved_main):
+                fail(errors, "savings APPROVED_BASELINE validator missing main()")
+            elif approved_main() != 0:
+                fail(errors, "savings APPROVED_BASELINE validation failed")
+        except Exception as exc:
+            fail(errors, f"savings APPROVED_BASELINE validator failed: {exc}")
 
     savings_tested_validator = ROOT / "factory/tools/validate_savings_tested.py"
     if savings_tested_validator.is_file():
