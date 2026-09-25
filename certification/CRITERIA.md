@@ -27,7 +27,9 @@ Required:
 - no critical documentation gate marked OPEN.
 
 ### W1 — BASELINE_LIBRARY_CERTIFIED
-Requires K0 plus at least one reusable workflow package that has passed the full quarry and contains:
+Requires K0 plus at least one reusable workflow package that has passed the applicable certified-runtime package contract.
+
+For `n8n-base-js-v1`, the existing quarry contract remains:
 
 ```text
 workflow.json
@@ -38,7 +40,9 @@ fixtures/
 evidence/TEST-REPORT.md
 ```
 
-and machine/human evidence for idempotency, provider failures, tenant isolation, secret redaction and side-effect safety.
+For separately certified code-first Savings Workflow runtimes, the implementation package follows `factory/SAVINGS-PACKAGE-CONTRACT.md` and **must not** fabricate `workflow.json`. It must contain specialized configuration/I/O contracts, fixtures, implementation reference, runbook, SavingsBaseline and `evidence/TEST-REPORT.md`.
+
+Both paths require machine/human evidence for idempotency, provider failures, tenant isolation, secret redaction and side-effect safety.
 
 ### P1 — PILOT_PRODUCT_CERTIFIED
 Requires W1 plus MK1 DoD with a production-like pilot: tenant/auth/RLS, real connector, two active automation instances, execution telemetry, incidents, ProcessRecord portal, Savings Engine, restore/rollback and incident drill.
