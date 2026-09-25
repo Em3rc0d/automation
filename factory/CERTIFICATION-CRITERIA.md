@@ -46,6 +46,7 @@ Adding `zero-deps-node-v1` requires the full existing F1 gate **plus** the follo
 [ ] W-SAVINGS-P0 reports 12/12 REFERENCE_IMPLEMENTED
 [ ] every selected registry implementation reference/test/demo exists
 [ ] Savings package validator PASS
+[ ] code-first Savings package contract readiness PASS
 [ ] complete Node test suite PASS
 [ ] all 12 deterministic demos PASS
 [ ] runtime import smoke PASS
@@ -67,7 +68,7 @@ Licensing, provenance interpretation, security review and approval remain human-
 A failed gate never deletes the candidate. Failure evidence goes to `no-pass-verified` and can later re-enter after remediation.
 
 ### Hardening
-For `n8n-base-js-v1`, HARDENED packages require executable workflow JSON, manifest, config schema, fixtures, docs, test plan, stable unique n8n workflow/node IDs and explicit runtime profile. A separately certified code-first profile may use its own runtime-specific implementation package contract, but that contract must be explicitly validated before any package is called HARDENED.
+For `n8n-base-js-v1`, HARDENED packages require executable workflow JSON, manifest, config schema, fixtures, docs, test plan, stable unique n8n workflow/node IDs and explicit runtime profile. Code-first Savings Workflows follow `factory/SAVINGS-PACKAGE-CONTRACT.md`; their implementation may be referenced from a shared runtime package and they must never fabricate an n8n `workflow.json`. The runtime-specific contract must pass its readiness validator before any package is called HARDENED.
 
 ### Runtime profile
 F1 certifies only the scope in `factory/RUNTIME-SUPPORT-POLICY.md`. The initial profile is `n8n-base-js-v1` on n8n `2.38.7`. Python Code execution, arbitrary community nodes and undeclared external binaries are blocked until separately profiled and certified.
