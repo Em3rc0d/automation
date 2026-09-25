@@ -13,7 +13,10 @@ Reference-only profile for W-SAVINGS-P0.
 - no npm dependencies;
 - local/CI execution;
 - in-memory adapters/control plane for deterministic evidence;
-- first executable workflow: `PAYMENT_REMINDER_AUTOMATION`.
+- executable references:
+  - `PAYMENT_REMINDER_AUTOMATION`;
+  - `APPOINTMENT_REMINDER_AUTOMATION`;
+  - `LEAD_FOLLOWUP_AUTOMATION`.
 
 This profile is **not yet Baseline Factory certified**. It exists to prove that Savings Workflows can be productized without making n8n or persistent hosting a per-client prerequisite.
 
