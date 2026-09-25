@@ -59,6 +59,24 @@ def main() -> int:
         if not item["savings_required"]:
             errors.append(f"savings_required must be true: {item['key']}")
 
+        implementation_status = item.get("implementation_status", "NOT_IMPLEMENTED")
+        implementation_reference = item.get("implementation_reference")
+        if implementation_status == "REFERENCE_IMPLEMENTED":
+            if not implementation_reference:
+                errors.append(f"REFERENCE_IMPLEMENTED missing implementation_reference: {item['key']}")
+            elif not (ROOT / implementation_reference).is_file():
+                errors.append(f"implementation_reference does not exist for {item['key']}: {implementation_reference}")
+            for field in ["reference_test", "reference_demo"]:
+                rel = item.get(field)
+                if not rel:
+                    errors.append(f"REFERENCE_IMPLEMENTED missing {field}: {item['key']}")
+                elif not (ROOT / rel).is_file():
+                    errors.append(f"{field} does not exist for {item['key']}: {rel}")
+            if item.get("reference_certification_boundary") != "NOT_FACTORY_CERTIFIED":
+                errors.append(f"reference implementation must declare NOT_FACTORY_CERTIFIED boundary: {item['key']}")
+        elif implementation_reference:
+            errors.append(f"implementation_reference requires REFERENCE_IMPLEMENTED status: {item['key']}")
+
     if len(entries) < 100:
         errors.append("catalog unexpectedly small; expected broad solution-level registry")
 
