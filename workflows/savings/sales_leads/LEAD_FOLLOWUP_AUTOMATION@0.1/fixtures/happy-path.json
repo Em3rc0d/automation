@@ -1,19 +1,20 @@
 {
   "fixture": "happy-path",
   "workflowKey": "LEAD_FOLLOWUP_AUTOMATION",
-  "input": {
+  "asOf": "2026-09-24T12:00:00Z",
+  "lead": {
+    "id": "lead-fixture-001",
     "tenantId": "tenant_fixture",
-    "idempotencyKey": "lead_followup_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic follow-up fixture before TESTED."
-    }
+    "name": "Fixture Lead",
+    "status": "open",
+    "createdAt": "2026-09-22T10:00:00Z",
+    "contact": { "channel": "email", "address": "fixture@example.test" }
   },
-  "expected": {
-    "status": "completed",
-    "automatedUnits": 1,
-    "savingsUnit": "follow-up"
-  }
+  "config": {
+    "stages": [
+      { "key": "h24", "delayHours": 24, "templateKey": "lead-followup-24h-v1" }
+    ],
+    "minSpacingHours": 12
+  },
+  "expected": { "stage": "h24", "messagesSent": 1, "persistedCompletedStages": ["h24"] }
 }

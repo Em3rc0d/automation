@@ -2,57 +2,22 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "LEAD_FOLLOWUP_AUTOMATION output",
   "type": "object",
-  "required": [
-    "status",
-    "automatedUnits",
-    "exceptionMinutes",
-    "oversightMinutes"
-  ],
+  "required": ["scannedLeads", "eligible", "executions"],
   "properties": {
-    "status": {
-      "enum": [
-        "completed",
-        "attention_required",
-        "failed",
-        "skipped_duplicate"
-      ]
-    },
-    "processRecordId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "approvalRequestId": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "automatedUnits": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "exceptionMinutes": {
-      "type": "number",
-      "minimum": 0
-    },
-    "oversightMinutes": {
-      "type": "number",
-      "minimum": 0
-    },
-    "variableCost": {
-      "type": "number",
-      "minimum": 0
-    },
-    "savingsUnit": {
-      "const": "follow-up"
-    },
-    "result": {
-      "type": [
-        "object",
-        "null"
-      ]
+    "scannedLeads": { "type": "integer", "minimum": 0 },
+    "eligible": { "type": "integer", "minimum": 0 },
+    "executions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["leadId", "stage", "status"],
+        "properties": {
+          "leadId": { "type": "string" },
+          "stage": { "type": "string" },
+          "status": { "enum": ["completed", "attention_required", "failed", "skipped_duplicate"] }
+        },
+        "additionalProperties": true
+      }
     }
   },
   "additionalProperties": false

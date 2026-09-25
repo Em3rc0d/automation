@@ -1,9 +1,14 @@
 # Runbook — Appointment Reminder
 
-Monitor success/failure, last success, connector health, automated `reminder`, exceptions, variable cost and incidents.
+Monitor calendar connector health, scheduler freshness, events scanned, reminders eligible/sent, missing contacts, message-provider retries, incidents and variable cost.
 
-Common failures: credential expiry, provider outage, malformed/stale source data, replay, config mismatch, tenant mismatch, cost spike.
+Common failures:
+1. calendar credential expired;
+2. message credential expired;
+3. cancelled event not synchronized;
+4. attendee has no reachable contact;
+5. scheduler delayed beyond scan window;
+6. duplicate provider callback/run;
+7. timezone/configuration mismatch.
 
-Operator: inspect tenant/workflow/trace → pause unsafe installation → repair dependency/config → replay with original idempotency → verify process and SavingsEvent count → audit customer-visible impact.
-
-Define rollback and reconciliation before APPROVED_BASELINE.
+Operator response: inspect tenant + trace → verify event state/timezone → repair connector/config → replay with original idempotency semantics → verify exactly one reminder/SavingsEvent per attendee stage.

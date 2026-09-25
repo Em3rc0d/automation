@@ -1,7 +1,17 @@
 # Test Plan — Lead Follow-up
 
-Status: **SKELETON / NO TEST EVIDENCE YET**
+Status: **REFERENCE TESTS IMPLEMENTED / CANONICAL TESTED GATE NOT CLAIMED**
 
-Required: happy path; malformed input; duplicate; transient/permanent provider failure; credential expiry; tenant isolation; retry/timeout; variable cost capture; SavingsEvent exactly once; exception/oversight minutes; rollback/replay without double counting.
+Reference tests: `runtime/savings-p0/test/lead-followup.test.js`.
 
-Runtime-specific profile: `durable`. Savings unit: `follow-up`.
+Covered:
+- earliest due incomplete stage;
+- won/closed/do-not-contact guard;
+- minimum spacing between stages;
+- persistent completed-stage state;
+- missing-contact exception accounting;
+- transient provider retry;
+- idempotent side effect;
+- ProcessRecord/SavingsEvent output.
+
+Canonical promotion still requires factory certification of `zero-deps-node-v1`.

@@ -15,8 +15,9 @@ manualWorkReduced: "Review upcoming appointments and remind attendees"
 capabilities:
   - "APPOINTMENT_REMIND"
 implementation:
-  status: "NOT_IMPLEMENTED"
-  engine: "UNBOUND"
+  status: "REFERENCE_IMPLEMENTED"
+  engine: "zero-deps-node-v1"
+  reference: "runtime/savings-p0/src/workflows/appointment-reminder.js"
   readyForProduction: false
 certification:
   tested: false

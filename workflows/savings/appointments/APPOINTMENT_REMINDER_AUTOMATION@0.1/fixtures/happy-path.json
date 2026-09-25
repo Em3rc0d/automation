@@ -1,19 +1,21 @@
 {
   "fixture": "happy-path",
   "workflowKey": "APPOINTMENT_REMINDER_AUTOMATION",
-  "input": {
+  "asOf": "2026-09-24T12:00:00Z",
+  "event": {
+    "id": "appt-fixture-001",
     "tenantId": "tenant_fixture",
-    "idempotencyKey": "appointment_reminder_automation:fixture:001",
-    "occurredAt": "2026-09-24T12:00:00Z",
-    "sourceSystem": "fixture",
-    "sourceId": "source-001",
-    "payload": {
-      "note": "Replace with realistic reminder fixture before TESTED."
-    }
+    "title": "Fixture Appointment",
+    "status": "confirmed",
+    "startsAt": "2026-09-24T14:00:00Z",
+    "attendees": [
+      {
+        "id": "attendee-001",
+        "name": "Fixture Customer",
+        "contact": { "channel": "email", "address": "fixture@example.test" }
+      }
+    ]
   },
-  "expected": {
-    "status": "completed",
-    "automatedUnits": 1,
-    "savingsUnit": "reminder"
-  }
+  "config": { "reminderOffsetsMinutes": [120], "scanWindowMinutes": 30 },
+  "expected": { "eligible": 1, "messagesSent": 1, "automatedUnits": 1 }
 }
