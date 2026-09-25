@@ -68,9 +68,9 @@ runtime:
 
 The W1/W2 static validators reject Python Code configuration and undeclared/non-base node packages under this profile.
 
-## Certification candidate — `zero-deps-node-v1`
+## Certified code-first profile — `zero-deps-node-v1`
 
-The repository is currently re-running the full factory gate to add a second explicit runtime profile:
+The Baseline Factory certifies a second explicit runtime profile:
 
 - engine: Node.js
 - pinned test version: `20.19.5`
@@ -89,7 +89,15 @@ Authority files:
 - `factory/runtime-profiles/zero-deps-node-v1/validate_profile.py`
 - `factory/runtime-profiles/zero-deps-node-v1/smoke.js`
 
-Until the same exact push SHA passes the expanded `Baseline Factory Validation` and a certificate is committed, this profile remains **CANDIDATE / NOT FACTORY-CERTIFIED**.
+Certification evidence:
+- exact main SHA: `8475fcd95817098c59cd1088b543e4881bd3fe38`;
+- Baseline Factory Validation: `36087356818`;
+- profile job: `107922514846` — SUCCESS;
+- 44/44 Node tests passed;
+- code-first hardening-readiness: PASS;
+- certificate: `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`.
+
+The profile is **FACTORY-CERTIFIED** within the declared boundary.
 
 ## Upgrade rule
 
