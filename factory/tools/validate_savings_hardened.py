@@ -28,8 +28,8 @@ def main() -> int:
     for chosen in selected:
         key = chosen["key"]
         item = by_key[key]
-        if item.get("stage") != "HARDENED":
-            errors.append(f"{key} stage must be HARDENED")
+        if item.get("stage") not in {"HARDENED", "TESTED", "APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}:
+            errors.append(f"{key} must be at least HARDENED")
             continue
 
         hardening = item.get("hardening") or {}
@@ -51,7 +51,7 @@ def main() -> int:
                 errors.append(f"{key} hardening report missing {token!r}")
 
         manifest = (package / "manifest.yaml").read_text(encoding="utf-8")
-        for token in ['stage: "HARDENED"', 'runtimeCertification: "CERTIFIED"', f'runtimeEvidenceSha: "{RUNTIME_SHA}"']:
+        for token in [f'stage: "{item["stage"]}"', 'runtimeCertification: "CERTIFIED"', f'runtimeEvidenceSha: "{RUNTIME_SHA}"']:
             if token not in manifest:
                 errors.append(f"{key} manifest missing hardened token {token!r}")
 
@@ -62,7 +62,7 @@ def main() -> int:
         return 1
 
     print("SAVINGS HARDENED VALIDATION: PASS")
-    print("workflows=12 stage=HARDENED runtime=zero-deps-node-v1")
+    print("workflows=12 minimum_stage=HARDENED runtime=zero-deps-node-v1")
     print("next=exact-SHA workflow test evidence")
     return 0
 
