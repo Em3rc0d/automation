@@ -56,6 +56,8 @@ python factory/tools/scaffold_savings_workflows.py \
 python factory/tools/scaffold_savings_workflows.py --all --force
 ```
 
+`REFERENCE_IMPLEMENTED` packages are preserved by default even with `--force`. This prevents generic regeneration from destroying specialized contracts/evidence. Overwriting one of those packages requires the explicit dangerous flag `--replace-reference`.
+
 ## Why commit the skeletons now?
 
 The product has moved from a small template list to a broad **Savings Workflow design library**. Keeping the skeletons in Git gives each workflow a visible place for:
