@@ -62,7 +62,7 @@ def main() -> int:
                 f'savingsUnit: "{item["savings_unit"]}"',
                 f'status: "{item.get("implementation_status", "NOT_IMPLEMENTED")}"',
                 "readyForProduction: false",
-                "approvedBaseline: false",
+                ("approvedBaseline: true" if item["stage"] in {"APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"} else "approvedBaseline: false"),
             ]
             for token in required_tokens:
                 if token not in text:
@@ -116,7 +116,17 @@ def main() -> int:
                     errors.append(f"{item['key']} baseline missing metric {token}")
 
         if (package / "workflow.json").exists():
-            errors.append(f"{item['key']} DESIGN_READY package must not contain fake workflow.json")
+            errors.append(f"{item['key']} code-first package must not contain fake workflow.json")
+
+        if item["stage"] in {"HARDENED", "TESTED", "APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}:
+            hardening_report = package / "evidence/HARDENING-REPORT.md"
+            if not hardening_report.is_file():
+                errors.append(f"{item['key']} {item['stage']} package missing evidence/HARDENING-REPORT.md")
+
+        if item["stage"] in {"TESTED", "APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}:
+            test_report = package / "evidence/TEST-REPORT.md"
+            if not test_report.is_file():
+                errors.append(f"{item['key']} {item['stage']} package missing evidence/TEST-REPORT.md")
 
     actual_paths: set[Path] = set()
     if LIBRARY.exists():
@@ -159,7 +169,7 @@ def main() -> int:
     print("SAVINGS PACKAGE VALIDATION: PASS")
     print(f"registry_entries={len(entries)} materialized_packages={len(actual_paths)}")
     print(f"package_contract_files={len(REQUIRED_FILES)} domains={len(domains)}")
-    print("scope=DESIGN_READY skeleton structure only; no runtime certification claim")
+    print("scope=lifecycle-aware materialized package structure")
     return 0
 
 

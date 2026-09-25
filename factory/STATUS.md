@@ -33,7 +33,9 @@ Reference workflows          12/12 executable
 Runtime dependencies          0
 Paid test infrastructure      0
 Factory profile certificate   CERTIFIED
-Canonical workflow approval   0/12
+Canonical workflow HARDENED   12/12
+Canonical workflow TESTED      0/12
+Canonical workflow approval    0/12
 ```
 
 The original `n8n-base-js-v1` F1 certificate remains historical evidence for its original scope. The factory's certified scope now also includes `zero-deps-node-v1` under `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`.
@@ -107,3 +109,16 @@ APPROVED_BASELINE         0
 ```
 
 Individual component certification resumes only after this factory seal.
+
+
+## W-SAVINGS-P0 canonical lifecycle
+
+The 12 zero-cost reference workflows have moved from reference-only design state to **HARDENED** under the code-first Savings package contract.
+
+```text
+HARDENED                 12
+TESTED                     0
+APPROVED_BASELINE           0
+```
+
+Each HARDENED package binds to the certified `zero-deps-node-v1` runtime and carries an explicit hardening report. Exact-SHA workflow test reports are the next gate.

@@ -80,6 +80,7 @@ REQUIRED_PATHS = [
     "factory/tools/scaffold_savings_workflows.py",
     "factory/tools/validate_savings_registry.py",
     "factory/tools/validate_savings_packages.py",
+    "factory/tools/validate_savings_hardened.py",
     "factory/runtime-profiles/zero-deps-node-v1/profile.json",
     "factory/runtime-profiles/zero-deps-node-v1/README.md",
     "factory/runtime-profiles/zero-deps-node-v1/validate_profile.py",
@@ -257,6 +258,18 @@ def validate() -> list[str]:
                 fail(errors, "W-SAVINGS-P0 structural validation failed")
         except Exception as exc:
             fail(errors, f"W-SAVINGS-P0 validator failed: {exc}")
+
+    savings_hardened_validator = ROOT / "factory/tools/validate_savings_hardened.py"
+    if savings_hardened_validator.is_file():
+        try:
+            ns = runpy.run_path(str(savings_hardened_validator))
+            hardened_main = ns.get("main")
+            if not callable(hardened_main):
+                fail(errors, "savings HARDENED validator missing main()")
+            elif hardened_main() != 0:
+                fail(errors, "savings HARDENED lifecycle validation failed")
+        except Exception as exc:
+            fail(errors, f"savings HARDENED validator failed: {exc}")
 
     savings_packages_validator = ROOT / "factory/tools/validate_savings_packages.py"
     if savings_packages_validator.is_file():
