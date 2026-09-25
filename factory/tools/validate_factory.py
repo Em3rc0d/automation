@@ -31,6 +31,8 @@ REQUIRED = [
     "factory/runtime-profiles/zero-deps-node-v1/README.md",
     "factory/runtime-profiles/zero-deps-node-v1/validate_profile.py",
     "factory/runtime-profiles/zero-deps-node-v1/smoke.js",
+    "factory/SAVINGS-PACKAGE-CONTRACT.md",
+    "factory/tools/validate_savings_hardening_readiness.py",
     "quarries/workflow-quarry/tools/index_workflow_corpus.py",
     ".github/workflows/factory-validation.yml",
 ]
