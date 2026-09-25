@@ -25,7 +25,7 @@
         "LEAD_CAPTURE"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -37,7 +37,15 @@
       "reference_demo": "runtime/savings-p0/demo/lead-intake/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/sales_leads/LEAD_INTAKE_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-002",
@@ -185,7 +193,7 @@
         "LEAD_NURTURE_SEQUENCE"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -197,7 +205,15 @@
       "reference_demo": "runtime/savings-p0/demo/lead-followup/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/sales_leads/LEAD_FOLLOWUP_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-010",
@@ -329,7 +345,7 @@
         "APPOINTMENT_REMIND"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -341,7 +357,15 @@
       "reference_demo": "runtime/savings-p0/demo/appointment-reminder/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/appointments/APPOINTMENT_REMINDER_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-017",
@@ -548,7 +572,7 @@
         "QUOTE_FOLLOWUP"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -560,7 +584,15 @@
       "reference_demo": "runtime/savings-p0/demo/quote-followup/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/quotes_contracts/QUOTE_FOLLOWUP_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-028",
@@ -804,7 +836,7 @@
         "PAYMENT_REMINDER"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -816,7 +848,15 @@
       "reference_demo": "runtime/savings-p0/demo/payment-reminder/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/accounts_receivable/PAYMENT_REMINDER_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-041",
@@ -1346,7 +1386,7 @@
         "DOCUMENT_ARCHIVE"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -1358,7 +1398,15 @@
       "reference_demo": "runtime/savings-p0/demo/document-archive/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/accounts_payable_documents/DOCUMENT_ARCHIVE_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-069",
@@ -1905,7 +1953,7 @@
         "LOW_STOCK_ALERT"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -1917,7 +1965,15 @@
       "reference_demo": "runtime/savings-p0/demo/low-stock-alert/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/orders_inventory/LOW_STOCK_ALERT_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-098",
@@ -2085,7 +2141,7 @@
         "SUPPORT_NORMALIZE"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -2097,7 +2153,15 @@
       "reference_demo": "runtime/savings-p0/demo/support-intake/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/support/SUPPORT_INTAKE_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-107",
@@ -2834,7 +2898,7 @@
         "EMAIL_CLASSIFY_ROUTE"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -2846,7 +2910,15 @@
       "reference_demo": "runtime/savings-p0/demo/email-classify-route/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/inbox_messaging/EMAIL_CLASSIFY_ROUTE_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-146",
@@ -2861,7 +2933,7 @@
         "EMAIL_ATTACHMENT_EXTRACT"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -2873,7 +2945,15 @@
       "reference_demo": "runtime/savings-p0/demo/email-attachment-extract/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/inbox_messaging/EMAIL_ATTACHMENT_EXTRACT_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-147",
@@ -2964,7 +3044,7 @@
         "UNANSWERED_MESSAGE_WATCHDOG"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -2976,7 +3056,15 @@
       "reference_demo": "runtime/savings-p0/demo/unanswered-message-watchdog/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/inbox_messaging/UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-152",
@@ -3371,7 +3459,7 @@
         "RENEWAL_REMINDER"
       ],
       "customer_facing_type": "SAVINGS_WORKFLOW",
-      "stage": "DESIGN_READY",
+      "stage": "HARDENED",
       "execution_model": "SHARED_MULTI_TENANT",
       "pre_revenue_mode": "LOCAL_OR_MOCKED",
       "external_cost_policy": "CLIENT_OWNED_OR_METERED",
@@ -3383,7 +3471,15 @@
       "reference_demo": "runtime/savings-p0/demo/renewal-reminder/run.js",
       "reference_certification_boundary": "FACTORY_CERTIFIED_RUNTIME",
       "runtime_certification_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
-      "runtime_certification_run_id": 36087356818
+      "runtime_certification_run_id": 36087356818,
+      "hardening": {
+        "runtime_profile": "zero-deps-node-v1",
+        "runtime_certification_state": "CERTIFIED",
+        "runtime_evidence_sha": "8475fcd95817098c59cd1088b543e4881bd3fe38",
+        "runtime_certificate": "certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md",
+        "report": "workflows/savings/feedback_retention/RENEWAL_REMINDER_AUTOMATION@0.1/evidence/HARDENING-REPORT.md",
+        "hardened_at": "2026-09-25"
+      }
     },
     {
       "id": "SWF-173",
