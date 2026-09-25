@@ -33,6 +33,29 @@ The repository can reproducibly manufacture workflow baselines through the gover
 [ ] evidence artifact uploaded for the exact factory run
 ```
 
+## Additional runtime profile gate
+
+Adding `zero-deps-node-v1` requires the full existing F1 gate **plus** the following checks on the same SHA:
+
+```text
+[ ] Node runtime pinned to 20.19.5
+[ ] zero-deps profile manifest/static validator PASS
+[ ] package.json declares no runtime/dev/optional/peer dependencies
+[ ] source imports only relative modules + declared Node built-ins
+[ ] direct network/fetch/child-process/process.env access blocked in profile source
+[ ] W-SAVINGS-P0 reports 12/12 REFERENCE_IMPLEMENTED
+[ ] every selected registry implementation reference/test/demo exists
+[ ] Savings package validator PASS
+[ ] code-first Savings package contract readiness PASS
+[ ] complete Node test suite PASS
+[ ] all 12 deterministic demos PASS
+[ ] runtime import smoke PASS
+[ ] no node_modules or local secret files tracked
+[ ] profile evidence artifact uploaded for exact SHA
+```
+
+Passing these gates certifies the **runtime substrate only**. Workflow business correctness still advances separately through HARDENED → TESTED → APPROVED_BASELINE.
+
 ## Operational factory contract
 
 ### Discovery / intake
@@ -45,7 +68,7 @@ Licensing, provenance interpretation, security review and approval remain human-
 A failed gate never deletes the candidate. Failure evidence goes to `no-pass-verified` and can later re-enter after remediation.
 
 ### Hardening
-HARDENED packages require executable workflow JSON, manifest, config schema, fixtures, docs, test plan, stable unique n8n workflow/node IDs and explicit runtime profile.
+For `n8n-base-js-v1`, HARDENED packages require executable workflow JSON, manifest, config schema, fixtures, docs, test plan, stable unique n8n workflow/node IDs and explicit runtime profile. Code-first Savings Workflows follow `factory/SAVINGS-PACKAGE-CONTRACT.md`; their implementation may be referenced from a shared runtime package and they must never fabricate an n8n `workflow.json`. The runtime-specific contract must pass its readiness validator before any package is called HARDENED.
 
 ### Runtime profile
 F1 certifies only the scope in `factory/RUNTIME-SUPPORT-POLICY.md`. The initial profile is `n8n-base-js-v1` on n8n `2.38.7`. Python Code execution, arbitrary community nodes and undeclared external binaries are blocked until separately profiled and certified.

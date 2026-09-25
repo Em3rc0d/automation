@@ -27,6 +27,12 @@ REQUIRED = [
     "factory/tools/validate_factory.py",
     "factory/CERTIFICATION-CRITERIA.md",
     "factory/STATUS.md",
+    "factory/runtime-profiles/zero-deps-node-v1/profile.json",
+    "factory/runtime-profiles/zero-deps-node-v1/README.md",
+    "factory/runtime-profiles/zero-deps-node-v1/validate_profile.py",
+    "factory/runtime-profiles/zero-deps-node-v1/smoke.js",
+    "factory/SAVINGS-PACKAGE-CONTRACT.md",
+    "factory/tools/validate_savings_hardening_readiness.py",
     "quarries/workflow-quarry/tools/index_workflow_corpus.py",
     ".github/workflows/factory-validation.yml",
 ]
@@ -61,9 +67,32 @@ def main() -> int:
     policy = ROOT / "factory/RUNTIME-SUPPORT-POLICY.md"
     if policy.is_file():
         text = policy.read_text(encoding="utf-8")
-        for token in ["n8n-base-js-v1", "2.38.7", "Python Code execution", "community nodes", "requires re-running the full factory certification gate"]:
+        for token in ["n8n-base-js-v1", "2.38.7", "zero-deps-node-v1", "20.19.5", "Python Code execution", "community nodes", "requires re-running the full factory certification gate"]:
             if token not in text:
                 errors.append(f"runtime support policy missing boundary token: {token}")
+
+    node_profile = ROOT / "factory/runtime-profiles/zero-deps-node-v1/profile.json"
+    if node_profile.is_file():
+        try:
+            data = json.loads(node_profile.read_text(encoding="utf-8"))
+            expected = {
+                "profile": "zero-deps-node-v1",
+                "engine": "node",
+                "testedVersion": "20.19.5",
+                "certificationState": "CANDIDATE",
+                "expectedReferenceWorkflows": 12,
+            }
+            for key, value in expected.items():
+                if data.get(key) != value:
+                    errors.append(
+                        f"zero-deps Node profile manifest {key} mismatch: expected={value!r} actual={data.get(key)!r}"
+                    )
+            if data.get("dependencyPolicy", {}).get("runtimeDependencies") != []:
+                errors.append("zero-deps Node profile runtimeDependencies must be empty")
+            if data.get("infrastructurePolicy", {}).get("paidInfrastructureRequiredForTests") is not False:
+                errors.append("zero-deps Node profile paidInfrastructureRequiredForTests must be false")
+        except Exception as exc:
+            errors.append(f"invalid zero-deps Node profile manifest: {exc}")
 
     probe = ROOT / "factory/probes/runtime-probe.json"
     if probe.is_file():
@@ -141,6 +170,7 @@ def main() -> int:
     print("Generalized control-plane mock + deterministic retry/failure scenarios: PRESENT")
     print("Managed baseline $env references: EXPLICITLY ENABLED; embedded secret values remain forbidden")
     print("Certified base runtime profile: n8n-base-js-v1 / n8n 2.38.7")
+    print("Runtime extension candidate: zero-deps-node-v1 / Node 20.19.5")
     print("Scope: factory configuration/static invariants; runtime gate remains separate.")
     return 0
 

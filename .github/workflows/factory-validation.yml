@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - w1/baseline-library
+      - main
   pull_request:
 
 permissions:
@@ -77,3 +78,79 @@ jobs:
             factory-runtime.log
             factory-compose-ps.txt
             factory-compose.log
+
+
+  zero-deps-node-v1-profile:
+    needs: factory-operational
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup pinned Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.5'
+
+      - name: Record Node profile evidence identity
+        run: |
+          echo "FACTORY_EVIDENCE_SHA=${GITHUB_SHA}" | tee zero-deps-node-v1-evidence.txt
+          echo "PROFILE=zero-deps-node-v1" | tee -a zero-deps-node-v1-evidence.txt
+          echo "NODE_VERSION=$(node --version)" | tee -a zero-deps-node-v1-evidence.txt
+          echo "NPM_VERSION=$(npm --version)" | tee -a zero-deps-node-v1-evidence.txt
+
+      - name: Validate zero-deps Node profile
+        run: |
+          python factory/runtime-profiles/zero-deps-node-v1/validate_profile.py | tee zero-deps-node-v1-static.log
+
+      - name: Validate Savings wave and package structure
+        run: |
+          python w-savings-p0/tools/validate_wave.py | tee zero-deps-node-v1-wave.log
+          python factory/tools/validate_savings_registry.py | tee -a zero-deps-node-v1-wave.log
+          python factory/tools/validate_savings_packages.py | tee -a zero-deps-node-v1-wave.log
+
+      - name: Validate code-first Savings hardening readiness
+        run: |
+          python factory/tools/validate_savings_hardening_readiness.py | tee zero-deps-node-v1-hardening.log
+
+      - name: Run complete zero-dependency reference suite
+        working-directory: runtime/savings-p0
+        run: |
+          set -o pipefail
+          npm run validate 2>&1 | tee ../../zero-deps-node-v1-runtime.log
+
+      - name: Run runtime import smoke
+        run: |
+          set -o pipefail
+          node factory/runtime-profiles/zero-deps-node-v1/smoke.js 2>&1 | tee zero-deps-node-v1-smoke.log
+
+      - name: Ensure profile remains dependency and secret free
+        run: |
+          if git ls-files | grep -E '(^|/)node_modules/'; then
+            echo 'Tracked node_modules detected.'
+            exit 1
+          fi
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'; then
+            echo 'Tracked environment secret file detected.'
+            exit 1
+          fi
+
+      - name: Upload zero-deps Node profile evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-deps-node-v1-validation-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            zero-deps-node-v1-evidence.txt
+            zero-deps-node-v1-static.log
+            zero-deps-node-v1-wave.log
+            zero-deps-node-v1-hardening.log
+            zero-deps-node-v1-runtime.log
+            zero-deps-node-v1-smoke.log

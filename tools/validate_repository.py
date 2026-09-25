@@ -80,6 +80,12 @@ REQUIRED_PATHS = [
     "factory/tools/scaffold_savings_workflows.py",
     "factory/tools/validate_savings_registry.py",
     "factory/tools/validate_savings_packages.py",
+    "factory/runtime-profiles/zero-deps-node-v1/profile.json",
+    "factory/runtime-profiles/zero-deps-node-v1/README.md",
+    "factory/runtime-profiles/zero-deps-node-v1/validate_profile.py",
+    "factory/runtime-profiles/zero-deps-node-v1/smoke.js",
+    "factory/SAVINGS-PACKAGE-CONTRACT.md",
+    "factory/tools/validate_savings_hardening_readiness.py",
 ]
 
 QUARRY_STAGE_DIRS = [
