@@ -2,6 +2,8 @@
 
 Updated: 2026-09-24
 
+Reference library complete: **12/12 executable references; canonical promotion pending runtime certification.**
+
 ```text
 Selected workflows          12/12
 Reference runtime kit        DONE
