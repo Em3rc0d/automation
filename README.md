@@ -168,3 +168,10 @@ Actualmente `workflows/savings/` contiene **233 materialized DESIGN_READY packag
 Estado inicial del catálogo: **DESIGN_READY**. `DESIGN_READY != TESTED != APPROVED_BASELINE`.
 
 Los **12/12 workflows de W-SAVINGS-P0** ya tienen referencias ejecutables bajo `runtime/savings-p0/`. `zero-deps-node-v1` está **FACTORY-CERTIFIED** con Node 20.19.5, 44/44 tests y evidence SHA `8475fcd95817098c59cd1088b543e4881bd3fe38`. Los workflows siguen `readyForProduction: false` hasta pasar sus gates individuales HARDENED → TESTED → APPROVED_BASELINE.
+
+
+## W-SAVINGS-P0 baseline library
+
+Los 12 workflows de la primera ola de costo casi cero ya alcanzaron `APPROVED_BASELINE` sobre `zero-deps-node-v1`.
+
+Cada baseline aprobado conserva un registro inmutable en `workflows/approved/savings/` apuntando al snapshot TESTED y a su evidencia CI exacta. Esto **no** salta el gate del cliente: conectores reales, permisos, baseline acordado, fixtures del tenant y aceptación siguen siendo obligatorios.
