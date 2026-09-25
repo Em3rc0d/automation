@@ -35,7 +35,7 @@ Paid test infrastructure      0
 Factory profile certificate   CERTIFIED
 Canonical workflow HARDENED   12/12
 Canonical workflow TESTED     12/12
-Canonical workflow approval    0/12
+Canonical workflow approval   12/12
 ```
 
 The original `n8n-base-js-v1` F1 certificate remains historical evidence for its original scope. The factory's certified scope now also includes `zero-deps-node-v1` under `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`.
@@ -118,7 +118,7 @@ The 12 zero-cost reference workflows have moved from reference-only design state
 ```text
 HARDENED                 12
 TESTED                    12
-APPROVED_BASELINE           0
+APPROVED_BASELINE          12
 ```
 
 Each HARDENED package binds to the certified `zero-deps-node-v1` runtime and carries an explicit hardening report. Exact-SHA workflow test reports are the next gate.
@@ -129,3 +129,10 @@ Exact-SHA TESTED evidence:
 - Savings P0 Validation run: `36089006956`
 - job: `107927102957`
 - result: **44/44 PASS + all deterministic demos PASS**
+
+
+## W-SAVINGS-P0 approved baseline closure
+
+The first code-first Savings baseline wave now contains **12 APPROVED_BASELINE** workflow versions with immutable approval records under `workflows/approved/savings/`.
+
+Approval points to the canonical TESTED source commit rather than fabricating n8n artifacts. Client-specific activation remains outside baseline approval.
