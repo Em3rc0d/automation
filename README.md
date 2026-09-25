@@ -153,7 +153,7 @@ El repositorio tiene CI en `.github/workflows/repository-certification.yml` para
 K0 KNOWLEDGE / ARCHITECTURE     CLOSED
 WORKFLOW QUARRY                 CONTINUOUS
 W1 APPROVED BASELINE LIBRARY    NOT YET CERTIFIED
-W-SAVINGS-P0 REFERENCE WAVE      1/12 EXECUTABLE REFERENCES
+W-SAVINGS-P0 REFERENCE WAVE      3/12 EXECUTABLE REFERENCES
 P1 PILOT PRODUCT                NOT YET CERTIFIED
 ```
 
@@ -167,4 +167,4 @@ Actualmente `workflows/savings/` contiene **233 materialized DESIGN_READY packag
 
 Estado inicial del catálogo: **DESIGN_READY**. `DESIGN_READY != TESTED != APPROVED_BASELINE`.
 
-`PAYMENT_REMINDER_AUTOMATION` ya tiene una referencia ejecutable bajo `runtime/savings-p0/`, con idempotencia, retries, ProcessRecord, Incident, SavingsEvent, tests y demo local. Sigue `readyForProduction: false` hasta que el nuevo runtime profile sea certificado por la Baseline Factory.
+`PAYMENT_REMINDER_AUTOMATION`, `APPOINTMENT_REMINDER_AUTOMATION` y `LEAD_FOLLOWUP_AUTOMATION` ya tienen referencias ejecutables bajo `runtime/savings-p0/`. Las tres reutilizan el mismo runtime, idempotencia, retries, ProcessRecord, Incident, SavingsEvent y adapters provider-neutral. Siguen `readyForProduction: false` hasta que el nuevo runtime profile sea certificado por la Baseline Factory.
