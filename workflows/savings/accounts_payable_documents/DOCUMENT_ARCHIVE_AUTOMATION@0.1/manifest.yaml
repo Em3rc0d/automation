@@ -5,7 +5,7 @@ key: "DOCUMENT_ARCHIVE_AUTOMATION"
 version: "0.1"
 name: "Document Archive"
 domain: "accounts_payable_documents"
-stage: "HARDENED"
+stage: "TESTED"
 runtimeProfile: "function"
 executionModel: "SHARED_MULTI_TENANT"
 preRevenueMode: "LOCAL_OR_MOCKED"
@@ -32,3 +32,17 @@ hardening:
   runtimeCertification: "CERTIFIED"
   runtimeEvidenceSha: "8475fcd95817098c59cd1088b543e4881bd3fe38"
   report: "evidence/HARDENING-REPORT.md"
+
+testing:
+  verdict: "PASS"
+  runtimeProfile: "zero-deps-node-v1"
+  runtimeVersion: "20.19.5"
+  evidenceSha: "e7bc6152bce2b6bd5fce6a222c6c3077b3c386f0"
+  workflowRun: "Savings P0 Validation"
+  runId: 36089006956
+  jobId: 107927102957
+  testCommand: "npm run validate"
+  testCount: 44
+  passCount: 44
+  failCount: 0
+  report: "evidence/TEST-REPORT.md"

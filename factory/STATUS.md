@@ -34,7 +34,7 @@ Runtime dependencies          0
 Paid test infrastructure      0
 Factory profile certificate   CERTIFIED
 Canonical workflow HARDENED   12/12
-Canonical workflow TESTED      0/12
+Canonical workflow TESTED     12/12
 Canonical workflow approval    0/12
 ```
 
@@ -117,8 +117,15 @@ The 12 zero-cost reference workflows have moved from reference-only design state
 
 ```text
 HARDENED                 12
-TESTED                     0
+TESTED                    12
 APPROVED_BASELINE           0
 ```
 
 Each HARDENED package binds to the certified `zero-deps-node-v1` runtime and carries an explicit hardening report. Exact-SHA workflow test reports are the next gate.
+
+
+Exact-SHA TESTED evidence:
+- SHA: `e7bc6152bce2b6bd5fce6a222c6c3077b3c386f0`
+- Savings P0 Validation run: `36089006956`
+- job: `107927102957`
+- result: **44/44 PASS + all deterministic demos PASS**

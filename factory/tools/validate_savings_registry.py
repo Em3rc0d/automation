@@ -113,6 +113,17 @@ def main() -> int:
                 if not report or not (ROOT / report).is_file():
                     errors.append(f"{item['key']} hardening report missing: {report}")
 
+        if item["stage"] in {"TESTED", "APPROVED_BASELINE", "CLIENT_CONFIGURED", "CLIENT_ACCEPTED"}:
+            testing = item.get("testing")
+            if not isinstance(testing, dict) or testing.get("verdict") != "PASS":
+                errors.append(f"{item['key']} {item['stage']} requires PASS testing metadata")
+            else:
+                report = testing.get("report")
+                if not report or not (ROOT / report).is_file():
+                    errors.append(f"{item['key']} test report missing: {report}")
+                if int(testing.get("fail_count", -1)) != 0:
+                    errors.append(f"{item['key']} testing fail_count must be 0")
+
     if len(entries) < 100:
         errors.append("catalog unexpectedly small; expected broad solution-level registry")
 
