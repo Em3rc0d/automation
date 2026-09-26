@@ -180,3 +180,25 @@ python tools/savings/install_approved.py record-evidence \
 ```
 
 The installer copies evidence into the bundle, computes SHA-256, appends an acceptance ledger entry and stores a reference in `acceptance.json`. `doctor --target CLIENT_ACCEPTED` re-hashes the snapshot and blocks promotion if evidence was modified or removed.
+
+
+## Pilot bootstrap from discovery
+
+Before requesting credentials or paying for hosting, convert discovery assumptions into a reproducible zero-cost pilot plan:
+
+```bash
+python tools/savings/pilot_bootstrap.py plan \
+  --spec operations/savings/examples/pilot-preflight.example.json
+```
+
+To create local DRAFT bundles for the selected approved workflows:
+
+```bash
+python tools/savings/pilot_bootstrap.py scaffold \
+  --spec operations/savings/examples/pilot-preflight.example.json \
+  --out-root .local/installations
+```
+
+The bootstrap only accepts `APPROVED_BASELINE` workflows, rejects secret-like material, checks candidate-provider compatibility, pre-fills SavingsBaseline values as DRAFT and keeps all connector/acceptance gates fail-closed.
+
+See `operations/savings/PILOT-BOOTSTRAP.md`.
