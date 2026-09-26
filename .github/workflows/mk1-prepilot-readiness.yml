@@ -1,0 +1,37 @@
+name: MK1 Pre-Pilot Readiness Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pre-pilot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.5'
+      - name: Validate repository-side pre-pilot readiness
+        run: python mk1/tools/validate_pre_pilot_readiness.py
+      - name: Run Savings operator tests
+        run: python -m unittest discover -s tools/savings/tests -p 'test_*.py' -v
+      - name: Run local/live runtime tests
+        run: node --test operations/savings/runtime/test/*.test.mjs
+      - name: Execute MK1 rehearsal and static integrity proof
+        run: |
+          python tools/savings/rehearse_pilot.py --out .local/mk1-prepilot --json
+          python tools/savings/render_rehearsal_html.py --input .local/mk1-prepilot --json
+          python tools/savings/render_rehearsal_html.py --input .local/mk1-prepilot --verify --json
+      - name: Execute incident repair rehearsal
+        run: node operations/savings/runtime/incident_drill.mjs --assert
