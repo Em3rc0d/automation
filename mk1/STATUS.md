@@ -18,6 +18,7 @@ Hashed client-acceptance evidence gate      IMPLEMENTED
 Two-workflow MK1 rehearsal                  IMPLEMENTED
 Static client/operator demo surfaces          IMPLEMENTED
 Static report integrity manifest             IMPLEMENTED
+Real-pilot evidence gate                     IMPLEMENTED
 Reduced surface ADR                           ACCEPTED
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
@@ -63,3 +64,19 @@ Production auth, RLS and persistence remain real pilot/product gates.
 ADR-0009 allows the first paying/funded pilot to use an operator-mediated static client report **only when the client explicitly agrees**. Reports carry a SHA-256 manifest and must be delivered through an access-controlled client-approved channel.
 
 This can defer hosted Auth/RLS/UI spend, but it never waives tenant isolation, connector evidence, live execution, acceptance, backup or incident requirements.
+
+
+## Real-pilot fail-closed gate
+
+`tools/savings/mk1_gate.py` converts the remaining external MK1 requirements into one evidence specification and refuses to seal the pilot while any real-world gate is missing.
+
+The repository example is intentionally BLOCKED. This prevents local rehearsal artifacts from being mistaken for:
+- payment/funding;
+- client agreement;
+- provider ownership/scopes;
+- real SavingsBaseline agreement;
+- live execution;
+- tenant isolation evidence;
+- client acceptance.
+
+See `operations/savings/MK1-REAL-PILOT-GATE.md`.
