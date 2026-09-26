@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+'use strict';
+const fs=require('fs'),path=require('path'),os=require('os'),crypto=require('crypto');
+const {createRequire}=require('module');
+const req=createRequire('/usr/local/lib/node_modules/n8n/package.json');
+const sqlite3=req('sqlite3');
+const mode=process.argv[2];
+if(!['pre','post'].includes(mode)){console.error('usage: verify-case003-gate9-import.js <pre|post>');process.exit(2);}
+const targetId='case003KapsoVerificationGate9V1';
+const sourceId='kapsoMessageReceiveV1';
+const checkpoint='/tmp/case003-gate9-pre.json';
+const userFolder=process.env.N8N_USER_FOLDER||os.homedir();
+const n8nDir=path.join(userFolder,'.n8n');
+const configured=process.env.DB_SQLITE_DATABASE;
+const dbPath=configured?(path.isAbsolute(configured)?configured:path.join(n8nDir,configured)):path.join(n8nDir,'database.sqlite');
+const sha=v=>crypto.createHash('sha256').update(String(v??'')).digest('hex');
+const open=()=>new Promise((resolve,reject)=>{const db=new sqlite3.Database(dbPath,sqlite3.OPEN_READONLY,e=>e?reject(e):resolve(db));});
+const all=(db,sql,p=[])=>new Promise((resolve,reject)=>db.all(sql,p,(e,r)=>e?reject(e):resolve(r||[])));
+const close=db=>new Promise(resolve=>db.close(()=>resolve()));
+
+(async()=>{
+ const db=await open();
+ const workflows=await all(db,'select id,name,active,nodes,connections,settings from workflow_entity order by id');
+ const credentials=await all(db,'select id,name,type,data from credentials_entity order by id');
+ const source=workflows.find(w=>w.id===sourceId);
+ if(!source) throw new Error('source Kapso receive workflow missing');
+ const sourceNodes=JSON.parse(source.nodes);
+ const sourceHmac=sourceNodes.find(n=>n.name==='Calculate Kapso HMAC')?.credentials?.crypto;
+ if(!sourceHmac?.id) throw new Error('source Kapso HMAC binding missing');
+
+ if(mode==='pre'){
+   const existingTarget=workflows.find(w=>w.id===targetId);
+   const replaceExisting=Boolean(existingTarget);
+   if(existingTarget && !(existingTarget.active===0||existingTarget.active===false||existingTarget.active==='0')) throw new Error('Gate-9 existing workflow must be inactive before replacement');
+   if(!credentials.find(c=>c.id===sourceHmac.id&&c.type==='crypto')) throw new Error('source crypto credential metadata missing');
+   if(!credentials.find(c=>c.id==='case003RpcAuthV1'&&c.type==='httpHeaderAuth')) throw new Error('CASE-003 RPC credential missing');
+   const smtpMatches=credentials.filter(c=>c.type==='smtp'&&c.name==='CASE003 SMTP OTP');
+   if(smtpMatches.length!==1) throw new Error('CASE003 SMTP OTP credential missing or ambiguous');
+   fs.writeFileSync(checkpoint,JSON.stringify({
+     workflowCount:workflows.length,credentialCount:credentials.length,
+     replaceExisting,
+     sourceActive:source.active,sourceHash:sha(source.nodes)+'|'+sha(source.connections),
+     sourceHmacId:sourceHmac.id,
+     workflows:workflows.filter(w=>w.id!==targetId).map(w=>({id:w.id,name:w.name,active:w.active,nodesHash:sha(w.nodes),connectionsHash:sha(w.connections),settingsHash:sha(w.settings)})),
+     credentials:credentials.map(c=>({id:c.id,name:c.name,type:c.type,dataHash:sha(c.data)}))
+   },null,2)+'\n',{mode:0o600});
+   console.log('[case003-gate9] PRE PASS workflows='+workflows.length+' credentials='+credentials.length+' sourceActive='+source.active+' target='+(replaceExisting?'replace-inactive':'absent'));
+ }else{
+   if(!fs.existsSync(checkpoint)) throw new Error('Gate-9 checkpoint missing');
+   const before=JSON.parse(fs.readFileSync(checkpoint,'utf8'));
+   const expectedWorkflowCount=before.workflowCount+(before.replaceExisting?0:1);
+   if(workflows.length!==expectedWorkflowCount) throw new Error('workflow count mismatch');
+   if(credentials.length!==before.credentialCount) throw new Error('credential count changed');
+   for(const old of before.credentials){const now=credentials.find(c=>c.id===old.id);if(!now||now.name!==old.name||now.type!==old.type||sha(now.data)!==old.dataHash)throw new Error('credential changed:'+old.id);}
+   for(const old of before.workflows){const now=workflows.find(w=>w.id===old.id);if(!now||now.name!==old.name||now.active!==old.active||sha(now.nodes)!==old.nodesHash||sha(now.connections)!==old.connectionsHash||sha(now.settings)!==old.settingsHash)throw new Error('existing workflow changed:'+old.id);}
+   const t=workflows.find(w=>w.id===targetId); if(!t) throw new Error('Gate-9 target missing');
+   if(!(t.active===0||t.active===false||t.active==='0')) throw new Error('Gate-9 target must import inactive');
+   const nodes=JSON.parse(t.nodes);
+   if(t.nodes.includes('__CASE003_')) throw new Error('Gate-9 unresolved template placeholder');
+   for(const n of nodes.filter(n=>['process-provider','verify-provider-code','gate10-prepare-email','gate10-mark-delivery'].includes(n.id))){
+     const url=String(n.parameters?.url||'');
+     if(!/^https:\/\//.test(url)) throw new Error('Gate-9 invalid RPC URL:'+n.id);
+     const headers=n.parameters?.headerParameters?.parameters||[];
+     const apiKey=String(headers.find(h=>h.name==='apikey')?.value||'');
+     if(!apiKey || apiKey.includes('__CASE003_')) throw new Error('Gate-9 missing publishable key:'+n.id);
+   }
+   if(nodes.filter(n=>String(n.type||'').includes('webhook')).length!==1) throw new Error('Gate-9 webhook invariant failed');
+   if(nodes.find(n=>n.id==='kapso-hmac')?.credentials?.crypto?.id!==before.sourceHmacId) throw new Error('Gate-9 HMAC binding does not reuse source credential');
+   for(const id of ['process-provider','verify-provider-code','gate10-prepare-email','gate10-mark-delivery']){
+     if(nodes.find(n=>n.id===id)?.credentials?.httpHeaderAuth?.id!=='case003RpcAuthV1') throw new Error('Gate-9/Gate-10 RPC binding mismatch:'+id);
+   }
+   const smtpCred=credentials.find(c=>c.type==='smtp'&&c.name==='CASE003 SMTP OTP');
+   const emailNodes=nodes.filter(n=>n.type==='n8n-nodes-base.emailSend');
+   if(emailNodes.length!==1 || emailNodes[0].id!=='gate10-send-email') throw new Error('Gate-10 email node invariant failed');
+   if(emailNodes[0]?.credentials?.smtp?.id!==smtpCred?.id) throw new Error('Gate-10 SMTP binding mismatch');
+   if(nodes.some(n=>/kapso send|send message|whatsapp send/i.test(String(n.name||'')))) throw new Error('WhatsApp outbound send node detected');
+   const settings=JSON.parse(t.settings||'{}');
+   if(settings.saveDataSuccessExecution!=='none'||settings.saveDataErrorExecution!=='none') throw new Error('Gate-9 verification execution persistence must be disabled');
+   console.log('[case003-gate9] POST PASS workflows='+workflows.length+' credentials='+credentials.length+' target=inactive sourceUnchanged=true');
+ }
+ await close(db);
+})().catch(e=>{console.error('[case003-gate9] FAIL '+(e.stack||e.message));process.exit(1);});

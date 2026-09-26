@@ -1,0 +1,131 @@
+{
+  "id": "case003DueDateEvaluationV1",
+  "name": "CASE-003 Due Date Evaluation",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Manual Gate Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zqcwlnshtsectitagkca.supabase.co/rest/v1/rpc/case003_reserve_due_candidates",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_iWaIWQJ66b49OcT_lwaJ9Q_-Hi_DoqP"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{\"p_days_ahead\":3,\"p_rule_code\":\"due_3d_gate4_v1\"}",
+        "options": {}
+      },
+      "id": "reserve-rpc",
+      "name": "Reserve Due Notifications",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "case003RpcAuthV1",
+          "name": "CASE003 Supabase RPC Token"
+        }
+      },
+      "notes": "Gate 4 real-SAP certification harness. Dedicated CASE-003 credential; fresh probe rule; no outbound channel node."
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.filter(item => item.json.reserved === true || String(item.json.reserved).toLowerCase() === 'true');"
+      },
+      "id": "allow-new",
+      "name": "Allow Newly Reserved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => ({json:{...item.json,deliveryAllowed:true,deliveryMode:'gate4-real-no-channel',notificationKey:item.json.idempotency_key}}));"
+      },
+      "id": "payload",
+      "name": "Build Notification Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Gate Test": {
+      "main": [
+        [
+          {
+            "node": "Reserve Due Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reserve Due Notifications": {
+      "main": [
+        [
+          {
+            "node": "Allow Newly Reserved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Allow Newly Reserved": {
+      "main": [
+        [
+          {
+            "node": "Build Notification Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "caseId": "CASE-003",
+    "purpose": "Gate-4 manual-only real SAP reservation test. Inactive. No outbound delivery."
+  }
+}

@@ -1,0 +1,256 @@
+{
+  "id": "case003Gate10SmtpTestV1",
+  "name": "CASE-003 Gate 10 SMTP Test",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Gate 10 Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "__CASE003_SUPABASE_URL__/rest/v1/rpc/case003_prepare_email_verification_test_override_json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "__CASE003_SUPABASE_PUBLISHABLE_KEY__"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({p_verification_request_id:'__CASE003_GATE10_REQUEST_ID__',p_override_email:'__CASE003_TEST_EMAIL_OVERRIDE__',p_trace_id:'gate10-smtp-real-test'}) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "prepare-challenge",
+      "name": "Prepare Test Email Challenge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "case003RpcAuthV1",
+          "name": "CASE003 Supabase RPC Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{}; if(j.decision!=='VERIFICATION_DELIVERY_REQUIRED'||!j.delivery?.destination_email||!j.delivery?.verification_code||!j.delivery_id) throw new Error('GATE10_PREPARE_FAILED:'+String(j.decision)); return [{json:j}];"
+      },
+      "id": "assert-prepare",
+      "name": "Assert Challenge Prepared",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Prepare Test Email Challenge').first().json.delivery.destination_email }}",
+        "toEmail": "={{ $('Prepare Test Email Challenge').first().json.delivery.destination_email }}",
+        "subject": "CASE-003 — código de verificación",
+        "emailFormat": "text",
+        "text": "={{ 'Código de verificación: ' + $('Prepare Test Email Challenge').first().json.delivery.verification_code + '\\n\\nEste código expira en aproximadamente 10 minutos. Responde por WhatsApp con: CODIGO <código>.' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-email",
+      "name": "Send Verification Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "smtp": {
+          "id": "__CASE003_SMTP_CREDENTIAL_ID__",
+          "name": "__CASE003_SMTP_CREDENTIAL_NAME__"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{};\nconst failed=!!j.error;\nconst raw=JSON.stringify(j.error||j);\nlet category=null;\nif(failed){\n  if(/534[- ]5\\.7\\.9|application-specific password|app password/i.test(raw)) category='SMTP_APP_PASSWORD';\n  else if(/EAUTH|535[- ]|invalid login|username and password not accepted|authentication unsuccessful/i.test(raw)) category='SMTP_AUTH';\n  else if(/ETIMEDOUT|connection timeout|greeting never received|socket timeout/i.test(raw)) category='SMTP_CONNECTION_TIMEOUT';\n  else if(/ECONNREFUSED|connection refused/i.test(raw)) category='SMTP_CONNECTION_REFUSED';\n  else if(/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(raw)) category='SMTP_DNS';\n  else if(/certificate|self[- ]signed|TLS|SSL routines|wrong version number/i.test(raw)) category='SMTP_TLS';\n  else if(/EENVELOPE|recipient.*rejected|sender.*rejected|550[- ]|553[- ]/i.test(raw)) category='SMTP_ENVELOPE';\n  else category='SMTP_DELIVERY_FAILED';\n}\nconst id=String(j.messageId||j.response?.messageId||'').slice(0,240);\nreturn [{json:{sent:!failed,provider_message_id:id||null,error_code:category}}];"
+      },
+      "id": "classify-email",
+      "name": "Classify SMTP Delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "__CASE003_SUPABASE_URL__/rest/v1/rpc/case003_mark_verification_delivery_json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "__CASE003_SUPABASE_PUBLISHABLE_KEY__"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({p_delivery_id:$('Prepare Test Email Challenge').first().json.delivery_id,p_sent:$json.sent,p_provider:'smtp',p_provider_message_id:$json.provider_message_id,p_error_code:$json.error_code,p_trace_id:'gate10-smtp-real-test'}) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "mark-delivery",
+      "name": "Mark Verification Delivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "case003RpcAuthV1",
+          "name": "CASE003 Supabase RPC Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{}; if(!['VERIFICATION_SENT','VERIFICATION_DELIVERY_FAILED'].includes(j.decision)) throw new Error('GATE10_MARK_FAILED:'+String(j.decision)); return [{json:{decision:j.decision,verification_request_id:j.verification_request_id,challenge_id:j.challenge_id,trusted_contact_masked:j.trusted_contact_masked,safe_to_respond:true}}];"
+      },
+      "id": "assert-final",
+      "name": "Assert Safe Delivery Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Gate 10 Test": {
+      "main": [
+        [
+          {
+            "node": "Prepare Test Email Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Test Email Challenge": {
+      "main": [
+        [
+          {
+            "node": "Assert Challenge Prepared",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assert Challenge Prepared": {
+      "main": [
+        [
+          {
+            "node": "Send Verification Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Verification Email": {
+      "main": [
+        [
+          {
+            "node": "Classify SMTP Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify SMTP Delivery": {
+      "main": [
+        [
+          {
+            "node": "Mark Verification Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Verification Delivery": {
+      "main": [
+        [
+          {
+            "node": "Assert Safe Delivery Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none"
+  },
+  "pinData": {},
+  "meta": {
+    "caseId": "CASE-003",
+    "gate": "10",
+    "purpose": "One-shot controlled SMTP delivery proof. Rendered only at runtime; repository template contains no real email or credential secret."
+  },
+  "tags": []
+}

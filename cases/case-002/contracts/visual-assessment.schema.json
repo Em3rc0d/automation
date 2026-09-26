@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/case-002/visual-assessment.schema.json",
+  "title": "CASE-002 VisualAssessment",
+  "description": "Observation-only output. It cannot represent a mechanical diagnosis or safety clearance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "evidenceId",
+    "usable",
+    "relevance",
+    "observations",
+    "cannotDetermine",
+    "recommendedNextStep",
+    "requiresHumanTechnicalDiagnosis"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "evidenceId": { "type": "string", "minLength": 1 },
+    "usable": { "type": "boolean" },
+    "relevance": { "enum": ["unknown", "unlikely", "possible", "likely_relevant"] },
+    "reason": { "type": ["string", "null"], "maxLength": 500 },
+    "observations": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 500 } },
+    "possibleCategory": { "type": ["string", "null"], "enum": ["fluid_leak", "warning_light", "body_damage", "tire_damage", "visible_component_damage", "other", "unknown", null] },
+    "cannotDetermine": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 500 } },
+    "recommendedNextStep": { "enum": ["request_another_photo", "collect_more_information", "workshop_inspection", "human_review", "continue_intake"] },
+    "requiresHumanTechnicalDiagnosis": { "const": true },
+    "modelProvider": { "type": ["string", "null"] },
+    "modelName": { "type": ["string", "null"] },
+    "modelVersion": { "type": ["string", "null"] }
+  }
+}
