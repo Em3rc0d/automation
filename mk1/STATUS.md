@@ -17,6 +17,7 @@ Local scheduler + event spool               IMPLEMENTED
 Hashed client-acceptance evidence gate      IMPLEMENTED
 Two-workflow MK1 rehearsal                  IMPLEMENTED
 Static client/operator demo surfaces          IMPLEMENTED
+PostgreSQL shared-table RLS control plane      IMPLEMENTED / EPHEMERAL-CI
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
 Paid infrastructure required for rehearsal NO
@@ -54,3 +55,19 @@ Do not mark P1/MK1 certified until those real-world gates are evidenced.
 The rehearsal JSON projections can render to dependency-free local Client Portal and Operator Console HTML. This closes the **demo/presentation** portion of the UI gap without adding hosting cost.
 
 Production auth, RLS and persistence remain real pilot/product gates.
+
+
+## Control-plane RLS evidence
+
+`control-plane/postgres/` now implements the MK1 shared-table control-plane contract and validates it in ephemeral PostgreSQL 16.
+
+The gate proves:
+- explicit `tenant_id` across tenant-owned domain data;
+- RLS enabled on all tenant-owned control-plane tables;
+- negative cross-tenant reads for authenticated users;
+- browser read-only behavior;
+- technical execution/audit tables withheld from the browser role;
+- cross-tenant composite-FK protection;
+- trusted backend/service-role boundary.
+
+This advances the RLS/isolation gate structurally without opening a paid Supabase project. A funded pilot must still prove the same behavior with real Auth/users and the selected production deployment.
