@@ -21,6 +21,9 @@ Output:
 ├── role-model.json
 ├── tenant-isolation.json
 ├── deployment-decision.json
+├── ops/
+│   ├── backup-restore-evidence.json
+│   └── live-incident-drill-evidence.json
 ├── CLIENT-ACCEPTANCE.md
 ├── baselines/
 │   └── <WORKFLOW>.json
