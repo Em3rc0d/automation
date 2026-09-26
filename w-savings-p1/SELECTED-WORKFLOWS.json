@@ -1,0 +1,49 @@
+{
+  "wave": "W-SAVINGS-P1",
+  "updated": "2026-09-26",
+  "status": "SELECTED_NOT_IMPLEMENTED",
+  "selection_rule": "extend the three current commercial offers while preserving zero-deps/shared-runtime economics and prioritizing workflows likely to surface in the first real MYPE pilots",
+  "mix": {
+    "pilot_track_percent": 65,
+    "factory_track_percent": 35
+  },
+  "workflows": [
+    {
+      "key": "LEAD_SLA_WATCHDOG_AUTOMATION",
+      "priority": 1,
+      "status": "DESIGN_READY",
+      "reason": "completes LeadFlow by removing manual checks for leads that have not been acted on inside SLA; deterministic scheduled scan"
+    },
+    {
+      "key": "APPOINTMENT_CONFIRM_AUTOMATION",
+      "priority": 2,
+      "status": "DESIGN_READY",
+      "reason": "extends the approved appointment reminder baseline into confirmation handling for academies, workshops and service businesses"
+    },
+    {
+      "key": "PAYMENT_RECONCILIATION_AUTOMATION",
+      "priority": 3,
+      "status": "DESIGN_READY",
+      "reason": "targets recurring finance/admin work after reminders by matching received payments against open receivables"
+    },
+    {
+      "key": "NO_SHOW_RECOVERY_AUTOMATION",
+      "priority": 4,
+      "status": "DESIGN_READY",
+      "reason": "extends appointment operations into recovery without requiring a dedicated tenant runtime"
+    },
+    {
+      "key": "QUOTE_PREPARE_AUTOMATION",
+      "priority": 5,
+      "status": "DESIGN_READY",
+      "reason": "moves Quote2Cash earlier in the process by deterministically preparing quote data before follow-up"
+    },
+    {
+      "key": "PAYMENT_ESCALATION_AUTOMATION",
+      "priority": 6,
+      "status": "DESIGN_READY",
+      "reason": "adds owner escalation after reminder stages while preserving human control over collection exceptions"
+    }
+  ],
+  "promotion_policy": "No workflow is promoted because it is commercially attractive. Each candidate must independently pass reference implementation, HARDENED, TESTED and APPROVED_BASELINE gates."
+}
