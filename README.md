@@ -277,3 +277,8 @@ python tools/savings/rehearse_pilot.py --json
 ```
 
 This is intentionally **not** a real-client claim. It reduces the next milestone to external evidence: real tenant, real provider, real baseline, controlled live execution and explicit client acceptance.
+
+
+### Presets MYPE
+
+Para reducir todavía más el tiempo de armado, `operations/savings/presets/` incluye topologías iniciales para MYPE de servicios, talleres, academias, backoffice, membresías e inventario ligero. Los presets solo combinan baselines ya aprobados y providers candidatos; no inventan baseline económico ni saltan credenciales/acceptance.

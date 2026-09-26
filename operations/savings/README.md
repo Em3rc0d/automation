@@ -202,3 +202,19 @@ python tools/savings/pilot_bootstrap.py scaffold \
 The bootstrap only accepts `APPROVED_BASELINE` workflows, rejects secret-like material, checks candidate-provider compatibility, pre-fills SavingsBaseline values as DRAFT and keeps all connector/acceptance gates fail-closed.
 
 See `operations/savings/PILOT-BOOTSTRAP.md`.
+
+
+### MYPE preset starting points
+
+For common MYPE shapes, start from a provider-compatible topology instead of selecting each workflow manually:
+
+```bash
+python tools/savings/pilot_bootstrap.py list-presets
+
+python tools/savings/pilot_bootstrap.py from-preset \
+  --preset workshop-google \
+  --tenant taller-demo \
+  --out .local/taller-demo-pilot.json
+```
+
+Current presets cover services/agencies, workshops, academies, backoffice documents, recurring memberships and lightweight inventory operations. They contain no baseline numbers or credentials; discovery must fill those before the pilot plan is meaningful.

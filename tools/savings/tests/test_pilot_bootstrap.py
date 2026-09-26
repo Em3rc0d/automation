@@ -70,6 +70,31 @@ class PilotBootstrapTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "secret"):
             pilot.build_plan(spec)
 
+    def test_preset_expands_to_approved_supported_topology(self):
+        spec = pilot.preset_spec("workshop-google", "taller-demo")
+        self.assertEqual(spec["preset"]["key"], "workshop-google")
+        self.assertGreaterEqual(len(spec["workflows"]), 4)
+        plan = pilot.build_plan(spec)
+        self.assertEqual(plan["workflowCount"], len(spec["workflows"]))
+        for workflow in plan["workflows"]:
+            self.assertTrue(all(
+                connector["providerSupported"] is True
+                for connector in workflow["connectors"]
+            ))
+            self.assertIn("discovery economics incomplete", workflow["blockersBeforeClientConfigured"])
+
+    def test_unknown_preset_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "unknown preset"):
+            pilot.preset_spec("does-not-exist", "tenant-x")
+
+    def test_preset_catalog_has_unique_keys_and_no_duplicate_workflows(self):
+        presets = pilot.list_presets()
+        keys = [item["key"] for item in presets]
+        self.assertEqual(len(keys), len(set(keys)))
+        for preset in presets:
+            workflow_keys = [item["key"] for item in preset["workflows"]]
+            self.assertEqual(len(workflow_keys), len(set(workflow_keys)))
+
     def test_scaffold_prefills_baseline_but_does_not_agree_or_configure(self):
         spec = self.base_spec()
         with tempfile.TemporaryDirectory() as tmp:

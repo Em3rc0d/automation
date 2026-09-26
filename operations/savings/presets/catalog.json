@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "status": "OPERATOR_STARTING_POINTS_NOT_CLIENT_ACCEPTED",
+  "presets": [
+    {
+      "key": "service-company-google",
+      "name": "Servicios profesionales / agencia",
+      "description": "Captura, seguimiento comercial, cotizaciones, cobranza e inbox básico sobre Google Workspace.",
+      "workflows": [
+        {
+          "key": "LEAD_INTAKE_AUTOMATION",
+          "providers": {
+            "records.leads.write": "google_sheets"
+          }
+        },
+        {
+          "key": "LEAD_FOLLOWUP_AUTOMATION",
+          "providers": {
+            "records.leads.read_write": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "QUOTE_FOLLOWUP_AUTOMATION",
+          "providers": {
+            "records.quotes.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "PAYMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "records.accounts_receivable.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
+          "providers": {
+            "records.threads.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "SUPPORT_INTAKE_AUTOMATION",
+          "providers": {
+            "records.tickets.write": "google_sheets"
+          }
+        }
+      ]
+    },
+    {
+      "key": "workshop-google",
+      "name": "Taller / servicio técnico",
+      "description": "Prospectos, recordatorios de citas, seguimiento, cobranza, stock y soporte.",
+      "workflows": [
+        {
+          "key": "LEAD_INTAKE_AUTOMATION",
+          "providers": {
+            "records.leads.write": "google_sheets"
+          }
+        },
+        {
+          "key": "LEAD_FOLLOWUP_AUTOMATION",
+          "providers": {
+            "records.leads.read_write": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "APPOINTMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "calendar.events.read": "google_calendar",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "PAYMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "records.accounts_receivable.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "LOW_STOCK_ALERT_AUTOMATION",
+          "providers": {
+            "records.inventory.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "SUPPORT_INTAKE_AUTOMATION",
+          "providers": {
+            "records.tickets.write": "google_sheets"
+          }
+        }
+      ]
+    },
+    {
+      "key": "academy-google",
+      "name": "Academia / capacitación",
+      "description": "Captura y seguimiento de interesados, citas, mensajes pendientes, cobranza y renovaciones.",
+      "workflows": [
+        {
+          "key": "LEAD_INTAKE_AUTOMATION",
+          "providers": {
+            "records.leads.write": "google_sheets"
+          }
+        },
+        {
+          "key": "LEAD_FOLLOWUP_AUTOMATION",
+          "providers": {
+            "records.leads.read_write": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "APPOINTMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "calendar.events.read": "google_calendar",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
+          "providers": {
+            "records.threads.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "PAYMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "records.accounts_receivable.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "RENEWAL_REMINDER_AUTOMATION",
+          "providers": {
+            "records.contracts.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        }
+      ]
+    },
+    {
+      "key": "backoffice-google",
+      "name": "Backoffice documental",
+      "description": "Clasificación de correo, extracción de adjuntos, archivo y soporte operativo.",
+      "workflows": [
+        {
+          "key": "EMAIL_CLASSIFY_ROUTE_AUTOMATION",
+          "providers": {
+            "email.inbound": "gmail",
+            "records.email_routes.write": "google_sheets"
+          }
+        },
+        {
+          "key": "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION",
+          "providers": {
+            "email.inbound": "gmail",
+            "storage.objects.write": "google_drive"
+          }
+        },
+        {
+          "key": "DOCUMENT_ARCHIVE_AUTOMATION",
+          "providers": {
+            "storage.objects.write": "google_drive"
+          }
+        },
+        {
+          "key": "SUPPORT_INTAKE_AUTOMATION",
+          "providers": {
+            "records.tickets.write": "google_sheets"
+          }
+        }
+      ]
+    },
+    {
+      "key": "membership-google",
+      "name": "Membresías / contratos recurrentes",
+      "description": "Renovaciones, cobranza, soporte y vigilancia de mensajes sin responder.",
+      "workflows": [
+        {
+          "key": "PAYMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "records.accounts_receivable.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "RENEWAL_REMINDER_AUTOMATION",
+          "providers": {
+            "records.contracts.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "SUPPORT_INTAKE_AUTOMATION",
+          "providers": {
+            "records.tickets.write": "google_sheets"
+          }
+        },
+        {
+          "key": "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
+          "providers": {
+            "records.threads.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        }
+      ]
+    },
+    {
+      "key": "inventory-service-google",
+      "name": "Operación con inventario ligero",
+      "description": "Alertas de stock, atención, seguimiento comercial y cobranza para una MYPE con inventario simple.",
+      "workflows": [
+        {
+          "key": "LOW_STOCK_ALERT_AUTOMATION",
+          "providers": {
+            "records.inventory.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "LEAD_INTAKE_AUTOMATION",
+          "providers": {
+            "records.leads.write": "google_sheets"
+          }
+        },
+        {
+          "key": "QUOTE_FOLLOWUP_AUTOMATION",
+          "providers": {
+            "records.quotes.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "PAYMENT_REMINDER_AUTOMATION",
+          "providers": {
+            "records.accounts_receivable.read": "google_sheets",
+            "messaging.send": "gmail"
+          }
+        },
+        {
+          "key": "SUPPORT_INTAKE_AUTOMATION",
+          "providers": {
+            "records.tickets.write": "google_sheets"
+          }
+        }
+      ]
+    }
+  ]
+}
