@@ -313,3 +313,14 @@ python tools/savings/mk1_gate.py check --spec <mk1-pilot-evidence.json>
 ```
 
 It requires at least two APPROVED_BASELINE workflows plus real evidence for funding/payment, role model, provider binding/scopes, agreed SavingsBaseline, controlled live execution, client acceptance, tenant isolation, backup/restore, incident response and deployment rollback. Reduced static mode additionally requires explicit client agreement and an access-controlled delivery channel.
+
+
+### Real pilot intake workspace
+
+Before binding any credential, create an auditable client-delivery workspace:
+
+```bash
+python tools/savings/pilot_intake.py --spec <pilot-preflight.json>
+```
+
+It generates a zero-secret, fail-closed pack for the selected APPROVED_BASELINE workflows: draft baselines, connector authorization files, role model, tenant isolation controls, deployment decision and acceptance checklist. The resulting MK1 evidence spec remains BLOCKED until real client evidence is supplied.
