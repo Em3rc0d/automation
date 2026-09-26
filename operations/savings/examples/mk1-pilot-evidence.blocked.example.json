@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "demo-real-pilot",
+  "pilot": {
+    "fundingStatus": "UNFUNDED",
+    "clientNameRef": "prospect-ref",
+    "operatorOwner": "operator"
+  },
+  "surface": {
+    "mode": "REDUCED_STATIC",
+    "clientAgreementEvidence": null,
+    "deliveryChannel": null
+  },
+  "workflows": [
+    {
+      "key": "PAYMENT_REMINDER_AUTOMATION",
+      "bundlePath": ".local/installations/demo-real-pilot/PAYMENT_REMINDER_AUTOMATION@0.1"
+    },
+    {
+      "key": "APPOINTMENT_REMINDER_AUTOMATION",
+      "bundlePath": ".local/installations/demo-real-pilot/APPOINTMENT_REMINDER_AUTOMATION@0.1"
+    }
+  ],
+  "gates": {
+    "roleModelAgreed": { "passed": false, "evidence": null, "notes": null },
+    "providerAccountBound": { "passed": false, "evidence": null, "notes": null },
+    "connectorScopesVerified": { "passed": false, "evidence": null, "notes": null },
+    "savingsBaselineAgreed": { "passed": false, "evidence": null, "notes": null },
+    "controlledLiveExecutionPassed": { "passed": false, "evidence": null, "notes": null },
+    "clientAcceptanceRecorded": { "passed": false, "evidence": null, "notes": null },
+    "tenantIsolationProved": { "passed": false, "evidence": null, "notes": null },
+    "backupRestorePassed": { "passed": true, "evidence": "mk1/ops-hardening/README.md", "notes": "local rehearsal only" },
+    "incidentDrillPassed": { "passed": true, "evidence": "mk1/ops-hardening/README.md", "notes": "local rehearsal only" },
+    "deploymentRollbackApproved": { "passed": false, "evidence": null, "notes": null }
+  }
+}
