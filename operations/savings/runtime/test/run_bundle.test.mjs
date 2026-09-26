@@ -79,7 +79,7 @@ test("lead intake local simulation persists normalized lead without cloud connec
     clock: "2026-09-25T12:00:00Z",
     inbound: {
       sourceSystem: "web_form",
-      externalId: "form-001",
+      sourceId: "form-001",
       name: "Cliente Fixture",
       email: "fixture@example.test",
       phone: "+51999999999",
