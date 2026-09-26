@@ -78,3 +78,19 @@ Live execution uses:
 - provider adapters outside the certified core runtime boundary.
 
 No live command auto-promotes a tenant to `CLIENT_ACCEPTED`.
+
+
+## Local scheduling and event ingress
+
+Scheduled installations can use generated local cron wrappers from `tools/savings/deploy_local.py`. The wrapper calls `run_live.mjs` and relies on the same persistent idempotency/audit state.
+
+Event-driven installations can use `run_event_spool.mjs` as a filesystem ingress:
+
+```text
+inbox/*.json
+→ run_live.mjs
+→ processed/ OR failed/
+→ evidence/*.result.json
+```
+
+This is intentionally not a public webhook server. It is a cheap operator/client-owned bridge suitable for pilots where another local/system process can write normalized events. A public HTTP ingress should be added only when a paid pilot requires it and must follow the repository webhook security contract.

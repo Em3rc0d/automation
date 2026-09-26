@@ -109,3 +109,29 @@ For event-driven workflows, pass `--event event.json`; Gmail-based email workflo
 The live runner uses a file-backed idempotency store and append-only control-plane audit under the local bundle. This keeps retry protection across separate process invocations without adding a database.
 
 The runner writes `LIVE_PROVIDER_EXECUTION` evidence but **does not set `productionDryRunPassed` automatically**. Human review remains required before client acceptance.
+
+
+## Zero-cost local scheduling
+
+A configured scheduled workflow can be deployed on an operator/client-owned Linux machine without Railway, n8n or a per-tenant server:
+
+```bash
+python tools/savings/deploy_local.py plan --bundle <bundle> --json
+
+python tools/savings/deploy_local.py generate-cron \
+  --bundle <bundle> \
+  --env-file /etc/automation/acme.env
+```
+
+The generator creates a mode-`0700` wrapper, a crontab fragment and deployment metadata. It writes **no credential material**; the optional env file is an external operator-managed file and should be mode `0600` and outside Git.
+
+Event-driven workflows do not receive a fake polling cron. For a zero-cost local ingress path, place normalized event JSON under an event spool and process it with:
+
+```bash
+node operations/savings/runtime/run_event_spool.mjs \
+  --bundle <bundle> \
+  --spool .local/spool/acme \
+  --confirm-live-side-effects YES
+```
+
+Successful files move from `inbox/` to `processed/`; failures are quarantined under `failed/` with evidence rather than retried blindly in the same pass.
