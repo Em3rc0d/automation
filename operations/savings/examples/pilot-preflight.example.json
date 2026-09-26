@@ -1,0 +1,34 @@
+{
+  "tenantId": "demo-mype",
+  "currency": "PEN",
+  "workflows": [
+    {
+      "key": "PAYMENT_REMINDER_AUTOMATION",
+      "monthlyUnits": 120,
+      "manualMinutesPerUnit": 4,
+      "estimatedHumanMinutesAfterAutomation": 0.5,
+      "loadedHourlyCost": 18,
+      "baselineMethod": "client_declared",
+      "baselineSampleSize": 20,
+      "confidence": "low",
+      "providers": {
+        "records.accounts_receivable.read": "google_sheets",
+        "messaging.send": "gmail"
+      }
+    },
+    {
+      "key": "APPOINTMENT_REMINDER_AUTOMATION",
+      "monthlyUnits": 180,
+      "manualMinutesPerUnit": 2,
+      "estimatedHumanMinutesAfterAutomation": 0.25,
+      "loadedHourlyCost": 18,
+      "baselineMethod": "client_declared",
+      "baselineSampleSize": 20,
+      "confidence": "low",
+      "providers": {
+        "calendar.events.read": "google_calendar",
+        "messaging.send": "gmail"
+      }
+    }
+  ]
+}
