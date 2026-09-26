@@ -324,3 +324,16 @@ python tools/savings/pilot_intake.py --spec <pilot-preflight.json>
 ```
 
 It generates a zero-secret, fail-closed pack for the selected APPROVED_BASELINE workflows: draft baselines, connector authorization files, role model, tenant isolation controls, deployment decision and acceptance checklist. The resulting MK1 evidence spec remains BLOCKED until real client evidence is supplied.
+
+
+### MK1 evidence sync
+
+As real pilot artifacts accumulate, derive the gate state instead of flipping booleans manually:
+
+```bash
+python tools/savings/mk1_evidence_sync.py \
+  --spec .local/pilot/<tenant>/mk1-pilot-evidence.json \
+  --write
+```
+
+The derivation reads verified connector bindings, AGREED baselines, live execution evidence, hashed client approval, tenant-isolation controls, deployment decision, backup/restore and live-incident-drill evidence. Missing evidence stays blocked.
