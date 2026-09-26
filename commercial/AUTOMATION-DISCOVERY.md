@@ -87,3 +87,22 @@ Discovery ends with:
 - owner for each credential/provider account.
 
 No implementation starts while a critical business rule, system-of-record owner, credential owner or acceptance criterion remains unknown.
+
+
+## 7. Zero-cost pilot preflight
+
+When discovery maps to existing `APPROVED_BASELINE` Savings Workflows, the operator can turn the measured assumptions into a local pilot plan before asking for credentials:
+
+```bash
+python tools/savings/pilot_bootstrap.py plan --spec <pilot-spec.json>
+```
+
+The preflight:
+- rejects workflows that have not reached `APPROVED_BASELINE`;
+- maps required provider-neutral connector roles;
+- flags unsupported/missing provider choices;
+- computes a clearly labeled discovery capacity estimate when volume/time assumptions are present;
+- keeps baseline agreement, connector verification and client acceptance as later evidence gates;
+- does not provision paid infrastructure.
+
+This tool does not replace client discovery or approval. It makes the transition from discovery to implementation reproducible.
