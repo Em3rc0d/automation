@@ -23,6 +23,12 @@ APPROVED_ROOT = ROOT / "workflows/approved/savings"
 SECRET_KEY = re.compile(r"(password|secret|api[_-]?key|access[_-]?token|refresh[_-]?token|private[_-]?key)", re.I)
 SECRET_VALUE = re.compile(r"(?:sk-[A-Za-z0-9_-]{12,}|AKIA[0-9A-Z]{16}|-----BEGIN .*PRIVATE KEY-----)")
 
+PROTECTED_EVIDENCE_CHECKS = {
+    "productionDryRunPassed",
+    "clientFixturePassed",
+    "clientApprovalRecorded",
+}
+
 
 def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -185,6 +191,11 @@ def scaffold(workflow_key: str, tenant_id: str, out_root: Path, created_at: str 
             "clientFixturePassed": False,
             "clientApprovalRecorded": False,
         },
+        "evidenceRefs": {
+            "productionDryRunPassed": None,
+            "clientFixturePassed": None,
+            "clientApprovalRecorded": None,
+        },
         "notes": [],
     }
 
@@ -306,6 +317,9 @@ def diagnose(bundle: Path, target: str = "CLIENT_CONFIGURED") -> dict:
         if checks.get(check) is not True:
             errors.append(f"acceptance check not complete: {check}")
 
+    if target == "CLIENT_ACCEPTED":
+        errors.extend(validate_acceptance_evidence(bundle, acceptance))
+
     return {
         "ready": not errors,
         "target": target,
@@ -314,6 +328,205 @@ def diagnose(bundle: Path, target: str = "CLIENT_CONFIGURED") -> dict:
         "tenantId": installation.get("tenantId"),
         "blockers": errors,
     }
+
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def acceptance_ledger_path(bundle: Path) -> Path:
+    return bundle / "evidence" / "acceptance-ledger.jsonl"
+
+
+def append_acceptance_ledger(bundle: Path, entry: dict) -> None:
+    path = acceptance_ledger_path(bundle)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def acceptance_identity_errors(evidence: dict, installation: dict) -> list[str]:
+    errors: list[str] = []
+    expected = {
+        "tenantId": installation.get("tenantId"),
+        "installationId": installation.get("installationId"),
+        "workflowKey": installation.get("workflowKey"),
+        "workflowVersion": installation.get("workflowVersion"),
+    }
+    for field, value in expected.items():
+        if evidence.get(field) != value:
+            errors.append(
+                f"acceptance evidence identity mismatch {field}: "
+                f"expected={value!r} actual={evidence.get(field)!r}"
+            )
+    return errors
+
+
+def validate_acceptance_source(check: str, evidence: dict, installation: dict) -> None:
+    identity_errors = acceptance_identity_errors(evidence, installation)
+    if identity_errors:
+        raise ValueError("; ".join(identity_errors))
+
+    if check == "productionDryRunPassed":
+        if evidence.get("evidenceType") != "LIVE_PROVIDER_EXECUTION":
+            raise ValueError("production dry-run evidence must be LIVE_PROVIDER_EXECUTION")
+        if evidence.get("productionConnectorExecution") is not True:
+            raise ValueError("production dry-run evidence must prove productionConnectorExecution=true")
+        if evidence.get("success") is not True:
+            raise ValueError("production dry-run evidence must have success=true")
+        if evidence.get("requiresHumanReviewForAcceptance") is not True:
+            raise ValueError("production dry-run evidence must require human review before acceptance")
+        incidents = evidence.get("controlPlane", {}).get("incidents", [])
+        if incidents:
+            raise ValueError("production dry-run evidence contains incidents")
+
+    elif check == "clientFixturePassed":
+        if evidence.get("evidenceType") != "LOCAL_SIMULATION":
+            raise ValueError("client fixture evidence must be LOCAL_SIMULATION")
+        if evidence.get("productionEvidence") is not False:
+            raise ValueError("client fixture evidence must preserve productionEvidence=false")
+        incidents = evidence.get("controlPlane", {}).get("incidents", [])
+        if incidents:
+            raise ValueError("client fixture evidence contains incidents")
+
+    else:
+        raise ValueError(f"file evidence not supported for check: {check}")
+
+
+def record_acceptance_evidence(
+    bundle: Path,
+    check: str,
+    *,
+    actor: str,
+    evidence_file: Path | None = None,
+    reference: str | None = None,
+    recorded_at: str | None = None,
+) -> dict:
+    if check not in PROTECTED_EVIDENCE_CHECKS:
+        raise ValueError(f"check is not evidence-protected: {check}")
+    if not actor or not actor.strip():
+        raise ValueError("actor is required")
+
+    installation = read_json(bundle / "installation.json")
+    recorded_at = recorded_at or now_iso()
+    evidence_dir = bundle / "evidence" / "acceptance"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+
+    if check == "clientApprovalRecorded":
+        if not reference or not reference.strip():
+            raise ValueError("client approval requires a non-empty reference")
+        source = {
+            "schemaVersion": 1,
+            "evidenceType": "CLIENT_APPROVAL",
+            "tenantId": installation.get("tenantId"),
+            "installationId": installation.get("installationId"),
+            "workflowKey": installation.get("workflowKey"),
+            "workflowVersion": installation.get("workflowVersion"),
+            "actor": actor,
+            "reference": reference,
+            "recordedAt": recorded_at,
+        }
+        raw = (json.dumps(source, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+        digest = hashlib.sha256(raw).hexdigest()
+        snapshot = evidence_dir / f"{check}-{digest[:16]}.json"
+        snapshot.write_bytes(raw)
+        source_type = "CLIENT_APPROVAL"
+    else:
+        if evidence_file is None or not evidence_file.is_file():
+            raise ValueError(f"{check} requires --file evidence")
+        source = read_json(evidence_file)
+        validate_acceptance_source(check, source, installation)
+        raw = evidence_file.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        snapshot = evidence_dir / f"{check}-{digest[:16]}.json"
+        snapshot.write_bytes(raw)
+        source_type = source.get("evidenceType")
+
+    entry_id = f"ae_{check}_{digest[:16]}"
+    snapshot_rel = snapshot.relative_to(bundle).as_posix()
+    entry = {
+        "schemaVersion": 1,
+        "entryId": entry_id,
+        "check": check,
+        "evidenceType": source_type,
+        "sha256": digest,
+        "snapshot": snapshot_rel,
+        "actor": actor,
+        "recordedAt": recorded_at,
+        "reference": reference,
+    }
+    append_acceptance_ledger(bundle, entry)
+
+    path = bundle / "acceptance.json"
+    acceptance = read_json(path)
+    refs = acceptance.setdefault("evidenceRefs", {})
+    refs[check] = {
+        "entryId": entry_id,
+        "sha256": digest,
+        "snapshot": snapshot_rel,
+        "actor": actor,
+        "recordedAt": recorded_at,
+    }
+    acceptance.setdefault("checks", {})[check] = True
+    write_json(path, acceptance)
+    return entry
+
+
+def validate_acceptance_evidence(bundle: Path, acceptance: dict) -> list[str]:
+    errors: list[str] = []
+    ledger_path = acceptance_ledger_path(bundle)
+    ledger: dict[str, dict] = {}
+    if ledger_path.is_file():
+        for line_no, line in enumerate(ledger_path.read_text(encoding="utf-8").splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError as exc:
+                errors.append(f"acceptance ledger invalid JSON at line {line_no}: {exc}")
+                continue
+            entry_id = entry.get("entryId")
+            if entry_id:
+                ledger[entry_id] = entry
+
+    refs = acceptance.get("evidenceRefs", {})
+    checks = acceptance.get("checks", {})
+    for check in PROTECTED_EVIDENCE_CHECKS:
+        if checks.get(check) is not True:
+            continue
+        ref = refs.get(check)
+        if not isinstance(ref, dict):
+            errors.append(f"acceptance evidence reference missing: {check}")
+            continue
+        entry_id = ref.get("entryId")
+        entry = ledger.get(entry_id)
+        if not entry:
+            errors.append(f"acceptance ledger entry missing: {check}")
+            continue
+        snapshot_rel = ref.get("snapshot")
+        if not isinstance(snapshot_rel, str) or not snapshot_rel:
+            errors.append(f"acceptance snapshot path missing: {check}")
+            continue
+        snapshot = bundle / snapshot_rel
+        try:
+            snapshot.resolve().relative_to(bundle.resolve())
+        except ValueError:
+            errors.append(f"acceptance snapshot escapes bundle: {check}")
+            continue
+        if not snapshot.is_file():
+            errors.append(f"acceptance snapshot missing: {check}")
+            continue
+        digest = sha256_file(snapshot)
+        if digest != ref.get("sha256") or digest != entry.get("sha256"):
+            errors.append(f"acceptance evidence hash mismatch: {check}")
+        if entry.get("check") != check:
+            errors.append(f"acceptance ledger check mismatch: {check}")
+    return errors
 
 
 def set_binding(
@@ -403,6 +616,8 @@ def set_baseline(bundle: Path, args: argparse.Namespace) -> None:
 
 
 def set_check(bundle: Path, check: str, value: bool = True) -> None:
+    if check in PROTECTED_EVIDENCE_CHECKS:
+        raise ValueError(f"{check} is evidence-protected; use record-evidence")
     path = bundle / "acceptance.json"
     doc = read_json(path)
     if check not in doc.get("checks", {}):
@@ -487,6 +702,14 @@ def parser() -> argparse.ArgumentParser:
     chk.add_argument("--name", required=True)
     chk.add_argument("--false", action="store_true")
 
+    ev = sub.add_parser("record-evidence")
+    ev.add_argument("--bundle", type=Path, required=True)
+    ev.add_argument("--check", choices=sorted(PROTECTED_EVIDENCE_CHECKS), required=True)
+    ev.add_argument("--actor", required=True)
+    ev.add_argument("--file", type=Path)
+    ev.add_argument("--reference")
+    ev.add_argument("--recorded-at")
+
     pro = sub.add_parser("promote")
     pro.add_argument("--bundle", type=Path, required=True)
     pro.add_argument("--to", choices=["CLIENT_CONFIGURED", "CLIENT_ACCEPTED"], required=True)
@@ -534,7 +757,7 @@ def main() -> int:
                 args.scope,
                 parse_settings(args.setting),
             )
-            print("binding=verified")
+            print("binding=bound")
             return 0
 
         if args.command == "baseline":
@@ -545,6 +768,18 @@ def main() -> int:
         if args.command == "check":
             set_check(args.bundle, args.name, not args.false)
             print(f"{args.name}={str(not args.false).lower()}")
+            return 0
+
+        if args.command == "record-evidence":
+            entry = record_acceptance_evidence(
+                args.bundle,
+                args.check,
+                actor=args.actor,
+                evidence_file=args.file,
+                reference=args.reference,
+                recorded_at=args.recorded_at,
+            )
+            print(json.dumps(entry, indent=2))
             return 0
 
         if args.command == "promote":

@@ -235,3 +235,21 @@ LOCAL_SIMULATION
 Para un piloto pagado que ya tenga una máquina Linux/VM/PC operativo, los workflows programados pueden generar un wrapper + crontab local con `tools/savings/deploy_local.py`. Los workflows event-driven disponen de un spool de archivos con `run_event_spool.mjs`.
 
 La decisión sigue siendo económica: **no se aprovisiona Railway/n8n/servidor por cliente por defecto**. El runtime local usa el mismo código aprobado, idempotencia persistente y audit trail; si luego el volumen/ingreso justifica un runtime compartido administrado, se cambia el deployment, no el workflow de negocio.
+
+
+### Aceptación del cliente con evidencia
+
+Los gates finales `clientFixturePassed`, `productionDryRunPassed` y `clientApprovalRecorded` ya no deben depender de un booleano manual. El installation kit registra evidencia, toma un snapshot, calcula SHA-256 y mantiene un ledger local. Si la evidencia cambia después, `doctor` bloquea `CLIENT_ACCEPTED`.
+
+Con esto el camino barato sigue siendo auditable:
+
+```text
+APPROVED_BASELINE
+→ bundle local
+→ fixture local
+→ connector healthcheck
+→ CLIENT_CONFIGURED
+→ live controlled execution
+→ hashed evidence + client approval
+→ CLIENT_ACCEPTED
+```
