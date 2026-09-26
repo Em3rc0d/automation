@@ -1,0 +1,47 @@
+{
+  "clock": "2026-09-25T12:00:00Z",
+  "asOfDate": "2026-09-25",
+  "simulationCostPerMessagePen": 0.02,
+  "records": [
+    {
+      "id": "invoice-001",
+      "invoiceNumber": "F001-001",
+      "customerName": "Cliente Rehearsal Uno",
+      "status": "open",
+      "dueDate": "2026-09-25",
+      "amount": 850,
+      "currency": "PEN",
+      "contact": { "channel": "email", "address": "billing-one@example.test" }
+    },
+    {
+      "id": "invoice-002",
+      "invoiceNumber": "F001-002",
+      "customerName": "Cliente Rehearsal Dos",
+      "status": "open",
+      "dueDate": "2026-09-18",
+      "amount": 1250,
+      "currency": "PEN",
+      "contact": { "channel": "email", "address": "billing-two@example.test" }
+    },
+    {
+      "id": "invoice-003",
+      "invoiceNumber": "F001-003",
+      "customerName": "Cliente Sin Contacto",
+      "status": "open",
+      "dueDate": "2026-09-25",
+      "amount": 420,
+      "currency": "PEN",
+      "contact": { "channel": "email", "address": "" }
+    },
+    {
+      "id": "invoice-004",
+      "invoiceNumber": "F001-004",
+      "customerName": "Cliente Pagado",
+      "status": "paid",
+      "dueDate": "2026-09-25",
+      "amount": 600,
+      "currency": "PEN",
+      "contact": { "channel": "email", "address": "paid@example.test" }
+    }
+  ]
+}

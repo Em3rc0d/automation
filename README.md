@@ -90,7 +90,7 @@ Producto, non-goals, tenancy, modelo de dominio, contratos, secrets/OAuth, Savin
 
 Evidencia: `mk0/CLOSURE-LEDGER.md`.
 
-### MK1 — NOT CERTIFIED / implementation stage
+### MK1 — PRE-PILOT / ZERO-COST REHEARSAL READY / NOT CERTIFIED
 
 Termina cuando podemos:
 
@@ -255,13 +255,25 @@ APPROVED_BASELINE
 ```
 
 
-### Zero-cost pilot bootstrap
+## MK1 zero-cost rehearsal
 
-El paso comercial → piloto también puede prepararse sin credenciales ni infraestructura pagada:
+`mk1/rehearsal/` now proves a two-workflow value loop for a synthetic tenant using the same approved baselines and zero-dependency runtime:
 
-```bash
-python tools/savings/pilot_bootstrap.py plan \
-  --spec operations/savings/examples/pilot-preflight.example.json
+```text
+Payment Reminder + Appointment Reminder
+→ local installation bundles
+→ fixture baselines
+→ approved runtime execution
+→ ProcessRecords / SavingsEvents
+→ client/operator projections
+→ CLIENT_CONFIGURED doctor
+→ expected BLOCKED result until a real connector is verified
 ```
 
-El planner solo acepta `APPROVED_BASELINE`, valida compatibilidad de providers, estima capacidad liberada con supuestos explícitos y muestra los blockers reales para `CLIENT_CONFIGURED` / `CLIENT_ACCEPTED`. Puede generar bundles DRAFT locales, pero no puede verificar conectores, acordar el baseline ni aprobar al cliente automáticamente.
+Run it with:
+
+```bash
+python tools/savings/rehearse_pilot.py --json
+```
+
+This is intentionally **not** a real-client claim. It reduces the next milestone to external evidence: real tenant, real provider, real baseline, controlled live execution and explicit client acceptance.

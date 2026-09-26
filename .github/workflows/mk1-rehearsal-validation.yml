@@ -1,0 +1,28 @@
+name: MK1 Zero-Cost Rehearsal Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rehearsal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.5'
+      - name: Validate installer tests
+        run: python -m unittest discover -s tools/savings/tests -p 'test_*.py' -v
+      - name: Run MK1 zero-cost pilot rehearsal
+        run: python tools/savings/rehearse_pilot.py --json
