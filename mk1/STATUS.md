@@ -20,6 +20,7 @@ Static client/operator demo surfaces          IMPLEMENTED
 Static report integrity manifest             IMPLEMENTED
 Real-pilot evidence gate                     IMPLEMENTED
 Pilot intake workspace generator             IMPLEMENTED
+Evidence-to-gate sync                         IMPLEMENTED
 Reduced surface ADR                           ACCEPTED
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
@@ -88,3 +89,8 @@ See `operations/savings/MK1-REAL-PILOT-GATE.md`.
 `tools/savings/pilot_intake.py` now generates a zero-secret, initially BLOCKED workspace for a real pilot from the existing preflight spec. It materializes draft role model, tenant-isolation controls, per-workflow SavingsBaselines, connector authorization files, deployment decision and client acceptance checklist.
 
 This means the first paying/funded client should require evidence collection and configuration, not new platform design.
+
+
+## Evidence-to-gate sync
+
+`tools/savings/mk1_evidence_sync.py` derives MK1 gate state from actual bundle/workspace artifacts instead of relying on manual boolean edits. Missing or incomplete evidence remains false. Funding/payment and reduced-surface client consent remain external/manual evidence by design.
