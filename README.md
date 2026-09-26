@@ -253,3 +253,15 @@ APPROVED_BASELINE
 → hashed evidence + client approval
 → CLIENT_ACCEPTED
 ```
+
+
+### Zero-cost pilot bootstrap
+
+El paso comercial → piloto también puede prepararse sin credenciales ni infraestructura pagada:
+
+```bash
+python tools/savings/pilot_bootstrap.py plan \
+  --spec operations/savings/examples/pilot-preflight.example.json
+```
+
+El planner solo acepta `APPROVED_BASELINE`, valida compatibilidad de providers, estima capacidad liberada con supuestos explícitos y muestra los blockers reales para `CLIENT_CONFIGURED` / `CLIENT_ACCEPTED`. Puede generar bundles DRAFT locales, pero no puede verificar conectores, acordar el baseline ni aprobar al cliente automáticamente.
