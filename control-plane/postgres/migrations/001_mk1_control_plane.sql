@@ -129,7 +129,6 @@ create table if not exists public.execution_run (
     on delete cascade,
   foreign key (automation_instance_id, tenant_id)
     references public.automation_instance(id, tenant_id)
-    on delete set null
 );
 
 create table if not exists public.execution_event (
@@ -160,13 +159,13 @@ create table if not exists public.process_record (
   monetary_value numeric(16,4),
   currency char(3),
   requires_attention boolean not null default false,
+  unique (id, tenant_id),
   unique (tenant_id, installation_id, entity_type, entity_id),
   foreign key (installation_id, tenant_id)
     references public.savings_workflow_installation(id, tenant_id)
     on delete cascade,
   foreign key (execution_run_id, tenant_id)
     references public.execution_run(id, tenant_id)
-    on delete set null
 );
 
 create table if not exists public.incident (
@@ -186,7 +185,6 @@ create table if not exists public.incident (
     on delete cascade,
   foreign key (execution_run_id, tenant_id)
     references public.execution_run(id, tenant_id)
-    on delete set null
 );
 
 create table if not exists public.approval_request (
@@ -201,7 +199,9 @@ create table if not exists public.approval_request (
   reason text,
   foreign key (installation_id, tenant_id)
     references public.savings_workflow_installation(id, tenant_id)
-    on delete cascade
+    on delete cascade,
+  foreign key (process_record_id, tenant_id)
+    references public.process_record(id, tenant_id)
 );
 
 create table if not exists public.savings_event (
@@ -221,11 +221,9 @@ create table if not exists public.savings_event (
     references public.savings_workflow_installation(id, tenant_id)
     on delete cascade,
   foreign key (execution_run_id, tenant_id)
-    references public.execution_run(id, tenant_id)
-    on delete set null,
+    references public.execution_run(id, tenant_id),
   foreign key (baseline_id, tenant_id)
     references public.savings_baseline(id, tenant_id)
-    on delete set null
 );
 
 create table if not exists public.audit_event (
@@ -294,7 +292,21 @@ create policy savings_event_tenant_select on public.savings_event
 
 -- No browser grants for connector_binding, automation_instance, execution_run,
 -- execution_event or audit_event: those remain Operator Console/trusted backend data.
-revoke all on all tables in schema public from authenticated;
+revoke all on
+  public.tenant,
+  public.tenant_membership,
+  public.savings_workflow_installation,
+  public.connector_binding,
+  public.automation_instance,
+  public.savings_baseline,
+  public.execution_run,
+  public.execution_event,
+  public.process_record,
+  public.incident,
+  public.approval_request,
+  public.savings_event,
+  public.audit_event
+from authenticated;
 grant select on public.tenant to authenticated;
 grant select on public.tenant_membership to authenticated;
 grant select on public.savings_workflow_installation to authenticated;
@@ -305,8 +317,21 @@ grant select on public.approval_request to authenticated;
 grant select on public.savings_event to authenticated;
 
 -- Supabase service_role is backend-only and BYPASSRLS in managed deployments.
-grant all privileges on all tables in schema public to service_role;
-grant usage, select on all sequences in schema public to service_role;
+grant all privileges on
+  public.tenant,
+  public.tenant_membership,
+  public.savings_workflow_installation,
+  public.connector_binding,
+  public.automation_instance,
+  public.savings_baseline,
+  public.execution_run,
+  public.execution_event,
+  public.process_record,
+  public.incident,
+  public.approval_request,
+  public.savings_event,
+  public.audit_event
+to service_role;
 
 create index if not exists idx_membership_user_tenant on public.tenant_membership(user_id, tenant_id);
 create index if not exists idx_installation_tenant_status on public.savings_workflow_installation(tenant_id, status);
