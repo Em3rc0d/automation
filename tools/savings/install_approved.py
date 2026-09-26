@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "workflows/SAVINGS-WORKFLOW-REGISTRY.json"
 REQUIREMENTS = ROOT / "operations/savings/connector-requirements.json"
+PROVIDER_CATALOG = ROOT / "connectors/savings/google-workspace/provider-catalog.json"
 APPROVED_ROOT = ROOT / "workflows/approved/savings"
 
 SECRET_KEY = re.compile(r"(password|secret|api[_-]?key|access[_-]?token|refresh[_-]?token|private[_-]?key)", re.I)
@@ -41,6 +42,12 @@ def registry_by_key() -> dict[str, dict]:
 
 def connector_requirements() -> dict[str, list[dict]]:
     return read_json(REQUIREMENTS)["workflows"]
+
+
+def provider_catalog() -> dict[str, dict]:
+    if not PROVIDER_CATALOG.is_file():
+        return {}
+    return read_json(PROVIDER_CATALOG).get("providers", {})
 
 
 def approved_entries() -> list[dict]:
@@ -145,6 +152,7 @@ def scaffold(workflow_key: str, tenant_id: str, out_root: Path, created_at: str 
                 "provider": None,
                 "credentialRef": None,
                 "scopes": [],
+                "settings": {},
                 "status": "unbound",
             }
             for req in requirements
@@ -246,10 +254,24 @@ def diagnose(bundle: Path, target: str = "CLIENT_CONFIGURED") -> dict:
         credential_ref = binding.get("credentialRef")
         if not isinstance(credential_ref, str) or not credential_ref.startswith("credref:"):
             errors.append(f"credentialRef must use credref: reference for {req['capability']}")
-        if not binding.get("provider"):
+        provider = binding.get("provider")
+        if not provider:
             errors.append(f"provider missing: {req['capability']}")
+        else:
+            supported = provider_catalog().get(provider)
+            if supported is None:
+                errors.append(f"provider not in approved connector catalog: {provider}")
+            elif req["capability"] not in supported.get("capabilities", []):
+                errors.append(f"provider {provider} does not support capability: {req['capability']}")
+            if provider == "google_sheets":
+                settings = binding.get("settings") or {}
+                for required_setting in ["spreadsheetId", "range"]:
+                    if not settings.get(required_setting):
+                        errors.append(f"google_sheets setting missing for {req['capability']}: {required_setting}")
         if not isinstance(binding.get("scopes"), list):
             errors.append(f"scopes must be an array: {req['capability']}")
+        if not isinstance(binding.get("settings"), dict):
+            errors.append(f"settings must be an object: {req['capability']}")
 
     baseline_checks = {
         "manual_minutes_per_unit": lambda x: isinstance(x, (int, float)) and x > 0,
@@ -289,9 +311,30 @@ def diagnose(bundle: Path, target: str = "CLIENT_CONFIGURED") -> dict:
     }
 
 
-def set_binding(bundle: Path, capability: str, provider: str, credential_ref: str, scopes: list[str]) -> None:
+def set_binding(
+    bundle: Path,
+    capability: str,
+    provider: str,
+    credential_ref: str,
+    scopes: list[str],
+    settings: dict | None = None,
+) -> None:
     if not credential_ref.startswith("credref:"):
         raise ValueError("credential_ref must start with credref:")
+    providers = provider_catalog()
+    if provider not in providers:
+        raise ValueError(f"provider not in approved connector catalog: {provider}")
+    if capability not in providers[provider].get("capabilities", []):
+        raise ValueError(f"provider {provider} does not support capability: {capability}")
+    settings = settings or {}
+    errors = assert_safe_tree(settings, "$.settings")
+    if errors:
+        raise ValueError("; ".join(errors))
+    if provider == "google_sheets":
+        for field in ["spreadsheetId", "range"]:
+            if not settings.get(field):
+                raise ValueError(f"google_sheets setting required: {field}")
+
     path = bundle / "connector-bindings.json"
     doc = read_json(path)
     for binding in doc.get("bindings", []):
@@ -300,6 +343,7 @@ def set_binding(bundle: Path, capability: str, provider: str, credential_ref: st
                 "provider": provider,
                 "credentialRef": credential_ref,
                 "scopes": scopes,
+                "settings": settings,
                 "status": "verified",
             })
             write_json(path, doc)
@@ -350,6 +394,23 @@ def promote(bundle: Path, target: str, at: str | None = None) -> dict:
     return doc
 
 
+def parse_settings(values: list[str]) -> dict:
+    result: dict[str, object] = {}
+    for item in values:
+        if "=" not in item:
+            raise ValueError(f"setting must be KEY=VALUE: {item}")
+        key, raw = item.split("=", 1)
+        key = key.strip()
+        if not key:
+            raise ValueError("setting key cannot be empty")
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError:
+            value = raw
+        result[key] = value
+    return result
+
+
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
@@ -374,6 +435,7 @@ def parser() -> argparse.ArgumentParser:
     bind.add_argument("--provider", required=True)
     bind.add_argument("--credential-ref", required=True)
     bind.add_argument("--scope", action="append", default=[])
+    bind.add_argument("--setting", action="append", default=[], help="Non-secret provider setting KEY=VALUE")
 
     base = sub.add_parser("baseline")
     base.add_argument("--bundle", type=Path, required=True)
@@ -429,7 +491,14 @@ def main() -> int:
             return 0 if result["ready"] else 2
 
         if args.command == "bind":
-            set_binding(args.bundle, args.capability, args.provider, args.credential_ref, args.scope)
+            set_binding(
+                args.bundle,
+                args.capability,
+                args.provider,
+                args.credential_ref,
+                args.scope,
+                parse_settings(args.setting),
+            )
             print("binding=verified")
             return 0
 

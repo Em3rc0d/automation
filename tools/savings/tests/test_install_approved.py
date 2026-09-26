@@ -59,8 +59,15 @@ class InstallerTests(unittest.TestCase):
                 Path(tmp),
                 "2026-09-25T00:00:00Z",
             )
-            mod.set_binding(bundle, "records.accounts_receivable.read", "google_sheets", "credref:sheet-demo", ["spreadsheets.readonly"])
-            mod.set_binding(bundle, "messaging.send", "gmail", "credref:gmail-demo", ["mail.send"])
+            mod.set_binding(
+                bundle,
+                "records.accounts_receivable.read",
+                "google_sheets",
+                "credref:sheet-demo",
+                ["spreadsheets.readonly"],
+                {"spreadsheetId": "sheet-demo", "range": "Invoices!A:Z"},
+            )
+            mod.set_binding(bundle, "messaging.send", "gmail", "credref:gmail-demo", ["mail.send"], {})
             args = argparse.Namespace(
                 manual_minutes=4.0,
                 sample_size=30,
@@ -93,7 +100,14 @@ class InstallerTests(unittest.TestCase):
                 Path(tmp),
                 "2026-09-25T00:00:00Z",
             )
-            mod.set_binding(bundle, "records.leads.write", "fixture_crm", "credref:crm-demo", ["leads.write"])
+            mod.set_binding(
+                bundle,
+                "records.leads.write",
+                "google_sheets",
+                "credref:crm-demo",
+                ["spreadsheets"],
+                {"spreadsheetId": "sheet-demo", "range": "Leads!A:Z"},
+            )
             args = argparse.Namespace(
                 manual_minutes=3.0,
                 sample_size=25,
@@ -121,6 +135,42 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue(ready["ready"], ready["blockers"])
             installation = mod.promote(bundle, "CLIENT_ACCEPTED", "2026-09-25T02:00:00Z")
             self.assertEqual(installation["state"], "CLIENT_ACCEPTED")
+
+    def test_unknown_provider_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = mod.scaffold(
+                "PAYMENT_REMINDER_AUTOMATION",
+                "tenant-demo",
+                Path(tmp),
+                "2026-09-25T00:00:00Z",
+            )
+            with self.assertRaisesRegex(ValueError, "provider not in approved connector catalog"):
+                mod.set_binding(
+                    bundle,
+                    "messaging.send",
+                    "unknown_provider",
+                    "credref:test",
+                    [],
+                    {},
+                )
+
+    def test_google_sheets_requires_non_secret_location_settings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = mod.scaffold(
+                "PAYMENT_REMINDER_AUTOMATION",
+                "tenant-demo",
+                Path(tmp),
+                "2026-09-25T00:00:00Z",
+            )
+            with self.assertRaisesRegex(ValueError, "google_sheets setting required"):
+                mod.set_binding(
+                    bundle,
+                    "records.accounts_receivable.read",
+                    "google_sheets",
+                    "credref:test",
+                    ["spreadsheets.readonly"],
+                    {},
+                )
 
     def test_embedded_secret_like_field_is_rejected(self):
         errors = mod.assert_safe_tree({"apiKey": "super-secret-live-value"})

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "status": "PRODUCTION_CANDIDATE_NOT_TENANT_ACCEPTED",
+  "providers": {
+    "google_sheets": {
+      "credentialType": "google_oauth",
+      "capabilities": [
+        "records.accounts_receivable.read",
+        "records.leads.write",
+        "records.leads.read_write",
+        "records.threads.read",
+        "records.quotes.read",
+        "records.email_routes.write",
+        "records.inventory.read",
+        "records.tickets.write",
+        "records.contracts.read"
+      ],
+      "adapter": "sheets-table.mjs"
+    },
+    "gmail": {
+      "credentialType": "google_oauth",
+      "capabilities": [
+        "messaging.send",
+        "email.inbound"
+      ],
+      "adapter": "gmail.mjs"
+    },
+    "google_calendar": {
+      "credentialType": "google_oauth",
+      "capabilities": [
+        "calendar.events.read"
+      ],
+      "adapter": "calendar.mjs"
+    },
+    "google_drive": {
+      "credentialType": "google_oauth",
+      "capabilities": [
+        "storage.objects.write"
+      ],
+      "adapter": "drive-storage.mjs"
+    }
+  }
+}
