@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MK1OpsEvidence",
+  "type": "object",
+  "required": ["schemaVersion", "passed", "evidence", "recordedAt"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "passed": { "type": "boolean" },
+    "evidence": { "type": ["string", "null"] },
+    "recordedAt": { "type": ["string", "null"] },
+    "notes": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}
