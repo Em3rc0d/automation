@@ -1,0 +1,26 @@
+name: MK1 Pilot Intake Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  intake-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: python -m unittest tools/savings/tests/test_pilot_intake.py
+      - name: Generate example intake
+        run: |
+          python tools/savings/pilot_intake.py             --spec operations/savings/examples/pilot-preflight.example.json             --out-root /tmp/mk1-pilot
+          test -f /tmp/mk1-pilot/demo-mype/INTAKE-MANIFEST.json

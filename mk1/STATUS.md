@@ -19,6 +19,7 @@ Two-workflow MK1 rehearsal                  IMPLEMENTED
 Static client/operator demo surfaces          IMPLEMENTED
 Static report integrity manifest             IMPLEMENTED
 Real-pilot evidence gate                     IMPLEMENTED
+Pilot intake workspace generator             IMPLEMENTED
 Reduced surface ADR                           ACCEPTED
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
@@ -80,3 +81,10 @@ The repository example is intentionally BLOCKED. This prevents local rehearsal a
 - client acceptance.
 
 See `operations/savings/MK1-REAL-PILOT-GATE.md`.
+
+
+## Pilot intake workspace
+
+`tools/savings/pilot_intake.py` now generates a zero-secret, initially BLOCKED workspace for a real pilot from the existing preflight spec. It materializes draft role model, tenant-isolation controls, per-workflow SavingsBaselines, connector authorization files, deployment decision and client acceptance checklist.
+
+This means the first paying/funded client should require evidence collection and configuration, not new platform design.
