@@ -21,6 +21,7 @@ Static report integrity manifest             IMPLEMENTED
 Real-pilot evidence gate                     IMPLEMENTED
 Pilot intake workspace generator             IMPLEMENTED
 Evidence-to-gate sync                         IMPLEMENTED
+One-command pilot launcher                    IMPLEMENTED
 Reduced surface ADR                           ACCEPTED
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
@@ -94,3 +95,8 @@ This means the first paying/funded client should require evidence collection and
 ## Evidence-to-gate sync
 
 `tools/savings/mk1_evidence_sync.py` derives MK1 gate state from actual bundle/workspace artifacts instead of relying on manual boolean edits. Missing or incomplete evidence remains false. Funding/payment and reduced-surface client consent remain external/manual evidence by design.
+
+
+## One-command pilot launch
+
+`tools/savings/launch_pilot.py` now composes pilot planning, APPROVED_BASELINE installation bundles and the fail-closed evidence workspace in one local command. Fresh launches are required to remain BLOCKED until real evidence arrives.
