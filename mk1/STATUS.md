@@ -17,6 +17,8 @@ Local scheduler + event spool               IMPLEMENTED
 Hashed client-acceptance evidence gate      IMPLEMENTED
 Two-workflow MK1 rehearsal                  IMPLEMENTED
 Static client/operator demo surfaces          IMPLEMENTED
+Static report integrity manifest             IMPLEMENTED
+Reduced surface ADR                           ACCEPTED
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
 Paid infrastructure required for rehearsal NO
@@ -54,3 +56,10 @@ Do not mark P1/MK1 certified until those real-world gates are evidenced.
 The rehearsal JSON projections can render to dependency-free local Client Portal and Operator Console HTML. This closes the **demo/presentation** portion of the UI gap without adding hosting cost.
 
 Production auth, RLS and persistence remain real pilot/product gates.
+
+
+## Reduced surface mode
+
+ADR-0009 allows the first paying/funded pilot to use an operator-mediated static client report **only when the client explicitly agrees**. Reports carry a SHA-256 manifest and must be delivered through an access-controlled client-approved channel.
+
+This can defer hosted Auth/RLS/UI spend, but it never waives tenant isolation, connector evidence, live execution, acceptance, backup or incident requirements.
