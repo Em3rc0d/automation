@@ -302,3 +302,14 @@ Es una superficie de demo deliberadamente estática: no reemplaza Auth/RLS ni se
 ADR-0009 allows a paying/funded first pilot to use an evidence-backed static client report and local operator tooling when the client explicitly agrees. Static surfaces now include a portable SHA-256 manifest covering the source projections and rendered HTML.
 
 This avoids paying for hosted presentation infrastructure before revenue while keeping connector, data-isolation, live-execution and client-acceptance gates intact.
+
+
+### MK1 real-pilot gate
+
+The zero-cost rehearsal path now ends in a fail-closed real-pilot evidence gate:
+
+```bash
+python tools/savings/mk1_gate.py check --spec <mk1-pilot-evidence.json>
+```
+
+It requires at least two APPROVED_BASELINE workflows plus real evidence for funding/payment, role model, provider binding/scopes, agreed SavingsBaseline, controlled live execution, client acceptance, tenant isolation, backup/restore, incident response and deployment rollback. Reduced static mode additionally requires explicit client agreement and an access-controlled delivery channel.
