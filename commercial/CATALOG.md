@@ -178,3 +178,21 @@ Client 3 → repeatability/case study
 ```
 
 Then increase pricing and move recurring patterns into templates.
+
+
+## Delivery presets
+
+The commercial catalog remains outcome-based; technical presets are only delivery accelerators.
+
+Current zero-cost starting points live in `operations/savings/presets/catalog.json`:
+
+- services/agencies;
+- workshops/technical service;
+- academies/training;
+- backoffice/document handling;
+- recurring memberships/contracts;
+- lightweight inventory/service operations.
+
+Each preset composes only `APPROVED_BASELINE` Savings Workflows and candidate Google Workspace adapters. It does not include client baseline values, credentials, acceptance or a pricing promise.
+
+Use `pilot_bootstrap.py from-preset` after discovery identifies a fit, then measure the real AS-IS process before quoting savings.

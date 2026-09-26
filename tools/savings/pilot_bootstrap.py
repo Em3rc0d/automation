@@ -18,6 +18,7 @@ REGISTRY = ROOT / "workflows/SAVINGS-WORKFLOW-REGISTRY.json"
 REQUIREMENTS = ROOT / "operations/savings/connector-requirements.json"
 PROVIDERS = ROOT / "connectors/savings/google-workspace/provider-catalog.json"
 INSTALLER = ROOT / "tools/savings/install_approved.py"
+PRESETS = ROOT / "operations/savings/presets/catalog.json"
 
 
 def read_json(path: Path) -> dict:
@@ -26,6 +27,39 @@ def read_json(path: Path) -> dict:
 
 def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def list_presets() -> list[dict]:
+    if not PRESETS.is_file():
+        return []
+    return read_json(PRESETS).get("presets", [])
+
+
+def preset_spec(preset_key: str, tenant_id: str, currency: str = "PEN") -> dict:
+    presets = {item["key"]: item for item in list_presets()}
+    preset = presets.get(preset_key)
+    if not preset:
+        raise ValueError(f"unknown preset: {preset_key}")
+    if not tenant_id or not tenant_id.strip():
+        raise ValueError("tenant is required")
+    workflows = []
+    for item in preset.get("workflows", []):
+        workflows.append({
+            "key": item["key"],
+            "providers": dict(item.get("providers") or {}),
+        })
+    if not workflows:
+        raise ValueError(f"preset has no workflows: {preset_key}")
+    return {
+        "tenantId": tenant_id,
+        "currency": currency,
+        "preset": {
+            "key": preset["key"],
+            "name": preset["name"],
+            "description": preset.get("description"),
+        },
+        "workflows": workflows,
+    }
 
 
 def load_installer():
@@ -260,12 +294,45 @@ def parser() -> argparse.ArgumentParser:
     scaffold.add_argument("--spec", type=Path, required=True)
     scaffold.add_argument("--out-root", type=Path, default=ROOT / ".local/installations")
 
+    sub.add_parser("list-presets")
+
+    from_preset = sub.add_parser("from-preset")
+    from_preset.add_argument("--preset", required=True)
+    from_preset.add_argument("--tenant", required=True)
+    from_preset.add_argument("--currency", default="PEN")
+    from_preset.add_argument("--out", type=Path)
+
     return ap
 
 
 def main() -> int:
     args = parser().parse_args()
     try:
+        if args.command == "list-presets":
+            value = {
+                "schemaVersion": 1,
+                "presets": [
+                    {
+                        "key": item["key"],
+                        "name": item["name"],
+                        "description": item.get("description"),
+                        "workflowCount": len(item.get("workflows", [])),
+                    }
+                    for item in list_presets()
+                ],
+            }
+            print(json.dumps(value, indent=2, ensure_ascii=False))
+            return 0
+
+        if args.command == "from-preset":
+            value = preset_spec(args.preset, args.tenant, args.currency)
+            build_plan(value)
+            if args.out:
+                args.out.parent.mkdir(parents=True, exist_ok=True)
+                write_json(args.out, value)
+            print(json.dumps(value, indent=2, ensure_ascii=False))
+            return 0
+
         spec = read_json(args.spec)
         if args.command == "plan":
             value = build_plan(spec)
