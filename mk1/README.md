@@ -227,3 +227,14 @@ python tools/savings/pilot_intake.py \
 ```
 
 The generated workspace is deliberately DRAFT/BLOCKED and contains no secrets. It pre-creates the artifacts needed for role agreement, connector scope verification, SavingsBaseline agreement, isolation evidence, deployment decision and client acceptance.
+
+
+## One-command pilot launch
+
+For the first real pilot, the operator no longer needs to remember the setup sequence:
+
+```bash
+python tools/savings/launch_pilot.py --spec <pilot-preflight.json>
+```
+
+This creates both installation bundles and the evidence-intake workspace locally, then verifies the fresh pilot is still BLOCKED. Provider credentials, live execution and client approval remain explicit later steps.
