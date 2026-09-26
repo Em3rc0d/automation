@@ -1,0 +1,60 @@
+{
+  "clock": "2026-09-25T12:00:00Z",
+  "asOf": "2026-09-25T12:00:00Z",
+  "simulationCostPerMessagePen": 0.01,
+  "events": [
+    {
+      "id": "appt-001",
+      "title": "Mantenimiento preventivo",
+      "status": "confirmed",
+      "startsAt": "2026-09-26T12:00:00Z",
+      "location": "Taller Rehearsal",
+      "attendees": [
+        {
+          "id": "customer-001",
+          "name": "Cliente Agenda Uno",
+          "contact": { "channel": "email", "address": "agenda-one@example.test" }
+        }
+      ]
+    },
+    {
+      "id": "appt-002",
+      "title": "Diagnóstico",
+      "status": "scheduled",
+      "startsAt": "2026-09-25T14:00:00Z",
+      "attendees": [
+        {
+          "id": "customer-002",
+          "name": "Cliente Agenda Dos",
+          "contact": { "channel": "email", "address": "agenda-two@example.test" }
+        }
+      ]
+    },
+    {
+      "id": "appt-003",
+      "title": "Revisión sin contacto",
+      "status": "scheduled",
+      "startsAt": "2026-09-25T14:00:00Z",
+      "attendees": [
+        {
+          "id": "customer-003",
+          "name": "Cliente Agenda Sin Contacto",
+          "contact": { "channel": "email", "address": "" }
+        }
+      ]
+    },
+    {
+      "id": "appt-004",
+      "title": "Cita cancelada",
+      "status": "cancelled",
+      "startsAt": "2026-09-25T14:00:00Z",
+      "attendees": [
+        {
+          "id": "customer-004",
+          "name": "Cliente Cancelado",
+          "contact": { "channel": "email", "address": "cancelled@example.test" }
+        }
+      ]
+    }
+  ]
+}

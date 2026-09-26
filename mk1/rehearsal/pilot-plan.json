@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "mk1-rehearsal",
+  "productionClaim": false,
+  "paidInfrastructureRequired": false,
+  "workflows": [
+    {
+      "key": "PAYMENT_REMINDER_AUTOMATION",
+      "fixture": "mk1/rehearsal/fixtures/payment-reminder.json",
+      "baseline": {
+        "manual_minutes_per_unit": 4,
+        "baseline_sample_size": 30,
+        "baseline_method": "time_study",
+        "loaded_hourly_cost": 18,
+        "currency": "PEN",
+        "confidence": "medium"
+      }
+    },
+    {
+      "key": "APPOINTMENT_REMINDER_AUTOMATION",
+      "fixture": "mk1/rehearsal/fixtures/appointment-reminder.json",
+      "baseline": {
+        "manual_minutes_per_unit": 2,
+        "baseline_sample_size": 30,
+        "baseline_method": "time_study",
+        "loaded_hourly_cost": 18,
+        "currency": "PEN",
+        "confidence": "medium"
+      }
+    }
+  ]
+}
