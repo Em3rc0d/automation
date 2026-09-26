@@ -1,0 +1,30 @@
+name: MK1 One-command Launch Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: python -m unittest tools/savings/tests/test_launch_pilot.py
+      - name: Smoke launch
+        run: |
+          python tools/savings/launch_pilot.py \
+            --spec operations/savings/examples/pilot-preflight.example.json \
+            --installations-root /tmp/mk1-installations \
+            --pilot-root /tmp/mk1-pilot \
+            > /tmp/mk1-launch.json
+          grep -q '"initialGate": "BLOCKED"' /tmp/mk1-launch.json
