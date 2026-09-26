@@ -31,3 +31,12 @@ Rejected: a missed `WHERE tenant_id = ...` becomes a data-leak incident.
 ## Future reconsideration
 
 Dedicated DB/schema per tenant may be revisited for contractual, regulatory or scale reasons for specific customers, but is not the default architecture.
+
+
+## Implementation evidence
+
+The MK1 database contract now has executable evidence under `control-plane/postgres/`.
+
+`.github/workflows/mk1-control-plane-rls.yml` applies the migration to ephemeral PostgreSQL 16 and proves negative cross-tenant access, read-only browser behavior, technical-table separation and composite tenant FK safety.
+
+This is pre-pilot schema/RLS evidence, not a claim that a real Supabase tenant/auth deployment has been accepted.

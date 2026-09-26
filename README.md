@@ -295,3 +295,8 @@ python tools/savings/render_rehearsal_html.py --input .local/mk1-rehearsal
 ```
 
 Es una superficie de demo deliberadamente estática: no reemplaza Auth/RLS ni se presenta como UI productiva.
+
+
+### Control plane PostgreSQL + RLS
+
+El contrato MK1 de tenancy ya tiene una implementación SQL reproducible bajo `control-plane/postgres/`: tablas compartidas con `tenant_id`, RLS, separación Browser/Operator y tests negativos cross-tenant contra PostgreSQL 16 efímero en CI. No requiere abrir un proyecto Supabase pagado para probar la seguridad estructural.

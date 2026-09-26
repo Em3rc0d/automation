@@ -1,0 +1,43 @@
+name: MK1 Control Plane RLS Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-rls:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: automation_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d automation_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: automation_test
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Bootstrap Supabase auth-role test shim
+        run: psql -v ON_ERROR_STOP=1 -f control-plane/postgres/test/bootstrap.sql
+      - name: Apply MK1 control-plane migration
+        run: psql -v ON_ERROR_STOP=1 -f control-plane/postgres/migrations/001_mk1_control_plane.sql
+      - name: Run negative cross-tenant RLS tests
+        run: psql -v ON_ERROR_STOP=1 -f control-plane/postgres/test/rls.sql
