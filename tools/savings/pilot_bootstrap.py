@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "workflows/SAVINGS-WORKFLOW-REGISTRY.json"
 REQUIREMENTS = ROOT / "operations/savings/connector-requirements.json"
 PROVIDERS = ROOT / "connectors/savings/google-workspace/provider-catalog.json"
-INSTALLER = ROOT / "tools/savings/install_approved.py"\nPRESETS = ROOT / "operations/savings/presets/catalog.json"
+INSTALLER = ROOT / "tools/savings/install_approved.py"
+PRESETS = ROOT / "operations/savings/presets/catalog.json"
 
 
 def read_json(path: Path) -> dict:
