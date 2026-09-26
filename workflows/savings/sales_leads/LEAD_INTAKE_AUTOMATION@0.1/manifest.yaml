@@ -20,7 +20,7 @@ implementation:
   reference: "runtime/savings-p0/src/workflows/lead-intake.js"
   readyForProduction: false
 certification:
-  tested: false
+  tested: true
   approvedBaseline: true
   clientAccepted: false
 savings:

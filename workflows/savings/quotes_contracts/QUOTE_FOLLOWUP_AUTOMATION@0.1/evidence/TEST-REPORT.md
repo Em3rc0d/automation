@@ -2,64 +2,71 @@
 
 VERDICT: PASS
 
-runtime_profile: zero-deps-node-v1  
-runtime_version: 20.19.5  
-evidence_sha: e7bc6152bce2b6bd5fce6a222c6c3077b3c386f0  
-workflow_run: Savings P0 Validation  
-run_id: 36089006956  
-job_id: 107927102957  
-test_command: npm run validate  
-test_count: 44  
-pass_count: 44  
-fail_count: 0  
+runtime_profile: zero-deps-node-v1
+runtime_version: 20.19.5
+evidence_sha: e7bc6152bce2b6bd5fce6a222c6c3077b3c386f0
+test_command: npm run validate
+test_count: 44
+pass_count: 44
+fail_count: 0
+workflow_run: 36089006956
+workflow_job: 107927102957
+workflow_test: runtime/savings-p0/test/quote-followup.test.js
+workflow_demo: runtime/savings-p0/demo/quote-followup/run.js
+idempotency: PASS
+failure_paths: PASS
+tenant_scope: PASS
+savings_event: PASS
+variable_cost: PASS
+demo_assertions: PASS
+limitations: provider-neutral local adapters only; live provider credentials and tenant production acceptance are outside TESTED.
 
-## Workflow identity
+## Evidence identity
 
-- key: `QUOTE_FOLLOWUP_AUTOMATION@0.1`
+- workflow: `QUOTE_FOLLOWUP_AUTOMATION@0.1`
+- domain: `quotes_contracts`
 - implementation: `runtime/savings-p0/src/workflows/quote-followup.js`
-- workflow-specific test: `runtime/savings-p0/test/quote-followup.test.js`
-- deterministic demo: `runtime/savings-p0/demo/quote-followup/run.js`
-- savings unit: `quote`
+- certified runtime: `zero-deps-node-v1`
+- runtime certificate: `certification/F1-ZERO-DEPS-NODE-V1-CERTIFICATE.md`
+- HARDENED report: `evidence/HARDENING-REPORT.md`
+- exact CI SHA: `e7bc6152bce2b6bd5fce6a222c6c3077b3c386f0`
+- Savings P0 Validation run: `36089006956`
+- zero-cost-reference-runtime job: `107927102957`
 
-## demo_assertions
+## What the exact-SHA suite proved
 
-PASS — the all-reference demo assertion command completed successfully on the exact evidence SHA, including this workflow's deterministic demo.
+The exact CI SHA executed the complete `runtime/savings-p0` suite and all reference demos under the certified runtime boundary:
 
-## idempotency
+```text
+tests 44
+pass  44
+fail   0
+```
 
-PASS — the workflow-specific suite and shared runtime suite cover duplicate execution/side-effect protection appropriate to this workflow.
+The package-specific executable test and deterministic demo named above were part of that suite.
 
-## failure_paths
+## Business/runtime assertions
 
-PASS — provider/transient/permanent failure or workflow exception behavior is covered by the package fixtures and executable reference/runtime tests.
+- tenant-scoped execution;
+- deterministic workflow policy;
+- duplicate/idempotency protection;
+- retry/failure behavior;
+- ProcessRecord generation where applicable;
+- Incident path on terminal runtime failures;
+- SavingsEvent accounting;
+- exception/oversight minutes are explicit rather than hidden;
+- provider variable cost is attributable where applicable;
+- replay does not create a second counted savings unit for the same business action.
 
-## tenant_scope
+## Boundary
 
-PASS — execution and local provider-neutral adapters require tenant-scoped access; cross-tenant behavior remains outside accepted paths.
+**TESTED** means this version has exact-SHA executable evidence on a FACTORY-CERTIFIED runtime.
 
-## savings_event
+It does not mean:
+- a live provider connector is configured;
+- a tenant has accepted a real fixture;
+- a SavingsBaseline has been agreed with a client;
+- production readiness has been approved;
+- the workflow is yet `APPROVED_BASELINE`.
 
-PASS — automated units, exceptions/oversight and SavingsEvent accounting are exercised through the shared runtime.
-
-## variable_cost
-
-PASS — provider variable cost is attributed when applicable; zero-cost local reference execution does not hide modeled provider cost.
-
-## limitations
-
-- Tests use certified provider-neutral local adapters, not live third-party credentials.
-- Client-specific provider scopes and real-system acceptance remain a later CLIENT_CONFIGURED / CLIENT_ACCEPTED gate.
-- This TESTED verdict applies to the repository-controlled code-first baseline on the certified runtime profile.
-- TESTED does not by itself mean APPROVED_BASELINE or production-ready for an individual tenant.
-
-## Evidence integrity
-
-The exact HARDENED branch SHA above passed:
-- Repository Certification;
-- Savings P0 Validation;
-- W1/W2 validation;
-- Baseline Factory Validation.
-
-The Savings P0 job reported **44 tests / 44 pass / 0 fail**, and `npm run validate` executed the complete Node suite plus all 12 deterministic demos.
-
-Next gate: explicit immutable promotion to `APPROVED_BASELINE`.
+Next gate: explicit immutable promotion to APPROVED_BASELINE.
