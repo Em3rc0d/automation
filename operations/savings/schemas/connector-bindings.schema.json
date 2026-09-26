@@ -25,7 +25,8 @@
           "credentialRef",
           "scopes",
           "status",
-          "settings"
+          "settings",
+          "verification"
         ],
         "properties": {
           "capability": {
@@ -56,6 +57,7 @@
           "status": {
             "enum": [
               "unbound",
+              "bound",
               "verified",
               "degraded",
               "revoked"
@@ -63,6 +65,29 @@
           },
           "settings": {
             "type": "object",
+            "additionalProperties": true
+          },
+          "verification": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "checkedAt": {
+                "type": "string"
+              },
+              "evidenceRef": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "checkedAt",
+              "evidenceRef",
+              "provider"
+            ],
             "additionalProperties": true
           }
         },

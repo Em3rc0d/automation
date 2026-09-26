@@ -211,3 +211,20 @@ Esto ejecuta el mismo código `zero-deps-node-v1`, produce ProcessRecords/Incide
 Para clientes que ya operan sobre Google Workspace, `connectors/savings/google-workspace/` ofrece adapters provider-facing para Sheets, Gmail, Calendar y Drive sin añadir dependencias npm ni un servidor dedicado por cliente. El runtime aprobado sigue provider-neutral; credenciales reales viven fuera del bundle mediante `credref:`.
 
 El pack está en estado **PRODUCTION_CANDIDATE**, no implica `CLIENT_ACCEPTED` hasta probar scopes, fixture y dry-run con la cuenta real del tenant.
+
+
+### De fixture local a conector real
+
+El flujo operativo ya separa explícitamente tres pasos:
+
+```text
+LOCAL_SIMULATION
+→ BOUND connector
+→ LIVE_CONNECTOR_HEALTHCHECK / verified
+→ CLIENT_CONFIGURED
+→ LIVE_PROVIDER_EXECUTION
+→ revisión humana
+→ CLIENT_ACCEPTED
+```
+
+`verify_connectors.mjs` valida scopes/conectividad sin fingir que un simple bind está verificado. `run_live.mjs` requiere confirmación explícita de side effects y persiste idempotencia/auditoría en archivos locales, evitando introducir una base de datos o servidor dedicado antes de que el ingreso lo justifique.

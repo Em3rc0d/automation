@@ -48,6 +48,19 @@ export class GoogleSheetsTableAdapter {
     return `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(this.spreadsheetId)}/values/${encodeURIComponent(range)}`;
   }
 
+  async healthCheck() {
+    const payload = await this.client.request(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(this.spreadsheetId)}`,
+      { query: { fields: "spreadsheetId,properties.title" } },
+    );
+    return {
+      provider: "google_sheets",
+      ok: payload?.spreadsheetId === this.spreadsheetId || Boolean(payload?.spreadsheetId),
+      resource: payload?.spreadsheetId ?? this.spreadsheetId,
+      title: payload?.properties?.title ?? null,
+    };
+  }
+
   async rawValues() {
     const payload = await this.client.request(this.endpoint(), { query: { majorDimension: "ROWS" } });
     return Array.isArray(payload?.values) ? payload.values : [];

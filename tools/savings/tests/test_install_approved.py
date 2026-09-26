@@ -68,6 +68,20 @@ class InstallerTests(unittest.TestCase):
                 {"spreadsheetId": "sheet-demo", "range": "Invoices!A:Z"},
             )
             mod.set_binding(bundle, "messaging.send", "gmail", "credref:gmail-demo", ["mail.send"], {})
+            mod.record_connector_verification(
+                bundle,
+                "records.accounts_receivable.read",
+                "evidence/sheets-check.json",
+                "google_sheets",
+                "2026-09-25T00:30:00Z",
+            )
+            mod.record_connector_verification(
+                bundle,
+                "messaging.send",
+                "evidence/gmail-check.json",
+                "gmail",
+                "2026-09-25T00:31:00Z",
+            )
             args = argparse.Namespace(
                 manual_minutes=4.0,
                 sample_size=30,
@@ -108,6 +122,13 @@ class InstallerTests(unittest.TestCase):
                 ["spreadsheets"],
                 {"spreadsheetId": "sheet-demo", "range": "Leads!A:Z"},
             )
+            mod.record_connector_verification(
+                bundle,
+                "records.leads.write",
+                "evidence/sheets-check.json",
+                "google_sheets",
+                "2026-09-25T00:30:00Z",
+            )
             args = argparse.Namespace(
                 manual_minutes=3.0,
                 sample_size=25,
@@ -135,6 +156,29 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue(ready["ready"], ready["blockers"])
             installation = mod.promote(bundle, "CLIENT_ACCEPTED", "2026-09-25T02:00:00Z")
             self.assertEqual(installation["state"], "CLIENT_ACCEPTED")
+
+    def test_bound_connector_is_not_verified_without_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = mod.scaffold(
+                "PAYMENT_REMINDER_AUTOMATION",
+                "tenant-demo",
+                Path(tmp),
+                "2026-09-25T00:00:00Z",
+            )
+            mod.set_binding(
+                bundle,
+                "records.accounts_receivable.read",
+                "google_sheets",
+                "credref:sheet-demo",
+                ["spreadsheets.readonly"],
+                {"spreadsheetId": "sheet-demo", "range": "Invoices!A:Z"},
+            )
+            connectors = mod.read_json(bundle / "connector-bindings.json")
+            bound = next(x for x in connectors["bindings"] if x["capability"] == "records.accounts_receivable.read")
+            self.assertEqual(bound["status"], "bound")
+            self.assertIsNone(bound["verification"])
+            result = mod.diagnose(bundle, "CLIENT_CONFIGURED")
+            self.assertTrue(any("connector not verified" in x for x in result["blockers"]))
 
     def test_unknown_provider_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

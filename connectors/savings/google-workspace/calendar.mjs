@@ -5,6 +5,18 @@ export class GoogleCalendarAdapter {
     this.calendarId = calendarId;
   }
 
+  async healthCheck() {
+    const calendar = await this.client.request(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(this.calendarId)}`,
+    );
+    return {
+      provider: "google_calendar",
+      ok: Boolean(calendar?.id),
+      calendarId: calendar?.id ?? this.calendarId,
+      summary: calendar?.summary ?? null,
+    };
+  }
+
   async listUpcoming({ tenantId, from, to }) {
     const payload = await this.client.request(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(this.calendarId)}/events`,
