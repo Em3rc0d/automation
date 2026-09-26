@@ -25,4 +25,8 @@ jobs:
       - name: Validate installer tests
         run: python -m unittest discover -s tools/savings/tests -p 'test_*.py' -v
       - name: Run MK1 zero-cost pilot rehearsal
-        run: python tools/savings/rehearse_pilot.py --json
+        run: python tools/savings/rehearse_pilot.py --out .local/mk1-rehearsal --json
+      - name: Render static client/operator surfaces
+        run: python tools/savings/render_rehearsal_html.py --input .local/mk1-rehearsal --json
+      - name: Verify static report evidence manifest
+        run: python tools/savings/render_rehearsal_html.py --input .local/mk1-rehearsal --verify --json
