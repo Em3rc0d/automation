@@ -295,3 +295,10 @@ python tools/savings/render_rehearsal_html.py --input .local/mk1-rehearsal
 ```
 
 Es una superficie de demo deliberadamente estática: no reemplaza Auth/RLS ni se presenta como UI productiva.
+
+
+### Zero-cost reduced pilot surface
+
+ADR-0009 allows a paying/funded first pilot to use an evidence-backed static client report and local operator tooling when the client explicitly agrees. Static surfaces now include a portable SHA-256 manifest covering the source projections and rendered HTML.
+
+This avoids paying for hosted presentation infrastructure before revenue while keeping connector, data-isolation, live-execution and client-acceptance gates intact.
