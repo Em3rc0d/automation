@@ -218,3 +218,16 @@ python tools/savings/pilot_bootstrap.py from-preset \
 ```
 
 Current presets cover services/agencies, workshops, academies, backoffice documents, recurring memberships and lightweight inventory operations. They contain no baseline numbers or credentials; discovery must fill those before the pilot plan is meaningful.
+
+
+## Local backup / restore
+
+Installation bundles can be backed up and restored without provisioning a backup service:
+
+```bash
+python tools/savings/backup_bundle.py create --bundle <bundle> --out <backup.zip>
+python tools/savings/backup_bundle.py verify --archive <backup.zip>
+python tools/savings/backup_bundle.py restore --archive <backup.zip> --target <empty-dir>
+```
+
+The utility rejects secret-like material and writes per-file/archive hashes. This covers local pilot bundle recovery only; it does not substitute for a future PostgreSQL/Supabase backup/restore drill.
