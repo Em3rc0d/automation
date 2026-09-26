@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MK1RealPilotEvidence",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "tenantId",
+    "pilot",
+    "surface",
+    "workflows",
+    "gates"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "pilot": {
+      "type": "object",
+      "required": ["fundingStatus", "clientNameRef", "operatorOwner"],
+      "properties": {
+        "fundingStatus": { "enum": ["UNFUNDED", "FUNDED", "PAID"] },
+        "clientNameRef": { "type": "string", "minLength": 1 },
+        "operatorOwner": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "surface": {
+      "type": "object",
+      "required": ["mode", "clientAgreementEvidence", "deliveryChannel"],
+      "properties": {
+        "mode": { "enum": ["REDUCED_STATIC", "HOSTED_PORTAL"] },
+        "clientAgreementEvidence": { "type": ["string", "null"] },
+        "deliveryChannel": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "workflows": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["key", "bundlePath"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "bundlePath": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": [
+        "roleModelAgreed",
+        "providerAccountBound",
+        "connectorScopesVerified",
+        "savingsBaselineAgreed",
+        "controlledLiveExecutionPassed",
+        "clientAcceptanceRecorded",
+        "tenantIsolationProved",
+        "backupRestorePassed",
+        "incidentDrillPassed",
+        "deploymentRollbackApproved"
+      ],
+      "properties": {
+        "roleModelAgreed": { "$ref": "#/$defs/gate" },
+        "providerAccountBound": { "$ref": "#/$defs/gate" },
+        "connectorScopesVerified": { "$ref": "#/$defs/gate" },
+        "savingsBaselineAgreed": { "$ref": "#/$defs/gate" },
+        "controlledLiveExecutionPassed": { "$ref": "#/$defs/gate" },
+        "clientAcceptanceRecorded": { "$ref": "#/$defs/gate" },
+        "tenantIsolationProved": { "$ref": "#/$defs/gate" },
+        "backupRestorePassed": { "$ref": "#/$defs/gate" },
+        "incidentDrillPassed": { "$ref": "#/$defs/gate" },
+        "deploymentRollbackApproved": { "$ref": "#/$defs/gate" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "gate": {
+      "type": "object",
+      "required": ["passed", "evidence"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "evidence": { "type": ["string", "null"] },
+        "notes": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

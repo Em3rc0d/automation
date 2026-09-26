@@ -1,0 +1,30 @@
+name: MK1 Pre-Pilot Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fail-closed-real-pilot-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: python -m unittest tools/savings/tests/test_mk1_gate.py
+      - name: Prove example remains blocked
+        shell: bash
+        run: |
+          set +e
+          python tools/savings/mk1_gate.py check --spec operations/savings/examples/mk1-pilot-evidence.blocked.example.json
+          rc=$?
+          set -e
+          test "$rc" -eq 2
