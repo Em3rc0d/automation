@@ -188,3 +188,10 @@ Evidence/tooling:
 - `mk1/ops-hardening/README.md`.
 
 These reduce technical uncertainty but do **not** replace the production control-plane backup test or a live-provider incident drill required for MK1 closure.
+
+
+## Reduced surface option
+
+ADR-0009 permits a first paying/funded pilot to use local operator tooling plus an evidence-backed static client report when the client explicitly agrees that login/self-service is not required.
+
+This is an economic sequencing decision, not a permanent product downgrade. Hosted Auth/RLS/Client Portal becomes mandatory when the contract, concurrency, compliance needs or recurring revenue justify it.
