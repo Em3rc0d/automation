@@ -7,6 +7,7 @@ RLS, a production control plane or client acceptance.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 import json
 import sys
@@ -15,6 +16,14 @@ from pathlib import Path
 
 def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def esc(value: object) -> str:
@@ -154,9 +163,17 @@ def render_index(summary: dict) -> str:
 
 def render_directory(input_dir: Path, output_dir: Path | None = None) -> dict:
     output_dir = output_dir or input_dir
-    client = read_json(input_dir / "client-portal.json")
-    operator = read_json(input_dir / "operator-console.json")
-    summary = read_json(input_dir / "summary.json")
+    source_paths = {
+        "clientPortalSource": input_dir / "client-portal.json",
+        "operatorConsoleSource": input_dir / "operator-console.json",
+        "summarySource": input_dir / "summary.json",
+    }
+    client = read_json(source_paths["clientPortalSource"])
+    operator = read_json(source_paths["operatorConsoleSource"])
+    summary = read_json(source_paths["summarySource"])
+
+    if any(doc.get("productionClaim") is not False for doc in [client, operator, summary]):
+        raise ValueError("all rehearsal source projections must explicitly have productionClaim=false")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     targets = {
@@ -167,17 +184,81 @@ def render_directory(input_dir: Path, output_dir: Path | None = None) -> dict:
     targets["index"].write_text(render_index(summary), encoding="utf-8")
     targets["clientPortal"].write_text(render_client(client), encoding="utf-8")
     targets["operatorConsole"].write_text(render_operator(operator), encoding="utf-8")
-    return {key: str(path) for key, path in targets.items()}
+
+    manifest = {
+        "schemaVersion": 1,
+        "evidenceType": "MK1_STATIC_REHEARSAL_SURFACE",
+        "productionClaim": False,
+        "tenantId": summary.get("tenantId"),
+        "workflowCount": summary.get("workflowCount"),
+        "sourceFiles": {
+            key: {
+                "path": str(path.resolve()),
+                "sha256": sha256_file(path),
+            }
+            for key, path in source_paths.items()
+        },
+        "generatedFiles": {
+            key: {
+                "path": str(path.resolve()),
+                "sha256": sha256_file(path),
+            }
+            for key, path in targets.items()
+        },
+    }
+    manifest_path = output_dir / "report-manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    result = {key: str(path) for key, path in targets.items()}
+    result["manifest"] = str(manifest_path)
+    return result
+
+
+def verify_directory(directory: Path) -> dict:
+    manifest_path = directory / "report-manifest.json"
+    manifest = read_json(manifest_path)
+    if manifest.get("productionClaim") is not False:
+        raise ValueError("static surface manifest must explicitly have productionClaim=false")
+
+    checked = 0
+    for group in ["sourceFiles", "generatedFiles"]:
+        entries = manifest.get(group)
+        if not isinstance(entries, dict) or not entries:
+            raise ValueError(f"manifest missing {group}")
+        for name, entry in entries.items():
+            raw_path = entry.get("path")
+            expected = entry.get("sha256")
+            if not isinstance(raw_path, str) or not raw_path:
+                raise ValueError(f"manifest path missing: {group}.{name}")
+            path = Path(raw_path)
+            if not path.is_file():
+                raise ValueError(f"manifest file missing: {group}.{name}")
+            actual = sha256_file(path)
+            if actual != expected:
+                raise ValueError(f"manifest hash mismatch: {group}.{name}")
+            checked += 1
+
+    return {
+        "valid": True,
+        "productionClaim": False,
+        "tenantId": manifest.get("tenantId"),
+        "workflowCount": manifest.get("workflowCount"),
+        "filesChecked": checked,
+    }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", type=Path, required=True)
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--verify", action="store_true")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
     try:
-        result = render_directory(args.input.resolve(), args.out.resolve() if args.out else None)
+        if args.verify:
+            result = verify_directory(args.input.resolve())
+        else:
+            result = render_directory(args.input.resolve(), args.out.resolve() if args.out else None)
     except (ValueError, FileNotFoundError, json.JSONDecodeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
