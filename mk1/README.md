@@ -195,3 +195,23 @@ These reduce technical uncertainty but do **not** replace the production control
 ADR-0009 permits a first paying/funded pilot to use local operator tooling plus an evidence-backed static client report when the client explicitly agrees that login/self-service is not required.
 
 This is an economic sequencing decision, not a permanent product downgrade. Hosted Auth/RLS/Client Portal becomes mandatory when the contract, concurrency, compliance needs or recurring revenue justify it.
+
+
+## Real-pilot evidence gate
+
+The final MK1 transition is now machine-gated:
+
+```bash
+python tools/savings/mk1_gate.py check \
+  --spec .local/pilot/<tenant>/mk1-pilot-evidence.json
+```
+
+A complete pilot may be sealed only after external evidence exists:
+
+```bash
+python tools/savings/mk1_gate.py seal \
+  --spec .local/pilot/<tenant>/mk1-pilot-evidence.json \
+  --out .local/pilot/<tenant>/MK1-PILOT-SEAL.json
+```
+
+This gate is deliberately fail-closed. Repository code cannot manufacture client consent, funding, provider ownership, OAuth scope evidence, a client-measured baseline or live production acceptance.
