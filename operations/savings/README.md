@@ -54,3 +54,17 @@ Local bundles live under `.local/` by default and are git-ignored.
 ## Economics
 
 The installer never assumes dedicated infrastructure. Provider costs remain `CLIENT_OWNED_OR_METERED` unless a client contract explicitly changes that policy.
+
+
+## Local execution before provider spend
+
+After scaffolding a bundle, execute the **same approved workflow code** with a client-like fixture and in-memory adapters:
+
+```bash
+node operations/savings/runtime/run_bundle.mjs \
+  --bundle .local/installations/acme-demo/PAYMENT_REMINDER_AUTOMATION@0.1 \
+  --fixture operations/savings/runtime/examples/payment-reminder.fixture.json \
+  --out .local/payment-reminder-dry-run.json
+```
+
+The evidence is explicitly `LOCAL_SIMULATION` / `productionEvidence=false`. It is useful for discovery, baseline validation and client-fixture testing, but cannot be used to fake `productionDryRunPassed`.

@@ -191,3 +191,16 @@ python tools/savings/install_approved.py doctor \
 ```
 
 El bundle separa `config`, connector bindings por `credref:`, SavingsBaseline y acceptance gates. `CLIENT_CONFIGURED` y `CLIENT_ACCEPTED` son bloqueados hasta completar sus requisitos; el installer no levanta Railway/n8n/servidores por cliente.
+
+
+### Ejecutar un baseline aprobado sin infraestructura
+
+El installation kit también puede ejecutar localmente los 12 baselines aprobados con fixtures del cliente y adapters en memoria:
+
+```bash
+node operations/savings/runtime/run_bundle.mjs \
+  --bundle .local/installations/acme-demo/PAYMENT_REMINDER_AUTOMATION@0.1 \
+  --fixture operations/savings/runtime/examples/payment-reminder.fixture.json
+```
+
+Esto ejecuta el mismo código `zero-deps-node-v1`, produce ProcessRecords/Incidents/SavingsEvents y mantiene `productionEvidence=false`: sirve para validar el caso antes de contratar o conectar proveedores reales.
