@@ -5,7 +5,8 @@
   "required": [
     "schemaVersion",
     "checks",
-    "notes"
+    "notes",
+    "evidenceRefs"
   ],
   "properties": {
     "schemaVersion": {
@@ -32,7 +33,83 @@
       "items": {
         "type": "string"
       }
+    },
+    "evidenceRefs": {
+      "type": "object",
+      "required": [
+        "productionDryRunPassed",
+        "clientFixturePassed",
+        "clientApprovalRecorded"
+      ],
+      "properties": {
+        "productionDryRunPassed": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/evidenceRef"
+            }
+          ]
+        },
+        "clientFixturePassed": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/evidenceRef"
+            }
+          ]
+        },
+        "clientApprovalRecorded": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/evidenceRef"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "evidenceRef": {
+      "type": "object",
+      "required": [
+        "entryId",
+        "sha256",
+        "snapshot",
+        "actor",
+        "recordedAt"
+      ],
+      "properties": {
+        "entryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "snapshot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

@@ -135,3 +135,48 @@ node operations/savings/runtime/run_event_spool.mjs \
 ```
 
 Successful files move from `inbox/` to `processed/`; failures are quarantined under `failed/` with evidence rather than retried blindly in the same pass.
+
+
+## Evidence-backed client acceptance
+
+The final acceptance checks cannot be completed by flipping booleans.
+
+These checks are evidence-protected:
+
+```text
+clientFixturePassed
+productionDryRunPassed
+clientApprovalRecorded
+```
+
+Record a reviewed client fixture:
+
+```bash
+python tools/savings/install_approved.py record-evidence \
+  --bundle <bundle> \
+  --check clientFixturePassed \
+  --file <local-simulation-result.json> \
+  --actor operator@example.com
+```
+
+Record a reviewed live provider execution:
+
+```bash
+python tools/savings/install_approved.py record-evidence \
+  --bundle <bundle> \
+  --check productionDryRunPassed \
+  --file <live-execution-result.json> \
+  --actor operator@example.com
+```
+
+Record explicit client approval:
+
+```bash
+python tools/savings/install_approved.py record-evidence \
+  --bundle <bundle> \
+  --check clientApprovalRecorded \
+  --actor client@example.com \
+  --reference 'email:approval-thread-123'
+```
+
+The installer copies evidence into the bundle, computes SHA-256, appends an acceptance ledger entry and stores a reference in `acceptance.json`. `doctor --target CLIENT_ACCEPTED` re-hashes the snapshot and blocks promotion if evidence was modified or removed.

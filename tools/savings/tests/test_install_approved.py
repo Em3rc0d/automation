@@ -150,12 +150,103 @@ class InstallerTests(unittest.TestCase):
             mod.promote(bundle, "CLIENT_CONFIGURED", "2026-09-25T01:00:00Z")
             blocked = mod.diagnose(bundle, "CLIENT_ACCEPTED")
             self.assertFalse(blocked["ready"])
-            for check in ["productionDryRunPassed", "clientFixturePassed", "clientApprovalRecorded"]:
-                mod.set_check(bundle, check)
+
+            installation_doc = mod.read_json(bundle / "installation.json")
+            fixture_evidence = Path(tmp) / "fixture-evidence.json"
+            fixture_evidence.write_text(json.dumps({
+                "schemaVersion": 1,
+                "evidenceType": "LOCAL_SIMULATION",
+                "productionEvidence": False,
+                "tenantId": installation_doc["tenantId"],
+                "installationId": installation_doc["installationId"],
+                "workflowKey": installation_doc["workflowKey"],
+                "workflowVersion": installation_doc["workflowVersion"],
+                "workflowResult": {"status": "completed"},
+                "controlPlane": {"incidents": []},
+            }), encoding="utf-8")
+            live_evidence = Path(tmp) / "live-evidence.json"
+            live_evidence.write_text(json.dumps({
+                "schemaVersion": 1,
+                "evidenceType": "LIVE_PROVIDER_EXECUTION",
+                "productionConnectorExecution": True,
+                "requiresHumanReviewForAcceptance": True,
+                "success": True,
+                "tenantId": installation_doc["tenantId"],
+                "installationId": installation_doc["installationId"],
+                "workflowKey": installation_doc["workflowKey"],
+                "workflowVersion": installation_doc["workflowVersion"],
+                "controlPlane": {"incidents": []},
+            }), encoding="utf-8")
+
+            mod.record_acceptance_evidence(
+                bundle,
+                "clientFixturePassed",
+                actor="operator@example.test",
+                evidence_file=fixture_evidence,
+                recorded_at="2026-09-25T01:10:00Z",
+            )
+            mod.record_acceptance_evidence(
+                bundle,
+                "productionDryRunPassed",
+                actor="operator@example.test",
+                evidence_file=live_evidence,
+                recorded_at="2026-09-25T01:20:00Z",
+            )
+            mod.record_acceptance_evidence(
+                bundle,
+                "clientApprovalRecorded",
+                actor="client@example.test",
+                reference="email:approval-001",
+                recorded_at="2026-09-25T01:30:00Z",
+            )
+
             ready = mod.diagnose(bundle, "CLIENT_ACCEPTED")
             self.assertTrue(ready["ready"], ready["blockers"])
             installation = mod.promote(bundle, "CLIENT_ACCEPTED", "2026-09-25T02:00:00Z")
             self.assertEqual(installation["state"], "CLIENT_ACCEPTED")
+
+    def test_protected_acceptance_check_cannot_be_flipped_directly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = mod.scaffold(
+                "LEAD_INTAKE_AUTOMATION",
+                "tenant-demo",
+                Path(tmp),
+                "2026-09-25T00:00:00Z",
+            )
+            with self.assertRaisesRegex(ValueError, "evidence-protected"):
+                mod.set_check(bundle, "productionDryRunPassed")
+
+    def test_acceptance_evidence_tamper_is_detected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = mod.scaffold(
+                "LEAD_INTAKE_AUTOMATION",
+                "tenant-demo",
+                Path(tmp),
+                "2026-09-25T00:00:00Z",
+            )
+            installation = mod.read_json(bundle / "installation.json")
+            source = Path(tmp) / "fixture.json"
+            source.write_text(json.dumps({
+                "evidenceType": "LOCAL_SIMULATION",
+                "productionEvidence": False,
+                "tenantId": installation["tenantId"],
+                "installationId": installation["installationId"],
+                "workflowKey": installation["workflowKey"],
+                "workflowVersion": installation["workflowVersion"],
+                "controlPlane": {"incidents": []},
+            }), encoding="utf-8")
+            entry = mod.record_acceptance_evidence(
+                bundle,
+                "clientFixturePassed",
+                actor="operator@example.test",
+                evidence_file=source,
+                recorded_at="2026-09-25T01:00:00Z",
+            )
+            snapshot = bundle / entry["snapshot"]
+            snapshot.write_text('{"tampered":true}\n', encoding="utf-8")
+            acceptance = mod.read_json(bundle / "acceptance.json")
+            errors = mod.validate_acceptance_evidence(bundle, acceptance)
+            self.assertTrue(any("hash mismatch" in error for error in errors))
 
     def test_bound_connector_is_not_verified_without_evidence(self):
         with tempfile.TemporaryDirectory() as tmp:
