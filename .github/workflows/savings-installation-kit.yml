@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.19.5'
       - name: Run installer unit tests
         run: python -m unittest discover -s tools/savings/tests -p 'test_*.py' -v
       - name: List approved baselines
