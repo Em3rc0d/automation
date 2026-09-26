@@ -215,3 +215,15 @@ python tools/savings/mk1_gate.py seal \
 ```
 
 This gate is deliberately fail-closed. Repository code cannot manufacture client consent, funding, provider ownership, OAuth scope evidence, a client-measured baseline or live production acceptance.
+
+
+## Pilot intake workspace
+
+Create the delivery workspace for a real pilot from the same discovery spec:
+
+```bash
+python tools/savings/pilot_intake.py \
+  --spec operations/savings/examples/pilot-preflight.example.json
+```
+
+The generated workspace is deliberately DRAFT/BLOCKED and contains no secrets. It pre-creates the artifacts needed for role agreement, connector scope verification, SavingsBaseline agreement, isolation evidence, deployment decision and client acceptance.
