@@ -337,3 +337,14 @@ python tools/savings/mk1_evidence_sync.py \
 ```
 
 The derivation reads verified connector bindings, AGREED baselines, live execution evidence, hashed client approval, tenant-isolation controls, deployment decision, backup/restore and live-incident-drill evidence. Missing evidence stays blocked.
+
+
+### One-command pilot launch
+
+The pre-revenue/pilot setup can now be created in one local command:
+
+```bash
+python tools/savings/launch_pilot.py --spec <pilot-preflight.json>
+```
+
+It scaffolds the approved workflow bundles plus the MK1 evidence workspace and confirms the initial state is BLOCKED. No paid infrastructure or provider secret is created.
