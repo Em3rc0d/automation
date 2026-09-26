@@ -16,6 +16,7 @@ Live connector verification/runtime        IMPLEMENTED
 Local scheduler + event spool               IMPLEMENTED
 Hashed client-acceptance evidence gate      IMPLEMENTED
 Two-workflow MK1 rehearsal                  IMPLEMENTED
+Static client/operator demo surfaces          IMPLEMENTED
 Bundle backup/restore rehearsal             IMPLEMENTED
 Incident failure/repair rehearsal           IMPLEMENTED
 Paid infrastructure required for rehearsal NO
@@ -46,3 +47,10 @@ Paid infrastructure required for rehearsal NO
 ```
 
 Do not mark P1/MK1 certified until those real-world gates are evidenced.
+
+
+## Static local HTML
+
+The rehearsal JSON projections can render to dependency-free local Client Portal and Operator Console HTML. This closes the **demo/presentation** portion of the UI gap without adding hosting cost.
+
+Production auth, RLS and persistence remain real pilot/product gates.

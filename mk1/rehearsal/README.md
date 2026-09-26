@@ -69,3 +69,15 @@ This rehearsal **does not** close MK1. A real paying/funded pilot must still pro
 - backup/restore and incident drill evidence.
 
 The value of this rehearsal is that those are now the remaining external/product gates rather than uncertainty about whether the approved workflows can execute cheaply.
+
+
+## Static demo surfaces
+
+After generating the rehearsal directory, render local client/operator pages without a web server:
+
+```bash
+python tools/savings/render_rehearsal_html.py \
+  --input .local/mk1-rehearsal
+```
+
+This produces `index.html`, `client-portal.html` and `operator-console.html` with no external assets. They remain rehearsal-only and do not replace auth/RLS/production UI.

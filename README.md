@@ -284,3 +284,14 @@ This is intentionally **not** a real-client claim. It reduces the next milestone
 The zero-cost pilot path now also includes local backup/restore integrity checks and an incident-repair rehearsal. This means a first paying pilot does not need to fund infrastructure merely to discover whether replay, incident creation or bundle recovery work.
 
 The remaining production gates are explicitly real-world: provider/OAuth evidence, client baseline/acceptance, production control-plane isolation, live-provider incident drill and production backup/restore.
+
+
+### MK1 static demo surfaces
+
+La rehearsal también puede renderizar una vista local de Client Portal y Operator Console sin levantar Next.js ni pagar hosting:
+
+```bash
+python tools/savings/render_rehearsal_html.py --input .local/mk1-rehearsal
+```
+
+Es una superficie de demo deliberadamente estática: no reemplaza Auth/RLS ni se presenta como UI productiva.
