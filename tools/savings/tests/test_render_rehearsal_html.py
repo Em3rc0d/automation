@@ -43,6 +43,24 @@ class RehearsalHtmlTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "productionClaim=false"):
             renderer.render_client({"productionClaim": True})
 
+    def test_manifest_detects_tampered_html(self):
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "client-portal.json").write_text(json.dumps({
+                "productionClaim": False, "summary": {}, "workflows": [], "methodologyNotice": "demo"
+            }))
+            (root / "operator-console.json").write_text(json.dumps({
+                "productionClaim": False, "paidInfrastructureRequired": False, "workflows": []
+            }))
+            (root / "summary.json").write_text(json.dumps({
+                "productionClaim": False, "tenantId": "synthetic", "workflowCount": 2
+            }))
+            result = renderer.render_directory(root)
+            Path(result["clientPortal"]).write_text("<!doctype html><p>tampered</p>")
+            with self.assertRaisesRegex(ValueError, "hash mismatch"):
+                renderer.verify_directory(root)
+
     def test_render_directory_writes_three_offline_files(self):
         import json
         with tempfile.TemporaryDirectory() as tmp:
@@ -64,12 +82,19 @@ class RehearsalHtmlTests(unittest.TestCase):
                 "workflowCount": 2,
             }))
             result = renderer.render_directory(root)
-            self.assertEqual(set(result), {"index", "clientPortal", "operatorConsole"})
-            for path in result.values():
-                content = Path(path).read_text()
+            self.assertEqual(set(result), {"index", "clientPortal", "operatorConsole", "manifest"})
+            for key in ["index", "clientPortal", "operatorConsole"]:
+                content = Path(result[key]).read_text()
                 self.assertIn("<!doctype html>", content)
                 self.assertNotIn("https://", content)
                 self.assertNotIn("http://", content)
+            manifest = json.loads(Path(result["manifest"]).read_text())
+            self.assertFalse(manifest["productionClaim"])
+            self.assertEqual(set(manifest["generatedFiles"]), {"index", "clientPortal", "operatorConsole"})
+            self.assertTrue(all(not Path(x["path"]).is_absolute() for x in manifest["sourceFiles"].values()))
+            verified = renderer.verify_directory(root)
+            self.assertTrue(verified["valid"])
+            self.assertEqual(verified["filesChecked"], 6)
 
 
 if __name__ == "__main__":
