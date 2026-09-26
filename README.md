@@ -228,3 +228,10 @@ LOCAL_SIMULATION
 ```
 
 `verify_connectors.mjs` valida scopes/conectividad sin fingir que un simple bind está verificado. `run_live.mjs` requiere confirmación explícita de side effects y persiste idempotencia/auditoría en archivos locales, evitando introducir una base de datos o servidor dedicado antes de que el ingreso lo justifique.
+
+
+### Ejecución programada sin servidor dedicado
+
+Para un piloto pagado que ya tenga una máquina Linux/VM/PC operativo, los workflows programados pueden generar un wrapper + crontab local con `tools/savings/deploy_local.py`. Los workflows event-driven disponen de un spool de archivos con `run_event_spool.mjs`.
+
+La decisión sigue siendo económica: **no se aprovisiona Railway/n8n/servidor por cliente por defecto**. El runtime local usa el mismo código aprobado, idempotencia persistente y audit trail; si luego el volumen/ingreso justifica un runtime compartido administrado, se cambia el deployment, no el workflow de negocio.
