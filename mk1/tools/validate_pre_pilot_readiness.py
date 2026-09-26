@@ -74,7 +74,7 @@ def main() -> int:
 
     provider_catalog = load_json("connectors/savings/google-workspace/provider-catalog.json")
     providers = provider_catalog.get("providers", {})
-    for provider in ["google_sheets", "google_gmail", "google_calendar", "google_drive"]:
+    for provider in ["google_sheets", "gmail", "google_calendar", "google_drive"]:
         if provider not in providers:
             errors.append(f"Google Workspace provider catalog missing {provider}")
 
