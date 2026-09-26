@@ -282,3 +282,8 @@ This is intentionally **not** a real-client claim. It reduces the next milestone
 ### Presets MYPE
 
 Para reducir todavía más el tiempo de armado, `operations/savings/presets/` incluye topologías iniciales para MYPE de servicios, talleres, academias, backoffice, membresías e inventario ligero. Los presets solo combinan baselines ya aprobados y providers candidatos; no inventan baseline económico ni saltan credenciales/acceptance.
+
+
+### Backup local del piloto
+
+Los bundles de instalación y su evidencia file-backed pueden archivarse/restaurarse con hashes usando `tools/savings/backup_bundle.py`, sin contratar almacenamiento o una base de datos solo para el rehearsal. El backup productivo del control plane sigue siendo un gate separado del piloto real.
