@@ -15,6 +15,18 @@ export class GoogleDriveStorageAdapter {
     this.folderId = folderId;
   }
 
+  async healthCheck() {
+    const payload = await this.client.request("https://www.googleapis.com/drive/v3/files", {
+      query: { pageSize: 1, fields: "files(id,name)" },
+    });
+    return {
+      provider: "google_drive",
+      ok: Array.isArray(payload?.files),
+      visibleFiles: payload?.files?.length ?? 0,
+      folderId: this.folderId,
+    };
+  }
+
   async put({ tenantId, path, content = null, metadata = {}, idempotencyKey }) {
     for (const [name, value] of Object.entries({ tenantId, path, idempotencyKey })) {
       if (typeof value !== "string" || !value.trim()) throw new TypeError(`${name} is required`);

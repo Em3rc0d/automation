@@ -15,33 +15,9 @@ import { MemoryCalendarAdapter } from "../../../runtime/savings-p0/src/adapters/
 import { MemoryMessageAdapter } from "../../../runtime/savings-p0/src/adapters/memory-message.js";
 import { MemoryStorageAdapter } from "../../../runtime/savings-p0/src/adapters/memory-storage.js";
 
-import { runPaymentReminderBatch } from "../../../runtime/savings-p0/src/workflows/payment-reminder.js";
-import { ingestLead } from "../../../runtime/savings-p0/src/workflows/lead-intake.js";
-import { runLeadFollowupBatch } from "../../../runtime/savings-p0/src/workflows/lead-followup.js";
-import { runUnansweredMessageWatchdog } from "../../../runtime/savings-p0/src/workflows/unanswered-message-watchdog.js";
-import { runAppointmentReminderBatch } from "../../../runtime/savings-p0/src/workflows/appointment-reminder.js";
-import { runQuoteFollowupBatch } from "../../../runtime/savings-p0/src/workflows/quote-followup.js";
-import { classifyAndRouteEmail } from "../../../runtime/savings-p0/src/workflows/email-classify-route.js";
-import { extractEmailAttachments } from "../../../runtime/savings-p0/src/workflows/email-attachment-extract.js";
-import { archiveDocument } from "../../../runtime/savings-p0/src/workflows/document-archive.js";
-import { runLowStockAlert } from "../../../runtime/savings-p0/src/workflows/low-stock-alert.js";
-import { intakeSupportRequest } from "../../../runtime/savings-p0/src/workflows/support-intake.js";
-import { runRenewalReminderBatch } from "../../../runtime/savings-p0/src/workflows/renewal-reminder.js";
+import { dispatchApprovedWorkflow, SUPPORTED_WORKFLOWS } from "./workflow-dispatch.mjs";
 
-const SUPPORTED = [
-  "PAYMENT_REMINDER_AUTOMATION",
-  "LEAD_INTAKE_AUTOMATION",
-  "LEAD_FOLLOWUP_AUTOMATION",
-  "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION",
-  "APPOINTMENT_REMINDER_AUTOMATION",
-  "QUOTE_FOLLOWUP_AUTOMATION",
-  "EMAIL_CLASSIFY_ROUTE_AUTOMATION",
-  "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION",
-  "DOCUMENT_ARCHIVE_AUTOMATION",
-  "LOW_STOCK_ALERT_AUTOMATION",
-  "SUPPORT_INTAKE_AUTOMATION",
-  "RENEWAL_REMINDER_AUTOMATION",
-];
+const SUPPORTED = SUPPORTED_WORKFLOWS;
 
 function parseArgs(argv) {
   const out = {};
@@ -124,102 +100,6 @@ function makeContext({ installation, fixture }) {
   };
 }
 
-async function dispatch({ installation, config, fixture, ctx }) {
-  const common = {
-    runtime: ctx.runtime,
-    tenantId: installation.tenantId,
-    automationInstanceId: installation.installationId,
-    config,
-  };
-
-  switch (installation.workflowKey) {
-    case "PAYMENT_REMINDER_AUTOMATION":
-      return runPaymentReminderBatch({
-        ...common,
-        invoiceSource: ctx.table,
-        messageAdapter: ctx.messageAdapter,
-        asOfDate: fixture.asOfDate ?? fixture.asOf,
-      });
-    case "LEAD_INTAKE_AUTOMATION":
-      return ingestLead({
-        runtime: ctx.runtime,
-        leadSource: ctx.table,
-        tenantId: installation.tenantId,
-        automationInstanceId: installation.installationId,
-        inbound: fixture.inbound,
-      });
-    case "LEAD_FOLLOWUP_AUTOMATION":
-      return runLeadFollowupBatch({
-        ...common,
-        leadSource: ctx.table,
-        messageAdapter: ctx.messageAdapter,
-        asOf: fixture.asOf,
-      });
-    case "UNANSWERED_MESSAGE_WATCHDOG_AUTOMATION":
-      return runUnansweredMessageWatchdog({
-        ...common,
-        threadSource: ctx.table,
-        messageAdapter: ctx.messageAdapter,
-        asOf: fixture.asOf,
-      });
-    case "APPOINTMENT_REMINDER_AUTOMATION":
-      return runAppointmentReminderBatch({
-        ...common,
-        calendarAdapter: ctx.calendarAdapter,
-        messageAdapter: ctx.messageAdapter,
-        asOf: fixture.asOf,
-      });
-    case "QUOTE_FOLLOWUP_AUTOMATION":
-      return runQuoteFollowupBatch({
-        ...common,
-        quoteSource: ctx.table,
-        messageAdapter: ctx.messageAdapter,
-        asOf: fixture.asOf,
-      });
-    case "EMAIL_CLASSIFY_ROUTE_AUTOMATION":
-      return classifyAndRouteEmail({
-        ...common,
-        routeStore: ctx.routeStore,
-        email: fixture.email,
-      });
-    case "EMAIL_ATTACHMENT_EXTRACT_AUTOMATION":
-      return extractEmailAttachments({
-        ...common,
-        storageAdapter: ctx.storageAdapter,
-        email: fixture.email,
-      });
-    case "DOCUMENT_ARCHIVE_AUTOMATION":
-      return archiveDocument({
-        ...common,
-        storageAdapter: ctx.storageAdapter,
-        document: fixture.document,
-      });
-    case "LOW_STOCK_ALERT_AUTOMATION":
-      return runLowStockAlert({
-        ...common,
-        inventorySource: ctx.table,
-        messageAdapter: ctx.messageAdapter,
-      });
-    case "SUPPORT_INTAKE_AUTOMATION":
-      return intakeSupportRequest({
-        runtime: ctx.runtime,
-        ticketStore: ctx.ticketStore,
-        tenantId: installation.tenantId,
-        automationInstanceId: installation.installationId,
-        request: fixture.request,
-      });
-    case "RENEWAL_REMINDER_AUTOMATION":
-      return runRenewalReminderBatch({
-        ...common,
-        contractSource: ctx.table,
-        messageAdapter: ctx.messageAdapter,
-        asOfDate: fixture.asOfDate ?? fixture.asOf,
-      });
-    default:
-      throw new Error(`no dispatcher for ${installation.workflowKey}`);
-  }
-}
-
 export async function runBundle({ bundle, fixturePath }) {
   const bundlePath = resolve(bundle);
   const installation = await readJson(resolve(bundlePath, "installation.json"));
@@ -229,7 +109,33 @@ export async function runBundle({ bundle, fixturePath }) {
   ensureApprovedInstallation(installation);
 
   const ctx = makeContext({ installation, fixture });
-  const workflowResult = await dispatch({ installation, config, fixture, ctx });
+  const workflowResult = await dispatchApprovedWorkflow({
+    workflowKey: installation.workflowKey,
+    runtime: ctx.runtime,
+    tenantId: installation.tenantId,
+    automationInstanceId: installation.installationId,
+    config,
+    adapters: {
+      invoiceSource: ctx.table,
+      leadSource: ctx.table,
+      threadSource: ctx.table,
+      calendarAdapter: ctx.calendarAdapter,
+      quoteSource: ctx.table,
+      routeStore: ctx.routeStore,
+      storageAdapter: ctx.storageAdapter,
+      inventorySource: ctx.table,
+      ticketStore: ctx.ticketStore,
+      contractSource: ctx.table,
+      messageAdapter: ctx.messageAdapter,
+    },
+    event: {
+      inbound: fixture.inbound,
+      email: fixture.email,
+      document: fixture.document,
+      request: fixture.request,
+    },
+    asOf: fixture.asOf ?? fixture.asOfDate ?? fixture.clock,
+  });
   const engineBaseline = baselineForEngine(baseline);
   const savings = engineBaseline
     ? calculateSavings({ baseline: engineBaseline, events: ctx.controlPlane.savingsEvents })

@@ -45,6 +45,17 @@ export class GmailMessageAdapter {
     this.costPerMessagePen = Number(costPerMessagePen);
   }
 
+  async healthCheck() {
+    const profile = await this.client.request(
+      `https://gmail.googleapis.com/gmail/v1/users/${encodeURIComponent(this.userId)}/profile`,
+    );
+    return {
+      provider: "gmail",
+      ok: Boolean(profile?.emailAddress),
+      emailAddress: profile?.emailAddress ?? null,
+    };
+  }
+
   async send({ tenantId, to, channel = "email", templateKey, variables = {}, idempotencyKey }) {
     if (channel !== "email") throw new Error(`Gmail adapter only supports email channel, got ${channel}`);
     for (const [name, value] of Object.entries({ tenantId, to, templateKey, idempotencyKey })) {
@@ -104,6 +115,17 @@ export class GmailInboundAdapter {
     if (!client?.request) throw new TypeError("client.request is required");
     this.client = client;
     this.userId = userId;
+  }
+
+  async healthCheck() {
+    const profile = await this.client.request(
+      `https://gmail.googleapis.com/gmail/v1/users/${encodeURIComponent(this.userId)}/profile`,
+    );
+    return {
+      provider: "gmail",
+      ok: Boolean(profile?.emailAddress),
+      emailAddress: profile?.emailAddress ?? null,
+    };
   }
 
   async getMessage(messageId) {

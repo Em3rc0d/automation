@@ -59,3 +59,22 @@ Use only the fields relevant to the workflow:
 - scheduled date logic: `asOf` or `asOfDate`.
 
 Tenant IDs are injected into simulated records/events when omitted.
+
+
+## Two execution modes
+
+### Local simulation
+
+`run_bundle.mjs` uses in-memory adapters and always emits `productionEvidence=false`.
+
+### Verified live connectors
+
+`verify_connectors.mjs` checks the real provider without executing the business side effect. After the bundle reaches `CLIENT_CONFIGURED`, `run_live.mjs` can execute the approved workflow against verified provider adapters.
+
+Live execution uses:
+- `FileIdempotencyStore` for cross-process duplicate protection;
+- `FileAuditControlPlane` for append-only local operational evidence;
+- the same approved `zero-deps-node-v1` business workflow code;
+- provider adapters outside the certified core runtime boundary.
+
+No live command auto-promotes a tenant to `CLIENT_ACCEPTED`.

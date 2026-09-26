@@ -95,3 +95,30 @@ Before `CLIENT_ACCEPTED`, a tenant must still prove:
 - provider quotas and operational limits.
 
 The connector pack being present in Git is not itself a claim that a specific client's Google configuration works.
+
+
+## Connector verification
+
+`bind` only records a provider binding. It does **not** claim that OAuth/scopes work.
+
+Use:
+
+```bash
+node operations/savings/runtime/verify_connectors.mjs --bundle <bundle>
+```
+
+The verifier performs a live read-only healthcheck for each provider role and records evidence before setting the binding to `verified`.
+
+Current healthchecks:
+- Sheets: spreadsheet metadata;
+- Gmail: account profile;
+- Calendar: calendar metadata;
+- Drive: visible file listing.
+
+A failed healthcheck moves the binding to `degraded`, never to verified.
+
+## Live execution
+
+`operations/savings/runtime/run_live.mjs` binds these adapters to the approved workflow implementations. It requires `CLIENT_CONFIGURED`, evidence-backed connector verification and an explicit `--confirm-live-side-effects YES` flag.
+
+Cross-process idempotency is persisted in local files; connector secrets remain environment-injected.

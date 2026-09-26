@@ -154,6 +154,7 @@ def scaffold(workflow_key: str, tenant_id: str, out_root: Path, created_at: str 
                 "scopes": [],
                 "settings": {},
                 "status": "unbound",
+                "verification": None,
             }
             for req in requirements
         ],
@@ -251,6 +252,10 @@ def diagnose(bundle: Path, target: str = "CLIENT_CONFIGURED") -> dict:
             continue
         if binding.get("status") != "verified":
             errors.append(f"connector not verified: {req['capability']}")
+        verification = binding.get("verification")
+        if binding.get("status") == "verified":
+            if not isinstance(verification, dict) or not verification.get("evidenceRef") or not verification.get("checkedAt"):
+                errors.append(f"connector verification evidence missing: {req['capability']}")
         credential_ref = binding.get("credentialRef")
         if not isinstance(credential_ref, str) or not credential_ref.startswith("credref:"):
             errors.append(f"credentialRef must use credref: reference for {req['capability']}")
@@ -344,10 +349,40 @@ def set_binding(
                 "credentialRef": credential_ref,
                 "scopes": scopes,
                 "settings": settings,
-                "status": "verified",
+                "status": "bound",
+                "verification": None,
             })
             write_json(path, doc)
             return
+    raise ValueError(f"unknown connector capability for bundle: {capability}")
+
+
+def record_connector_verification(
+    bundle: Path,
+    capability: str,
+    evidence_ref: str,
+    provider: str,
+    checked_at: str | None = None,
+) -> None:
+    if not evidence_ref:
+        raise ValueError("connector verification evidence_ref is required")
+    path = bundle / "connector-bindings.json"
+    doc = read_json(path)
+    for binding in doc.get("bindings", []):
+        if binding.get("capability") != capability:
+            continue
+        if binding.get("provider") != provider:
+            raise ValueError(f"verification provider mismatch for {capability}")
+        if binding.get("status") not in {"bound", "degraded", "verified"}:
+            raise ValueError(f"connector must be bound before verification: {capability}")
+        binding["status"] = "verified"
+        binding["verification"] = {
+            "checkedAt": checked_at or now_iso(),
+            "evidenceRef": evidence_ref,
+            "provider": provider,
+        }
+        write_json(path, doc)
+        return
     raise ValueError(f"unknown connector capability for bundle: {capability}")
 
 

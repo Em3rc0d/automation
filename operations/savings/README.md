@@ -41,7 +41,16 @@ python tools/savings/install_approved.py bind \
   --setting 'range=Invoices!A:Z'
 ```
 
-Record the agreed SavingsBaseline and acceptance checks, then use `promote --to CLIENT_CONFIGURED`. `CLIENT_ACCEPTED` requires additional dry-run, client-fixture and client-approval checks.
+Binding a connector now creates state **BOUND**, not VERIFIED. Live verification is a separate evidence gate:
+
+```bash
+node operations/savings/runtime/verify_connectors.mjs \
+  --bundle <bundle>
+```
+
+Only successful provider healthchecks move the bindings to `verified` and write `evidence/connector-verification.json`.
+
+Record the agreed SavingsBaseline and acceptance checks, then use `promote --to CLIENT_CONFIGURED`. `CLIENT_ACCEPTED` requires additional production execution/dry-run, client-fixture and client-approval checks.
 
 ## Secret rule
 
@@ -82,3 +91,21 @@ The evidence is explicitly `LOCAL_SIMULATION` / `productionEvidence=false`. It i
 - Drive → document/attachment storage.
 
 The pack is **not** automatically client-accepted. Bundles contain only `credref:` references and non-secret settings; OAuth material is injected at runtime outside Git. Live scope verification and production dry-run remain mandatory.
+
+
+## Live provider execution
+
+A `CLIENT_CONFIGURED` installation can execute against verified Google Workspace connectors through:
+
+```bash
+node operations/savings/runtime/run_live.mjs \
+  --bundle <bundle> \
+  --as-of 2026-09-25T12:00:00Z \
+  --confirm-live-side-effects YES
+```
+
+For event-driven workflows, pass `--event event.json`; Gmail-based email workflows can use `--source-id <gmail-message-id>`.
+
+The live runner uses a file-backed idempotency store and append-only control-plane audit under the local bundle. This keeps retry protection across separate process invocations without adding a database.
+
+The runner writes `LIVE_PROVIDER_EXECUTION` evidence but **does not set `productionDryRunPassed` automatically**. Human review remains required before client acceptance.
