@@ -1,0 +1,60 @@
+name: case001-poc
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: local/db/Dockerfile
+    image: case001-poc-db:local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: case001
+      POSTGRES_USER: case001
+      POSTGRES_PASSWORD: case001
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U case001 -d case001"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - case001_pgdata:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://case001:case001@db:5432/case001
+      CASE001_MODE: ${CASE001_MODE:-poc}
+      CASE001_AI_PROVIDER: ${CASE001_AI_PROVIDER:-gemini}
+      CASE001_MESSAGING_PROVIDER: ${CASE001_MESSAGING_PROVIDER:-local}
+      CASE001_ADMIN_TOKEN: ${CASE001_ADMIN_TOKEN:-case001-local-only}
+      CASE001_TENANT_ID: ${CASE001_TENANT_ID:-case-001-pilot}
+      CASE001_SELLER_PHONE: ${CASE001_SELLER_PHONE:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+      IGV_RATE: ${IGV_RATE:-0.18}
+      MAX_AUTO_DISCOUNT_PCT: ${MAX_AUTO_DISCOUNT_PCT:-8}
+      MINIMUM_MARGIN_PCT: ${MINIMUM_MARGIN_PCT:-22}
+      QUOTE_VALIDITY_DAYS: ${QUOTE_VALIDITY_DAYS:-7}
+      SAP_STALE_AFTER_HOURS: ${SAP_STALE_AFTER_HOURS:-24}
+      CASE001_FIXED_FX_RATE: ${CASE001_FIXED_FX_RATE:-}
+      FOLLOWUP_AFTER_HOURS: ${FOLLOWUP_AFTER_HOURS:-12}
+      FOLLOWUP_MAX_ATTEMPTS: ${FOLLOWUP_MAX_ATTEMPTS:-1}
+    ports:
+      - "${CASE001_APP_BIND_HOST:-127.0.0.1}:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+
+volumes:
+  case001_pgdata:
