@@ -204,17 +204,24 @@ The bootstrap only accepts `APPROVED_BASELINE` workflows, rejects secret-like ma
 See `operations/savings/PILOT-BOOTSTRAP.md`.
 
 
-### MYPE preset starting points
+## Backup and restore
 
-For common MYPE shapes, start from a provider-compatible topology instead of selecting each workflow manually:
+Local installation bundles can be backed up with SHA-256 integrity evidence using:
 
 ```bash
-python tools/savings/pilot_bootstrap.py list-presets
-
-python tools/savings/pilot_bootstrap.py from-preset \
-  --preset workshop-google \
-  --tenant taller-demo \
-  --out .local/taller-demo-pilot.json
+python tools/savings/backup_bundle.py create --bundle <bundle> --out <backup.tar.gz>
+python tools/savings/backup_bundle.py verify --archive <backup.tar.gz>
+python tools/savings/backup_bundle.py restore --archive <backup.tar.gz> --out <restore-dir>
 ```
 
-Current presets cover services/agencies, workshops, academies, backoffice documents, recurring memberships and lightweight inventory operations. They contain no baseline numbers or credentials; discovery must fill those before the pilot plan is meaningful.
+The backup refuses symlinks and secret-like files and does not include external credential environment files.
+
+## Incident rehearsal
+
+The pre-pilot recovery path can be exercised with:
+
+```bash
+node operations/savings/runtime/incident_drill.mjs --assert
+```
+
+It proves that a failed provider side effect creates an incident and no savings, then a repaired replay produces exactly one side effect and one SavingsEvent. This remains rehearsal evidence until repeated against the real provider of a paying/funded pilot.

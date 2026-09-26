@@ -1,0 +1,30 @@
+name: MK1 Pre-Pilot Ops Hardening Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ops-hardening:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.5'
+      - name: Run Savings operator tests
+        run: python -m unittest discover -s tools/savings/tests -p 'test_*.py' -v
+      - name: Run live/local runtime tests
+        run: node --test operations/savings/runtime/test/*.test.mjs
+      - name: Prove incident rehearsal
+        run: node operations/savings/runtime/incident_drill.mjs --assert

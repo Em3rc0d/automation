@@ -16,6 +16,8 @@ Live connector verification/runtime        IMPLEMENTED
 Local scheduler + event spool               IMPLEMENTED
 Hashed client-acceptance evidence gate      IMPLEMENTED
 Two-workflow MK1 rehearsal                  IMPLEMENTED
+Bundle backup/restore rehearsal             IMPLEMENTED
+Incident failure/repair rehearsal           IMPLEMENTED
 Paid infrastructure required for rehearsal NO
 ```
 
@@ -36,8 +38,10 @@ Paid infrastructure required for rehearsal NO
 [ ] explicit client acceptance evidence
 [ ] agreed client/operator UI surface available
 [ ] RLS/isolation evidence for production control plane
-[ ] backup/restore test
-[ ] incident drill
+[x] local bundle backup/restore test
+[ ] production control-plane backup/restore test
+[x] local runtime incident drill
+[ ] live-provider incident drill
 [ ] production deployment/rollback approved
 ```
 

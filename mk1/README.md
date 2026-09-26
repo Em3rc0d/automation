@@ -173,3 +173,18 @@ Engineering:
 When DoD passes, MK1 is closed.
 
 Do not delay release because we want WhatsApp, prettier analytics, billing, more connectors or a visual builder.
+
+
+## Pre-pilot operations hardening
+
+Before a real pilot exists, two additional operational paths are now rehearsed locally:
+
+- installation bundle backup/restore with per-file SHA-256 verification;
+- fail-safe incident creation followed by repaired replay with no duplicate side effect.
+
+Evidence/tooling:
+- `tools/savings/backup_bundle.py`;
+- `operations/savings/runtime/incident_drill.mjs`;
+- `mk1/ops-hardening/README.md`.
+
+These reduce technical uncertainty but do **not** replace the production control-plane backup test or a live-provider incident drill required for MK1 closure.
