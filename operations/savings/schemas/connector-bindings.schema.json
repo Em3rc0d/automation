@@ -24,7 +24,8 @@
           "provider",
           "credentialRef",
           "scopes",
-          "status"
+          "status",
+          "settings"
         ],
         "properties": {
           "capability": {
@@ -59,6 +60,10 @@
               "degraded",
               "revoked"
             ]
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": true
           }
         },
         "additionalProperties": false

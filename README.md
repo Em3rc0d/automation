@@ -204,3 +204,10 @@ node operations/savings/runtime/run_bundle.mjs \
 ```
 
 Esto ejecuta el mismo código `zero-deps-node-v1`, produce ProcessRecords/Incidents/SavingsEvents y mantiene `productionEvidence=false`: sirve para validar el caso antes de contratar o conectar proveedores reales.
+
+
+### Google Workspace connector pack
+
+Para clientes que ya operan sobre Google Workspace, `connectors/savings/google-workspace/` ofrece adapters provider-facing para Sheets, Gmail, Calendar y Drive sin añadir dependencias npm ni un servidor dedicado por cliente. El runtime aprobado sigue provider-neutral; credenciales reales viven fuera del bundle mediante `credref:`.
+
+El pack está en estado **PRODUCTION_CANDIDATE**, no implica `CLIENT_ACCEPTED` hasta probar scopes, fixture y dry-run con la cuenta real del tenant.

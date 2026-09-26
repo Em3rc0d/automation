@@ -35,8 +35,10 @@ python tools/savings/install_approved.py bind \
   --bundle <bundle> \
   --capability records.accounts_receivable.read \
   --provider google_sheets \
-  --credential-ref credref:acme-sheets \
-  --scope spreadsheets.readonly
+  --credential-ref credref:acme-google \
+  --scope spreadsheets.readonly \
+  --setting spreadsheetId=1AbCdEf... \
+  --setting 'range=Invoices!A:Z'
 ```
 
 Record the agreed SavingsBaseline and acceptance checks, then use `promote --to CLIENT_CONFIGURED`. `CLIENT_ACCEPTED` requires additional dry-run, client-fixture and client-approval checks.
@@ -68,3 +70,15 @@ node operations/savings/runtime/run_bundle.mjs \
 ```
 
 The evidence is explicitly `LOCAL_SIMULATION` / `productionEvidence=false`. It is useful for discovery, baseline validation and client-fixture testing, but cannot be used to fake `productionDryRunPassed`.
+
+
+## Google Workspace production-candidate pack
+
+`connectors/savings/google-workspace/` now provides zero-npm provider adapters for the connector roles required by all 12 approved workflows:
+
+- Sheets → record sources/stores;
+- Gmail → outbound email + inbound email;
+- Calendar → appointment source;
+- Drive → document/attachment storage.
+
+The pack is **not** automatically client-accepted. Bundles contain only `credref:` references and non-secret settings; OAuth material is injected at runtime outside Git. Live scope verification and production dry-run remain mandatory.
