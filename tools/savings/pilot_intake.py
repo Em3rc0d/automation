@@ -164,6 +164,21 @@ def generate(spec_path: Path, out_root: Path) -> dict:
         },
         "evidence": [],
     })
+    write_json(out / "ops" / "backup-restore-evidence.json", {
+        "schemaVersion": 1,
+        "passed": False,
+        "evidence": None,
+        "recordedAt": None,
+        "notes": "Replace local rehearsal with evidence for the selected pilot deployment mode.",
+    })
+    write_json(out / "ops" / "live-incident-drill-evidence.json", {
+        "schemaVersion": 1,
+        "passed": False,
+        "evidence": None,
+        "recordedAt": None,
+        "notes": "Must exercise the live-provider incident/recovery path.",
+    })
+
     write_json(out / "deployment-decision.json", {
         "schemaVersion": 1,
         "tenantId": tenant,
@@ -242,6 +257,8 @@ Expected initial result: **BLOCKED**.
             "role-model.json",
             "tenant-isolation.json",
             "deployment-decision.json",
+            "ops/backup-restore-evidence.json",
+            "ops/live-incident-drill-evidence.json",
             "CLIENT-ACCEPTANCE.md",
             "README.md",
             *[f"baselines/{row['workflowKey']}.json" for row in workflow_rows],
