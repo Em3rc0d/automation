@@ -15,6 +15,7 @@ Google Workspace connector pack            PRODUCTION_CANDIDATE
 Live connector verification/runtime        IMPLEMENTED
 Local scheduler + event spool               IMPLEMENTED
 Hashed client-acceptance evidence gate      IMPLEMENTED
+Local bundle backup/restore                   IMPLEMENTED
 Two-workflow MK1 rehearsal                  IMPLEMENTED
 Paid infrastructure required for rehearsal NO
 ```
@@ -42,3 +43,10 @@ Paid infrastructure required for rehearsal NO
 ```
 
 Do not mark P1/MK1 certified until those real-world gates are evidenced.
+
+
+## Backup / restore boundary
+
+Local installation bundles and file-backed runtime evidence can now be archived, hashed, verified and restored with `tools/savings/backup_bundle.py`.
+
+This proves local pilot recovery mechanics without cloud spend. The real PostgreSQL/Supabase production-control-plane backup/restore gate remains open and must be closed against the deployment selected for a funded pilot.
