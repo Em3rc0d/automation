@@ -1,0 +1,19 @@
+{
+  "asOfDate": "2026-09-25",
+  "simulationCostPerMessagePen": 0,
+  "records": [
+    {
+      "id": "invoice-client-fixture-001",
+      "invoiceNumber": "F001-1001",
+      "customerName": "Cliente Demo",
+      "status": "open",
+      "dueDate": "2026-09-25",
+      "amount": 850,
+      "currency": "PEN",
+      "contact": {
+        "channel": "email",
+        "address": "billing@example.test"
+      }
+    }
+  ]
+}

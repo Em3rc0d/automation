@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SavingsLocalSimulationFixture",
+  "description": "Provider-neutral local simulation input. Individual workflows use only the relevant fields.",
+  "type": "object",
+  "properties": {
+    "clock": { "type": "string" },
+    "asOf": { "type": "string" },
+    "asOfDate": { "type": "string" },
+    "simulationCostPerMessagePen": { "type": "number", "minimum": 0 },
+    "records": { "type": "array", "items": { "type": "object" } },
+    "routeRecords": { "type": "array", "items": { "type": "object" } },
+    "ticketRecords": { "type": "array", "items": { "type": "object" } },
+    "events": { "type": "array", "items": { "type": "object" } },
+    "inbound": { "type": "object" },
+    "email": { "type": "object" },
+    "document": { "type": "object" },
+    "request": { "type": "object" }
+  },
+  "additionalProperties": false
+}
