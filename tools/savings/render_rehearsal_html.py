@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import html
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -176,6 +177,18 @@ def render_directory(input_dir: Path, output_dir: Path | None = None) -> dict:
         raise ValueError("all rehearsal source projections must explicitly have productionClaim=false")
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    source_snapshot_dir = output_dir / "source"
+    source_snapshot_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_paths = {
+        key: source_snapshot_dir / path.name
+        for key, path in source_paths.items()
+    }
+    for key, path in source_paths.items():
+        if path.resolve() != snapshot_paths[key].resolve():
+            shutil.copyfile(path, snapshot_paths[key])
+        else:
+            snapshot_paths[key] = path
+
     targets = {
         "index": output_dir / "index.html",
         "clientPortal": output_dir / "client-portal.html",
@@ -193,14 +206,14 @@ def render_directory(input_dir: Path, output_dir: Path | None = None) -> dict:
         "workflowCount": summary.get("workflowCount"),
         "sourceFiles": {
             key: {
-                "path": str(path.resolve()),
+                "path": path.relative_to(output_dir).as_posix(),
                 "sha256": sha256_file(path),
             }
-            for key, path in source_paths.items()
+            for key, path in snapshot_paths.items()
         },
         "generatedFiles": {
             key: {
-                "path": str(path.resolve()),
+                "path": path.relative_to(output_dir).as_posix(),
                 "sha256": sha256_file(path),
             }
             for key, path in targets.items()
@@ -230,7 +243,14 @@ def verify_directory(directory: Path) -> dict:
             expected = entry.get("sha256")
             if not isinstance(raw_path, str) or not raw_path:
                 raise ValueError(f"manifest path missing: {group}.{name}")
-            path = Path(raw_path)
+            rel = Path(raw_path)
+            if rel.is_absolute() or ".." in rel.parts:
+                raise ValueError(f"manifest path unsafe: {group}.{name}")
+            path = (directory / rel).resolve()
+            try:
+                path.relative_to(directory.resolve())
+            except ValueError as exc:
+                raise ValueError(f"manifest path escapes directory: {group}.{name}") from exc
             if not path.is_file():
                 raise ValueError(f"manifest file missing: {group}.{name}")
             actual = sha256_file(path)
