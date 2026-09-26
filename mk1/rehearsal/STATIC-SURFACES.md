@@ -27,7 +27,12 @@ Generated:
 .local/mk1-rehearsal/
 ├── index.html
 ├── client-portal.html
-└── operator-console.html
+├── operator-console.html
+├── report-manifest.json
+└── source/
+    ├── client-portal.json
+    ├── operator-console.json
+    └── summary.json
 ```
 
 ## Boundary
@@ -40,3 +45,17 @@ These pages prove presentation shape only. They do not provide:
 - client acceptance.
 
 The renderer refuses inputs that do not explicitly carry `productionClaim=false`.
+
+
+## Integrity verification
+
+The renderer snapshots the three source projections and hashes both source + rendered files with SHA-256.
+
+```bash
+python tools/savings/render_rehearsal_html.py \
+  --input .local/mk1-rehearsal \
+  --verify \
+  --json
+```
+
+The manifest is evidence of file integrity, not a digital signature or client approval.
