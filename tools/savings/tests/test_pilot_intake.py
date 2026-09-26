@@ -25,6 +25,8 @@ class PilotIntakeTests(unittest.TestCase):
             self.assertTrue((out / "tenant-isolation.json").is_file())
             self.assertTrue((out / "deployment-decision.json").is_file())
             self.assertTrue((out / "CLIENT-ACCEPTANCE.md").is_file())
+            self.assertTrue((out / "ops/backup-restore-evidence.json").is_file())
+            self.assertTrue((out / "ops/live-incident-drill-evidence.json").is_file())
             manifest = json.loads((out / "INTAKE-MANIFEST.json").read_text())
             self.assertFalse(manifest["containsSecrets"])
             self.assertEqual(manifest["initialGateExpectation"], "BLOCKED")
