@@ -1,0 +1,8 @@
+{
+  "tenantId": "tenant-test",
+  "providerPhoneNumberId": "phone-number-test",
+  "to": "51999111222",
+  "text": "Mensaje que no debe enviarse.",
+  "traceId": "trace-kapso-send-invalid",
+  "idempotencyKey": "tenant-test:missing-business-action"
+}

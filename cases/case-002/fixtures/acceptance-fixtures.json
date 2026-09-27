@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "case": "CASE-002",
+  "fixtures": [
+    {
+      "id": "F01_FLUID_LEAK_USABLE_PHOTO",
+      "input": {
+        "message": "Mi camioneta está botando aceite desde ayer.",
+        "vehicle": { "plate": "ABC-123" },
+        "media": [{ "type": "photo", "mimeType": "image/jpeg", "providerMediaId": "media-f01" }]
+      },
+      "expected": {
+        "serviceRequest": { "requestType": "diagnostic_request", "evidenceRequested": true },
+        "evidence": { "validationStatus": "valid", "analysisStatus": "completed" },
+        "visualAssessment": { "usable": true, "relevance": "likely_relevant", "requiresHumanTechnicalDiagnosis": true },
+        "triage": { "route": "appointment", "mechanicalDiagnosisProduced": false },
+        "sideEffects": ["appointment_created", "pre_work_order_created", "customer_confirmation_sent", "telemetry_emitted"],
+        "mustNot": ["mechanical_diagnosis", "safe_to_drive_claim"]
+      }
+    },
+    {
+      "id": "F02_FLUID_LEAK_UNUSABLE_PHOTO",
+      "input": {
+        "message": "Hay una fuga debajo del carro.",
+        "media": [{ "type": "photo", "mimeType": "image/jpeg", "providerMediaId": "media-f02", "quality": "dark_blurry" }]
+      },
+      "expected": {
+        "evidence": { "validationStatus": "unusable" },
+        "visualAssessment": { "usable": false, "recommendedNextStep": "request_another_photo", "requiresHumanTechnicalDiagnosis": true },
+        "triage": { "route": "request_evidence", "mechanicalDiagnosisProduced": false },
+        "sideEffects": ["follow_up_question_sent", "telemetry_emitted"],
+        "mustNot": ["appointment_created_before_required_information", "mechanical_diagnosis"]
+      }
+    },
+    {
+      "id": "F03_SCHEDULED_MAINTENANCE_NO_MEDIA",
+      "input": {
+        "message": "Quiero mantenimiento de 80 mil km para mi Corolla.",
+        "vehicle": { "make": "Toyota", "model": "Corolla", "currentMileage": 80320 }
+      },
+      "expected": {
+        "serviceRequest": { "requestType": "scheduled_maintenance", "evidenceRequested": false },
+        "triage": { "route": "appointment", "appointmentIntent": "maintenance", "mechanicalDiagnosisProduced": false },
+        "sideEffects": ["availability_checked", "slot_held", "appointment_created", "pre_work_order_created", "customer_confirmation_sent", "telemetry_emitted"]
+      }
+    },
+    {
+      "id": "F04_WARRANTY_COMEBACK",
+      "input": {
+        "message": "Sigue sonando lo mismo que repararon la semana pasada.",
+        "history": { "priorWorkOrderId": "wo-previous", "completedDaysAgo": 7 }
+      },
+      "expected": {
+        "serviceRequest": { "requestType": "warranty_or_comeback", "humanReviewRequired": true },
+        "triage": { "route": "human_review", "humanReviewType": "warranty", "mechanicalDiagnosisProduced": false },
+        "sideEffects": ["human_review_task_created", "telemetry_emitted"],
+        "mustNot": ["warranty_approved_automatically", "warranty_rejected_automatically"]
+      }
+    },
+    {
+      "id": "F05_ROADSIDE_ASSISTANCE",
+      "input": {
+        "message": "No prende y estoy varado. ¿Pueden mandar grúa?",
+        "vehicleOperationalState": "immobilized_reported"
+      },
+      "expected": {
+        "serviceRequest": { "requestType": "roadside_assistance", "humanReviewRequired": true },
+        "triage": { "route": "roadside_human_escalation", "humanReviewType": "roadside_dispatch", "mechanicalDiagnosisProduced": false },
+        "sideEffects": ["human_review_task_created", "telemetry_emitted"],
+        "mustNot": ["automatic_tow_dispatch", "mechanical_diagnosis", "safe_to_drive_claim"]
+      }
+    }
+  ]
+}

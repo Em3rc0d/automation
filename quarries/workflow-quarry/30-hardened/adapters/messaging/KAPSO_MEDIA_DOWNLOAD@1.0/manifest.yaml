@@ -1,0 +1,119 @@
+key: KAPSO_MEDIA_DOWNLOAD
+version: 1.0.0
+artifact_class: ADAPTER
+family: messaging
+provider: kapso
+stage: HARDENED
+origin: ORIGINAL_SYNTHESIS
+runtime:
+  engine: n8n
+  profile: n8n-base-js-v1
+  tested_version: "2.38.7"
+
+purpose: >-
+  Retrieve one Kapso WhatsApp media object by provider media ID, enforce
+  metadata/size/download-host policy, download the binary and verify SHA-256
+  before returning it to the caller for evidence storage.
+
+implements:
+  - messaging.media.download
+
+non_goals:
+  - object-storage persistence
+  - image interpretation
+  - mechanical diagnosis
+  - execution-log serialization of media bytes
+
+input_contract:
+  required:
+    - tenantId
+    - providerPhoneNumberId
+    - providerMessageId
+    - mediaId
+    - traceId
+  optional:
+    - expectedMediaType
+    - maxBytes
+    - idempotencyKey
+
+output_contract:
+  required:
+    - tenantId
+    - provider
+    - providerPhoneNumberId
+    - providerMessageId
+    - mediaId
+    - mimeType
+    - sizeBytes
+    - sha256
+    - traceId
+    - idempotencyKey
+  binary_property: data
+
+provider_contract:
+  metadata_endpoint: /meta/whatsapp/v24.0/{media_id}
+  phone_number_query_required: true
+  temporary_download_url: true
+  expected_download_host: api.kapso.ai
+
+side_effects:
+  - type: HTTP_GET
+    capability: kapso.media.metadata.read
+  - type: HTTP_GET
+    capability: kapso.media.binary.read
+
+idempotency:
+  strategy: kapso-media:<providerPhoneNumberId>:<mediaId>
+  enforcement_boundary: calling orchestration / Evidence creation
+
+retry_policy:
+  metadata_max_tries: 3
+  download_max_tries: 3
+  wait_between_tries_ms: 1000
+
+failure_policy:
+  invalid_input: fail_before_network
+  metadata_mismatch: fail
+  size_limit_exceeded: fail_before_binary_download
+  download_host_not_allowed: fail
+  provider_hash_mismatch: fail
+  provider_failure_exhausted: fail for ERROR_TO_INCIDENT projection
+
+configuration:
+  credentials:
+    - HTTP Header Auth credential with Kapso X-API-Key
+  environment:
+    - KAPSO_META_API_BASE_URL
+  defaults:
+    KAPSO_META_API_BASE_URL: https://api.kapso.ai/meta/whatsapp/v24.0
+    maxBytes: 10485760
+
+security:
+  embedded_secrets: false
+  client_specific_ids: false
+  short_lived_download_url_not_persisted: true
+  media_binary_logging: prohibited
+  media_binary_telemetry: prohibited
+  sha256_verification: required_when_provider_hash_present
+
+provenance:
+  external_code_copied: false
+  sources:
+    - quarries/workflow-quarry/mining-batches/2026-09-11-batch-005-whatsapp-document-accounting.md
+    - https://docs.kapso.ai/api/meta/whatsapp/media/get-media-url
+    - https://docs.kapso.ai/docs/whatsapp/typescript-sdk/media
+  notes:
+    - Repository-native synthesis. Provider documentation supplies API behavior only.
+
+promotion:
+  next_stage: TESTED
+  requires:
+    - clean import into pinned n8n runtime
+    - successful metadata and binary retrieval against mock/provider sandbox
+    - oversize rejection before download
+    - invalid download-host rejection
+    - SHA-256 match test
+    - SHA-256 mismatch test
+    - retry/provider-failure test
+    - binary/log leakage review
+    - TEST-REPORT.md

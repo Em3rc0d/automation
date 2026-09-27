@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/case-002/service-request.schema.json",
+  "title": "CASE-002 ServiceRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tenantId",
+    "customerId",
+    "source",
+    "requestType",
+    "customerReportedSummary",
+    "urgency",
+    "humanReviewRequired"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "serviceRequestId": { "type": ["string", "null"] },
+    "customerId": { "type": "string", "minLength": 1 },
+    "vehicleId": { "type": ["string", "null"] },
+    "conversationId": { "type": ["string", "null"] },
+    "source": { "enum": ["whatsapp", "web", "operator", "phone_recorded", "walk_in_recorded"] },
+    "requestType": { "enum": ["scheduled_maintenance", "diagnostic_request", "repair_request", "inspection_request", "warranty_or_comeback", "bodywork_or_collision", "roadside_assistance", "other"] },
+    "customerReportedSummary": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "vehicleOperationalState": { "enum": ["unknown", "drivable_reported", "immobilized_reported", "not_applicable"] },
+    "urgency": { "enum": ["normal", "priority", "urgent_human_review"] },
+    "evidenceRequested": { "type": "boolean", "default": false },
+    "appointmentRequired": { "type": ["boolean", "null"] },
+    "humanReviewRequired": { "type": "boolean" },
+    "sourceMessageId": { "type": ["string", "null"] },
+    "occurredAt": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

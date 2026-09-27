@@ -1,0 +1,9 @@
+{
+  "tenantId": "tenant-test",
+  "providerPhoneNumberId": "phone-number-test",
+  "to": "51999111222",
+  "text": "Tu cita ha sido registrada para mañana a las 10:00.",
+  "traceId": "trace-kapso-send-valid",
+  "businessActionId": "ba-case002-confirmation-001",
+  "idempotencyKey": "tenant-test:ba-case002-confirmation-001"
+}

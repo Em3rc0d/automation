@@ -1,0 +1,187 @@
+{
+  "id": "case002GeminiInterpreterV1",
+  "name": "CASE002 - GEMINI INTERPRETER@1.0",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "case002-gemini-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst context = input.agentContext || {};\nconst sourceInput = {\n  tenantId: String(input.tenantId || ''),\n  providerPhoneNumberId: String(input.providerPhoneNumberId || ''),\n  senderId: String(input.senderId || ''),\n  providerMessageId: String(input.providerMessageId || ''),\n  providerEventId: String(input.providerEventId || input.providerMessageId || ''),\n  text: String(input.text || ''),\n  agentContext: context\n};\n\nconst policy = [\n  'You are the semantic interpreter for CASE-002, an automotive workshop WhatsApp intake flow in Peru.',\n  'You DO NOT execute tools, create appointments, choose availability, diagnose mechanical failures, decide that a vehicle is safe to drive, approve warranty, quote prices, or invent facts.',\n  'Extract only information supported by the supplied customer message and conversation context.',\n  'customerReportedSummary must preserve customer-reported facts and uncertainty. Do not turn symptoms into diagnoses.',\n  'mechanicalDiagnosisProduced MUST be false.',\n  'vehicleOperationalState is drivable_reported only when the customer reports that the vehicle can move/circulate; immobilized_reported only when the customer reports that it cannot.',\n  'A request about prior work, the same fault returning, or warranty maps to warranty_or_comeback.',\n  'A stranded/immobilized/tow request maps to roadside_assistance.',\n  'For dates, use the supplied currentDate and timezone America/Lima. If a date is ambiguous, leave targetDate empty and preserve raw.',\n  'For fields not present or not inferable with high confidence, use empty strings, unknown, other, or recognized=false as appropriate.',\n  'explicitConfirmation MUST be false unless step is awaiting_confirmation and the customer clearly confirms the currently proposed action.',\n  'When step is awaiting_slot, choosing one offered slot is selection, not final confirmation, even if the customer says ok.',\n  'selectedSlotReference may reference only a slot already present in offeredSlots; otherwise return empty string.',\n  'Return only the structure requested by the output parser.'\n].join('\\n');\n\nconst prompt = policy + '\\n\\nINPUT_CONTEXT_JSON:\\n' + JSON.stringify({\n  currentDate: context.currentDate || '',\n  timezone: 'America/Lima',\n  step: context.step || 'idle',\n  known: context.known || {},\n  offeredSlots: context.offeredSlots || [],\n  proposedSlot: context.proposedSlot || '',\n  recentConversation: context.recentConversation || [],\n  currentMessage: sourceInput.text\n});\n\nreturn [{ json: { sourceInput, prompt } }];"
+      },
+      "id": "case002-gemini-build-prompt",
+      "name": "Build Gemini Interpreter Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "notes": "Builds the minimum CASE-002 context envelope. No credentials or provider authority are passed to the model."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "hasOutputParser": true,
+        "batching": {},
+        "options": {}
+      },
+      "id": "case002-gemini-chain",
+      "name": "Interpret Conversation with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        680,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "Semantic extraction only. Failure returns to deterministic CASE-002 fallback."
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "maxOutputTokens": 1024,
+          "temperature": 0.1,
+          "topK": 20,
+          "topP": 0.8
+        }
+      },
+      "id": "case002-gemini-model",
+      "name": "CASE002 Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        620,
+        520
+      ],
+      "notes": "Credential is deliberately unbound in Git. Live binding must use the n8n googlePalmApi credential named CASE002 Gemini API."
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"schemaVersion\",\n    \"intent\",\n    \"requestType\",\n    \"customerReportedSummary\",\n    \"vehicleOperationalState\",\n    \"plate\",\n    \"schedulePreference\",\n    \"selectedSlotReference\",\n    \"explicitConfirmation\",\n    \"humanHelpRequested\",\n    \"mechanicalDiagnosisProduced\",\n    \"confidence\"\n  ],\n  \"properties\": {\n    \"schemaVersion\": {\n      \"type\": \"integer\",\n      \"enum\": [\n        1\n      ]\n    },\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"provide_service_information\",\n        \"appointment_preference\",\n        \"select_slot\",\n        \"confirm\",\n        \"change_preference\",\n        \"cancel\",\n        \"list_appointments\",\n        \"restart\",\n        \"human_help\",\n        \"other\"\n      ]\n    },\n    \"requestType\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"scheduled_maintenance\",\n        \"diagnostic_request\",\n        \"repair_request\",\n        \"inspection_request\",\n        \"warranty_or_comeback\",\n        \"bodywork_or_collision\",\n        \"roadside_assistance\",\n        \"other\"\n      ]\n    },\n    \"customerReportedSummary\": {\n      \"type\": \"string\",\n      \"maxLength\": 1000\n    },\n    \"vehicleOperationalState\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"unknown\",\n        \"drivable_reported\",\n        \"immobilized_reported\",\n        \"not_applicable\"\n      ]\n    },\n    \"plate\": {\n      \"type\": \"string\",\n      \"maxLength\": 16\n    },\n    \"schedulePreference\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"recognized\",\n        \"raw\",\n        \"targetDate\",\n        \"weekday\",\n        \"daypart\",\n        \"exactTime\"\n      ],\n      \"properties\": {\n        \"recognized\": {\n          \"type\": \"boolean\"\n        },\n        \"raw\": {\n          \"type\": \"string\",\n          \"maxLength\": 300\n        },\n        \"targetDate\": {\n          \"type\": \"string\",\n          \"maxLength\": 10\n        },\n        \"weekday\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"\",\n            \"monday\",\n            \"tuesday\",\n            \"wednesday\",\n            \"thursday\",\n            \"friday\",\n            \"saturday\",\n            \"sunday\"\n          ]\n        },\n        \"daypart\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"\",\n            \"morning\",\n            \"afternoon\"\n          ]\n        },\n        \"exactTime\": {\n          \"type\": \"string\",\n          \"maxLength\": 5\n        }\n      }\n    },\n    \"selectedSlotReference\": {\n      \"type\": \"string\",\n      \"maxLength\": 100\n    },\n    \"explicitConfirmation\": {\n      \"type\": \"boolean\"\n    },\n    \"humanHelpRequested\": {\n      \"type\": \"boolean\"\n    },\n    \"mechanicalDiagnosisProduced\": {\n      \"type\": \"boolean\",\n      \"enum\": [\n        false\n      ]\n    },\n    \"confidence\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"low\",\n        \"medium\",\n        \"high\"\n      ]\n    }\n  }\n}",
+        "autoFix": false
+      },
+      "id": "case002-gemini-parser",
+      "name": "CASE002 Conversation Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        820,
+        520
+      ],
+      "notes": "Strict provider-neutral interpretation contract. No tool or side-effect fields."
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $('Build Gemini Interpreter Prompt').first().json.sourceInput || {};\nconst current = $input.first().json || {};\n\nif (current.error) {\n  return [{ json: { ...source, llmMeta: { ok: false, provider: 'gemini', error: String(current.error).slice(0, 500) } } }];\n}\n\nconst parsed = current.output && typeof current.output === 'object' ? current.output : current;\nif (!parsed || typeof parsed !== 'object' || parsed.mechanicalDiagnosisProduced !== false) {\n  return [{ json: { ...source, llmMeta: { ok: false, provider: 'gemini', error: 'INVALID_OR_UNSAFE_INTERPRETATION' } } }];\n}\n\nreturn [{\n  json: {\n    ...source,\n    llmInterpretation: parsed,\n    llmMeta: {\n      ok: true,\n      provider: 'gemini',\n      model: 'models/gemini-2.5-flash'\n    }\n  }\n}];"
+      },
+      "id": "case002-gemini-normalize",
+      "name": "Normalize Gemini Interpretation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        300
+      ],
+      "notes": "Preserves the original envelope and marks unsafe/failed model output as unavailable so the caller can fall back deterministically."
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Build Gemini Interpreter Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Gemini Interpreter Prompt": {
+      "main": [
+        [
+          {
+            "node": "Interpret Conversation with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CASE002 Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Interpret Conversation with Gemini",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CASE002 Conversation Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Interpret Conversation with Gemini",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpret Conversation with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Normalize Gemini Interpretation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "candidateKey": "CASE002_GEMINI_INTERPRETER",
+    "candidateVersion": "1.1.0",
+    "stage": "CASE_HARNESS",
+    "origin": "CASE002_SYNTHESIS",
+    "artifactClass": "CASE_COMPOSITION",
+    "provider": "Google Gemini",
+    "sideEffectAuthority": false,
+    "mechanicalDiagnosisAuthority": false
+  },
+  "tags": [
+    {
+      "name": "case-002"
+    },
+    {
+      "name": "level-2"
+    },
+    {
+      "name": "gemini"
+    },
+    {
+      "name": "conversation"
+    }
+  ]
+}

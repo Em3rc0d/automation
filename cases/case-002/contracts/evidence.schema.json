@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/case-002/evidence.schema.json",
+  "title": "CASE-002 Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tenantId",
+    "serviceRequestId",
+    "evidenceId",
+    "source",
+    "type",
+    "mimeType",
+    "storageReference",
+    "contentHash",
+    "receivedAt",
+    "validationStatus",
+    "analysisStatus"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "serviceRequestId": { "type": "string", "minLength": 1 },
+    "evidenceId": { "type": "string", "minLength": 1 },
+    "source": { "enum": ["whatsapp", "web", "operator"] },
+    "sourceMessageId": { "type": ["string", "null"] },
+    "providerMediaId": { "type": ["string", "null"] },
+    "type": { "enum": ["photo", "video", "audio", "document"] },
+    "mimeType": { "type": "string", "minLength": 1 },
+    "sizeBytes": { "type": ["integer", "null"], "minimum": 0 },
+    "storageReference": { "type": "string", "minLength": 1 },
+    "contentHash": { "type": "string", "pattern": "^sha256:[a-fA-F0-9]{64}$" },
+    "receivedAt": { "type": "string", "format": "date-time" },
+    "capturedAt": { "type": ["string", "null"], "format": "date-time" },
+    "validationStatus": { "enum": ["pending", "valid", "invalid", "duplicate", "unusable"] },
+    "analysisStatus": { "enum": ["not_requested", "pending", "completed", "failed", "human_review"] },
+    "retentionClass": { "type": ["string", "null"] }
+  }
+}

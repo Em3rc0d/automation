@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "case": "CASE-002",
+  "purpose": "Portable n8n source manifest for the currently tested WhatsApp + Gemini Level-2 PoC",
+  "sourceBaselineCommit": "d1087b8876d09136c1624249a425566041439244",
+  "runtime": {
+    "n8nVersion": "2.38.7",
+    "userFolder": "/home/node",
+    "sqliteDatabase": "/home/node/.n8n/database.sqlite",
+    "persistentStatePath": "/home/node/.n8n",
+    "timezone": "America/Lima"
+  },
+  "workflowCountAtTestedLiveBaseline": 9,
+  "workflows": [
+    {
+      "id": "kapsoMessageReceiveV1",
+      "name": "ADAPTER CANDIDATE - KAPSO_MESSAGE_RECEIVE@1.0",
+      "source": "quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_RECEIVE@1.0/workflow.json",
+      "role": "WhatsApp inbound webhook, HMAC verification, normalization and CASE-002 composition host",
+      "bootstrapPhase": "seed",
+      "requiredForCurrentFlow": true
+    },
+    {
+      "id": "kapsoMediaDownloadV1",
+      "name": "ADAPTER CANDIDATE - KAPSO_MEDIA_DOWNLOAD@1.0",
+      "source": "quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MEDIA_DOWNLOAD@1.0/workflow.json",
+      "role": "Kapso media adapter",
+      "bootstrapPhase": "seed",
+      "requiredForCurrentFlow": false
+    },
+    {
+      "id": "kapsoMessageSendV1",
+      "name": "ADAPTER CANDIDATE - KAPSO_MESSAGE_SEND@1.0",
+      "source": "quarries/workflow-quarry/30-hardened/adapters/messaging/KAPSO_MESSAGE_SEND@1.0/workflow.json",
+      "role": "Hardened WhatsApp outbound send",
+      "bootstrapPhase": "seed",
+      "requiredForCurrentFlow": true
+    },
+    {
+      "id": "case002AcceptanceProbeV1",
+      "name": "CASE-002 ACCEPTANCE PROBE V1",
+      "source": "cases/case-002/runtime/case002-acceptance-probe.json",
+      "role": "Level-2 acceptance probe",
+      "bootstrapPhase": "seed",
+      "requiredForCurrentFlow": false
+    },
+    {
+      "id": "case002ControlPlaneStubV1",
+      "name": "CASE-002 LIVE CONTROL PLANE STUB",
+      "source": "cases/case-002/runtime/live/control-plane-stub.json",
+      "role": "Test-only in-n8n control-plane stub workflow",
+      "bootstrapPhase": "seed",
+      "requiredForCurrentFlow": false
+    },
+    {
+      "id": "case002Level2AppointmentAgentV1",
+      "name": "CASE002 LEVEL2 - APPOINTMENT AGENT@1.0",
+      "source": "cases/case-002/workflows/CASE002_LEVEL2_APPOINTMENT_AGENT@1.0/workflow.json",
+      "role": "Legacy deterministic conversational appointment source retained for rollback/reference",
+      "bootstrapPhase": "legacy-parity",
+      "requiredForCurrentFlow": false
+    },
+    {
+      "id": "case002GeminiInterpreterV1",
+      "name": "CASE002 - GEMINI INTERPRETER@1.0",
+      "source": "cases/case-002/workflows/CASE002_GEMINI_INTERPRETER@1.0/workflow.json",
+      "role": "Non-authoritative semantic interpretation",
+      "bootstrapPhase": "gemini",
+      "requiredForCurrentFlow": true
+    },
+    {
+      "id": "case002GeminiResponseRendererV1",
+      "name": "CASE002 - GEMINI RESPONSE RENDERER@1.0",
+      "source": "cases/case-002/workflows/CASE002_GEMINI_RESPONSE_RENDERER@1.0/workflow.json",
+      "role": "Non-authoritative natural-language response rendering",
+      "bootstrapPhase": "gemini",
+      "requiredForCurrentFlow": true
+    },
+    {
+      "id": "case002Level2ConversationAgentV2",
+      "name": "CASE002 LEVEL2 - CONVERSATION AGENT@2.0",
+      "source": "cases/case-002/workflows/CASE002_LEVEL2_CONVERSATION_AGENT@2.0/workflow.json",
+      "role": "Deterministic conversation policy/state + renderer guard + hardened send composition",
+      "bootstrapPhase": "gemini",
+      "requiredForCurrentFlow": true
+    }
+  ],
+  "runtimeComposition": {
+    "inbound": "kapsoMessageReceiveV1",
+    "semanticInterpreter": "case002GeminiInterpreterV1",
+    "deterministicPolicySource": "case002Level2ConversationAgentV2",
+    "responseRenderer": "case002GeminiResponseRendererV1",
+    "outbound": "kapsoMessageSendV1",
+    "overlayHelper": "cases/case-002/runtime/railway/prepare-level2-gemini-poc.js",
+    "bootstrap": "cases/case-002/runtime/railway/entrypoint.sh"
+  },
+  "credentialContracts": [
+    {
+      "name": "KAPSO API",
+      "n8nType": "httpHeaderAuth",
+      "purpose": "Kapso outbound API",
+      "requiredHeader": "X-API-Key",
+      "secretCommitted": false
+    },
+    {
+      "name": "CASE002 Gemini API",
+      "n8nType": "googlePalmApi",
+      "purpose": "Gemini interpreter and response renderer",
+      "defaultHost": "https://generativelanguage.googleapis.com",
+      "secretCommitted": false
+    },
+    {
+      "name": "Kapso Webhook HMAC",
+      "n8nType": "crypto",
+      "purpose": "Inbound webhook HMAC verification",
+      "secretCommitted": false,
+      "binding": "manual or environment-specific provisioning to Calculate Kapso HMAC"
+    },
+    {
+      "name": "CASE002 Control Plane Internal",
+      "n8nType": "httpHeaderAuth",
+      "purpose": "Internal control-plane call from Receive",
+      "secretCommitted": false,
+      "binding": "manual or environment-specific provisioning to Post Normalized Message"
+    }
+  ],
+  "authority": {
+    "gemini": "language understanding and response phrasing only",
+    "deterministicPolicy": "routing, state, appointment decisions and protected facts",
+    "provider": "external delivery side effects",
+    "mechanicalDiagnosisProduced": false
+  },
+  "portability": {
+    "railway": "Use cases/case-002/runtime/railway/Dockerfile with persistent /home/node/.n8n volume",
+    "vps": "Use cases/case-002/portable/docker-compose.yml or the same Dockerfile directly",
+    "local": "Use cases/case-002/portable/docker-compose.yml",
+    "secrets": "Create credentials inside the target n8n credential store; never commit secret values"
+  }
+}

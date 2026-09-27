@@ -1,0 +1,87 @@
+{
+  "id": "kapsoMessageSendV1",
+  "name": "ADAPTER CANDIDATE - KAPSO_MESSAGE_SEND@1.0",
+  "nodes": [
+    {
+      "parameters": {"inputSource": "passthrough"},
+      "id": "kapso-send-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst required = ['tenantId','providerPhoneNumberId','to','text','traceId','businessActionId','idempotencyKey'];\nconst missing = required.filter((k) => input[k] === undefined || input[k] === null || input[k] === '');\nif (missing.length) throw new Error(`KAPSO_SEND_INVALID_INPUT missing=${missing.join(',')}`);\nconst text = String(input.text);\nif (!text.length || text.length > 4096) throw new Error('KAPSO_SEND_TEXT_LENGTH_INVALID');\nconst to = String(input.to).replace(/[^0-9]/g, '');\nif (!to) throw new Error('KAPSO_SEND_RECIPIENT_INVALID');\nconst businessActionId = String(input.businessActionId);\nif (businessActionId.length > 512) throw new Error('KAPSO_SEND_BUSINESS_ACTION_ID_TOO_LONG');\nreturn [{ json: {\n  tenantId: String(input.tenantId),\n  provider: 'kapso',\n  providerPhoneNumberId: String(input.providerPhoneNumberId),\n  to,\n  text,\n  traceId: String(input.traceId),\n  businessActionId,\n  idempotencyKey: String(input.idempotencyKey),\n  payload: {\n    messaging_product: 'whatsapp',\n    recipient_type: 'individual',\n    to,\n    type: 'text',\n    biz_opaque_callback_data: businessActionId,\n    text: { body: text, preview_url: false }\n  }\n} }];"
+      },
+      "id": "validate-kapso-send",
+      "name": "Validate Send Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ (($env.KAPSO_META_API_BASE_URL || 'https://api.kapso.ai/meta/whatsapp/v24.0').replace(/\\/$/, '')) + '/' + encodeURIComponent($json.providerPhoneNumberId) + '/messages' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "X-Automation-Business-Action", "value": "={{ $json.businessActionId }}"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "id": "send-kapso-message",
+      "name": "Send Kapso Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300],
+      "notes": "Bind HTTP Header Auth with X-API-Key. Deliberately NO automatic retry: provider send idempotency is not assumed. Ambiguous transport outcomes must be reconciled before any replay."
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('Validate Send Request').first().json;\nconst response = $input.first().json || {};\nconst providerMessageId = response.messages?.[0]?.id ? String(response.messages[0].id) : '';\nif (!providerMessageId) throw new Error('KAPSO_SEND_PROVIDER_MESSAGE_ID_MISSING');\nconst waId = response.contacts?.[0]?.wa_id ? String(response.contacts[0].wa_id) : request.to;\nreturn [{ json: {\n  schemaVersion: '1.0',\n  tenantId: request.tenantId,\n  provider: 'kapso',\n  channel: 'whatsapp',\n  providerPhoneNumberId: request.providerPhoneNumberId,\n  recipientId: waId,\n  providerMessageId,\n  businessActionId: request.businessActionId,\n  idempotencyKey: request.idempotencyKey,\n  traceId: request.traceId,\n  status: 'accepted_by_provider',\n  retrySafe: false\n} }];"
+      },
+      "id": "normalize-kapso-send-result",
+      "name": "Normalize Send Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 300]
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [[{"node":"Validate Send Request","type":"main","index":0}]]
+    },
+    "Validate Send Request": {
+      "main": [[{"node":"Send Kapso Message","type":"main","index":0}]]
+    },
+    "Send Kapso Message": {
+      "main": [[{"node":"Normalize Send Result","type":"main","index":0}]]
+    }
+  },
+  "settings": {"executionOrder": "v1"},
+  "pinData": {},
+  "meta": {
+    "candidateKey": "KAPSO_MESSAGE_SEND",
+    "candidateVersion": "1.0.0",
+    "stage": "HARDENED",
+    "origin": "ORIGINAL_SYNTHESIS",
+    "artifactClass": "ADAPTER"
+  },
+  "tags": [
+    {"name":"baseline-candidate"},
+    {"name":"adapter"},
+    {"name":"messaging"},
+    {"name":"kapso"},
+    {"name":"outbound"}
+  ]
+}

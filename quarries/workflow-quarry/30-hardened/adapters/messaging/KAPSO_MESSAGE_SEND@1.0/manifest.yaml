@@ -1,0 +1,120 @@
+key: KAPSO_MESSAGE_SEND
+version: 1.0.0
+artifact_class: ADAPTER
+family: messaging
+provider: kapso
+stage: HARDENED
+origin: ORIGINAL_SYNTHESIS
+runtime:
+  engine: n8n
+  profile: n8n-base-js-v1
+  tested_version: "2.38.7"
+
+purpose: >-
+  Send one provider-neutral WhatsApp text action through Kapso, preserve the
+  provider message identifier and return a normalized outbound result without
+  assuming provider-side request idempotency.
+
+implements:
+  - messaging.send
+
+non_goals:
+  - business intent generation
+  - appointment policy
+  - blind retry of an ambiguous provider send
+  - template-message policy automation
+  - media upload/send in v1
+
+input_contract:
+  required:
+    - tenantId
+    - providerPhoneNumberId
+    - to
+    - text
+    - traceId
+    - businessActionId
+    - idempotencyKey
+
+output_contract:
+  schema_version: "1.0"
+  required:
+    - tenantId
+    - provider
+    - channel
+    - providerPhoneNumberId
+    - recipientId
+    - providerMessageId
+    - businessActionId
+    - idempotencyKey
+    - traceId
+    - status
+
+provider_contract:
+  endpoint: /meta/whatsapp/v24.0/{phone_number_id}/messages
+  method: POST
+  authentication: X-API-Key
+  message_type: text
+  correlation_field: biz_opaque_callback_data
+
+side_effects:
+  - type: HTTP_POST
+    capability: kapso.whatsapp.message.send
+    endpoint: /meta/whatsapp/v24.0/{phone_number_id}/messages
+
+idempotency:
+  strategy: >-
+    Caller MUST allocate a durable BusinessAction/idempotencyKey before invoking
+    this adapter. The provider call itself is treated as non-idempotent. The
+    businessActionId is also sent as biz_opaque_callback_data for later webhook
+    reconciliation.
+  provider_request_replay_safe: false
+  enforcement_boundary: Automation BusinessAction ledger / calling orchestration
+
+retry_policy:
+  provider_send_max_tries: 1
+  rationale: >-
+    A timeout after provider acceptance can be ambiguous. Automatic provider-send
+    retries are forbidden until provider-side idempotency is proven. Reconcile
+    provider status/webhook or require human review before replay.
+
+failure_policy:
+  invalid_input: fail_before_network
+  provider_4xx: fail_non_retryable
+  provider_5xx_or_timeout: unknown_outcome_do_not_blindly_retry
+  missing_provider_message_id: fail_and_reconcile
+
+configuration:
+  credentials:
+    - HTTP Header Auth credential with Kapso X-API-Key
+  environment:
+    - KAPSO_META_API_BASE_URL
+  defaults:
+    KAPSO_META_API_BASE_URL: https://api.kapso.ai/meta/whatsapp/v24.0
+    maxTextChars: 4096
+
+security:
+  embedded_secrets: false
+  client_specific_ids: false
+  api_key_logging: prohibited
+  message_body_logging: minimize
+  tenant_scope_required: true
+
+provenance:
+  external_code_copied: false
+  sources:
+    - https://docs.kapso.ai/api/meta/whatsapp/messages/send-a-message
+    - https://docs.kapso.ai/docs/whatsapp/send-messages/text
+  notes:
+    - Repository-native synthesis. Provider documentation supplies API behavior only.
+
+promotion:
+  next_stage: TESTED
+  requires:
+    - clean import into pinned n8n runtime
+    - successful text send against Kapso test/pilot account
+    - provider message ID persistence test
+    - invalid-input test with zero provider side effects
+    - ambiguous-timeout/no-blind-retry test
+    - businessActionId correlation test
+    - secret/PII leakage review
+    - TEST-REPORT.md

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://automation.local/schemas/case-002/conversation-interpretation.schema.json",
+  "title": "CASE-002 ConversationInterpretation",
+  "description": "Provider-neutral semantic interpretation produced by a replaceable language model. It is advisory input to deterministic CASE-002 policy and never has side-effect or diagnosis authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "intent",
+    "requestType",
+    "customerReportedSummary",
+    "vehicleOperationalState",
+    "plate",
+    "schedulePreference",
+    "selectedSlotReference",
+    "explicitConfirmation",
+    "humanHelpRequested",
+    "mechanicalDiagnosisProduced",
+    "confidence"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "intent": {
+      "enum": [
+        "provide_service_information",
+        "appointment_preference",
+        "select_slot",
+        "confirm",
+        "change_preference",
+        "cancel",
+        "list_appointments",
+        "restart",
+        "human_help",
+        "other"
+      ]
+    },
+    "requestType": {
+      "enum": [
+        "scheduled_maintenance",
+        "diagnostic_request",
+        "repair_request",
+        "inspection_request",
+        "warranty_or_comeback",
+        "bodywork_or_collision",
+        "roadside_assistance",
+        "other"
+      ]
+    },
+    "customerReportedSummary": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Short normalization of only facts reported by the customer. Must not introduce diagnosis."
+    },
+    "vehicleOperationalState": {
+      "enum": [
+        "unknown",
+        "drivable_reported",
+        "immobilized_reported",
+        "not_applicable"
+      ]
+    },
+    "plate": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Normalized plate when explicitly present in supplied context; otherwise empty string."
+    },
+    "schedulePreference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recognized",
+        "raw",
+        "targetDate",
+        "weekday",
+        "daypart",
+        "exactTime"
+      ],
+      "properties": {
+        "recognized": { "type": "boolean" },
+        "raw": { "type": "string", "maxLength": 300 },
+        "targetDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD only when unambiguously resolved from the supplied America/Lima current date; otherwise empty string."
+        },
+        "weekday": {
+          "enum": ["", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        },
+        "daypart": {
+          "enum": ["", "morning", "afternoon"]
+        },
+        "exactTime": {
+          "type": "string",
+          "description": "HH:MM in 24-hour format when explicitly understood; otherwise empty string."
+        }
+      }
+    },
+    "selectedSlotReference": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Customer reference to one of the already-offered slots, such as 'second' or '16:00'. Empty when not selecting."
+    },
+    "explicitConfirmation": {
+      "type": "boolean",
+      "description": "True only when the customer explicitly confirms the currently proposed action."
+    },
+    "humanHelpRequested": { "type": "boolean" },
+    "mechanicalDiagnosisProduced": {
+      "const": false,
+      "description": "Permanent authority boundary: the model must never produce a mechanical diagnosis."
+    },
+    "confidence": {
+      "enum": ["low", "medium", "high"]
+    }
+  }
+}

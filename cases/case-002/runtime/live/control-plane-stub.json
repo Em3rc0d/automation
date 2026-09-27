@@ -1,0 +1,61 @@
+{
+  "id": "case002ControlPlaneStubV1",
+  "name": "CASE-002 LIVE CONTROL PLANE STUB",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "internal/connectors/messaging/inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "case002-control-plane-webhook",
+      "name": "Inbound Control Plane Stub",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "webhookId": "case002-control-plane-stub-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const req = $input.first().json;\nconst headers = req.headers || {};\nconst body = req.body || {};\nreturn [{json:{accepted:true,schemaVersion:'1.0',receivedAt:new Date().toISOString(),idempotencyKey:String(headers['idempotency-key']||''),provider:String(body.provider||''),providerMessageId:String(body.providerMessageId||''),threadId:String(body.threadId||''),messageType:String(body.messageType||''),hasMedia:!!body.media}}];"
+      },
+      "id": "case002-control-plane-normalize",
+      "name": "Record Safe Receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "case002-control-plane-respond",
+      "name": "Accept Inbound Envelope",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [760, 300]
+    }
+  ],
+  "connections": {
+    "Inbound Control Plane Stub": {
+      "main": [[{"node":"Record Safe Receipt","type":"main","index":0}]]
+    },
+    "Record Safe Receipt": {
+      "main": [[{"node":"Accept Inbound Envelope","type":"main","index":0}]]
+    }
+  },
+  "settings": {"executionOrder":"v1"},
+  "pinData": {},
+  "meta": {
+    "case": "CASE-002",
+    "purpose": "Level-2 live integration control-plane stub",
+    "testOnly": true
+  },
+  "tags": []
+}

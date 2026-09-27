@@ -1,0 +1,160 @@
+{
+  "id": "kapsoMediaDownloadV1",
+  "name": "ADAPTER CANDIDATE - KAPSO_MEDIA_DOWNLOAD@1.0",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {"name":"tenantId","type":"string"},
+            {"name":"providerPhoneNumberId","type":"string"},
+            {"name":"providerMessageId","type":"string"},
+            {"name":"mediaId","type":"string"},
+            {"name":"traceId","type":"string"},
+            {"name":"expectedMediaType","type":"string"},
+            {"name":"maxBytes","type":"number"},
+            {"name":"idempotencyKey","type":"string"}
+          ]
+        }
+      },
+      "id": "kapso-media-trigger",
+      "name": "Called by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst required = ['tenantId','providerPhoneNumberId','providerMessageId','mediaId','traceId'];\nconst missing = required.filter((k) => input[k] === undefined || input[k] === null || input[k] === '');\nif (missing.length) throw new Error(`KAPSO_MEDIA_INVALID_INPUT missing=${missing.join(',')}`);\nconst maxBytes = Number(input.maxBytes ?? 10485760);\nif (!Number.isFinite(maxBytes) || maxBytes <= 0) throw new Error('KAPSO_MEDIA_INVALID_MAX_BYTES');\nreturn [{ json: {\n  tenantId: String(input.tenantId),\n  provider: 'kapso',\n  providerPhoneNumberId: String(input.providerPhoneNumberId),\n  providerMessageId: String(input.providerMessageId),\n  mediaId: String(input.mediaId),\n  expectedMediaType: input.expectedMediaType ? String(input.expectedMediaType) : null,\n  traceId: String(input.traceId),\n  maxBytes,\n  idempotencyKey: input.idempotencyKey ? String(input.idempotencyKey) : `kapso-media:${String(input.providerPhoneNumberId)}:${String(input.mediaId)}`\n} }];"
+      },
+      "id": "validate-media-request",
+      "name": "Validate Media Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.kapso.ai/meta/whatsapp/v24.0/' + encodeURIComponent($json.mediaId) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone_number_id",
+              "value": "={{ $json.providerPhoneNumberId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-kapso-media-metadata",
+      "name": "Get Kapso Media Metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [740, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "notes": "Bind an HTTP Header Auth credential with X-API-Key at deployment. Restrict the credential to api.kapso.ai."
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('Validate Media Request').first().json;\nconst metadata = $input.first().json;\nif (!metadata || !metadata.id || !metadata.download_url) throw new Error('KAPSO_MEDIA_METADATA_INCOMPLETE');\nif (String(metadata.id) !== request.mediaId) throw new Error('KAPSO_MEDIA_ID_MISMATCH');\nconst sizeBytes = Number(metadata.file_size);\nif (!Number.isFinite(sizeBytes) || sizeBytes < 0) throw new Error('KAPSO_MEDIA_SIZE_INVALID');\nif (sizeBytes > request.maxBytes) throw new Error(`KAPSO_MEDIA_TOO_LARGE size=${sizeBytes} max=${request.maxBytes}`);\nlet url;\ntry { url = new URL(String(metadata.download_url)); } catch { throw new Error('KAPSO_MEDIA_DOWNLOAD_URL_INVALID'); }\nif (url.protocol !== 'https:' || url.hostname !== 'api.kapso.ai' || !url.pathname.startsWith('/meta/whatsapp/media_download')) {\n  throw new Error('KAPSO_MEDIA_DOWNLOAD_URL_NOT_ALLOWED');\n}\nreturn [{ json: {\n  ...request,\n  mimeType: metadata.mime_type ? String(metadata.mime_type) : 'application/octet-stream',\n  sizeBytes,\n  providerSha256: metadata.sha256 ? String(metadata.sha256).toLowerCase() : null,\n  downloadUrl: String(metadata.download_url),\n  downloadUrlExpiresAt: metadata.download_url_expires_at ? String(metadata.download_url_expires_at) : null\n} }];"
+      },
+      "id": "validate-kapso-media-metadata",
+      "name": "Validate Kapso Media Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.downloadUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "download-kapso-media",
+      "name": "Download Kapso Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1260, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "notes": "Kapso download_url contains a short-lived provider token. Never log or persist the URL."
+    },
+    {
+      "parameters": {
+        "action": "hash",
+        "binaryData": true,
+        "type": "SHA256",
+        "binaryPropertyName": "data",
+        "dataPropertyName": "sha256Local",
+        "encoding": "hex"
+      },
+      "id": "hash-kapso-media",
+      "name": "Hash Downloaded Media",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [1520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Validate Kapso Media Metadata').first().json;\nconst current = $input.first();\nconst localHash = String(current.json.sha256Local ?? current.json.data ?? '').toLowerCase();\nif (!localHash) throw new Error('KAPSO_MEDIA_LOCAL_HASH_MISSING');\nif (meta.providerSha256 && localHash !== String(meta.providerSha256).toLowerCase()) throw new Error('KAPSO_MEDIA_HASH_MISMATCH');\nreturn [{\n  json: {\n    schemaVersion: '1.0',\n    tenantId: meta.tenantId,\n    provider: 'kapso',\n    providerPhoneNumberId: meta.providerPhoneNumberId,\n    providerMessageId: meta.providerMessageId,\n    mediaId: meta.mediaId,\n    mimeType: meta.mimeType,\n    sizeBytes: meta.sizeBytes,\n    sha256: localHash,\n    traceId: meta.traceId,\n    idempotencyKey: meta.idempotencyKey\n  },\n  binary: current.binary\n}];"
+      },
+      "id": "finalize-kapso-media",
+      "name": "Finalize Kapso Media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "Called by Another Workflow": {
+      "main": [[{"node":"Validate Media Request","type":"main","index":0}]]
+    },
+    "Validate Media Request": {
+      "main": [[{"node":"Get Kapso Media Metadata","type":"main","index":0}]]
+    },
+    "Get Kapso Media Metadata": {
+      "main": [[{"node":"Validate Kapso Media Metadata","type":"main","index":0}]]
+    },
+    "Validate Kapso Media Metadata": {
+      "main": [[{"node":"Download Kapso Media","type":"main","index":0}]]
+    },
+    "Download Kapso Media": {
+      "main": [[{"node":"Hash Downloaded Media","type":"main","index":0}]]
+    },
+    "Hash Downloaded Media": {
+      "main": [[{"node":"Finalize Kapso Media","type":"main","index":0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "candidateKey": "KAPSO_MEDIA_DOWNLOAD",
+    "candidateVersion": "1.0.0",
+    "stage": "HARDENED",
+    "origin": "ORIGINAL_SYNTHESIS",
+    "artifactClass": "ADAPTER"
+  },
+  "tags": [
+    {"name":"baseline-candidate"},
+    {"name":"adapter"},
+    {"name":"messaging"},
+    {"name":"kapso"},
+    {"name":"media"}
+  ]
+}

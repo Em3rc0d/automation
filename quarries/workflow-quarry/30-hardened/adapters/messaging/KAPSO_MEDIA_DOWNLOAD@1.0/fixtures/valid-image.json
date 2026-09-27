@@ -1,0 +1,15 @@
+{
+  "tenantId": "tenant_demo",
+  "providerPhoneNumberId": "123456789012345",
+  "providerMessageId": "wamid.MEDIA001",
+  "mediaId": "2621233374848975",
+  "expectedMediaType": "image",
+  "traceId": "trace-media-001",
+  "maxBytes": 10485760,
+  "expected": {
+    "provider": "kapso",
+    "mimeType": "image/jpeg",
+    "idempotencyKey": "kapso-media:123456789012345:2621233374848975",
+    "binaryProperty": "data"
+  }
+}

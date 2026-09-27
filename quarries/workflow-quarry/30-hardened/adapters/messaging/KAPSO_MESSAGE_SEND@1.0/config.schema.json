@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "automation://adapters/messaging/kapso-message-send/1.0/config",
+  "title": "KAPSO_MESSAGE_SEND@1.0 configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "apiBaseUrl": {
+      "type": "string",
+      "format": "uri",
+      "default": "https://api.kapso.ai/meta/whatsapp/v24.0"
+    },
+    "maxTextChars": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096,
+      "default": 4096
+    },
+    "automaticProviderRetries": {
+      "type": "boolean",
+      "const": false
+    }
+  },
+  "required": ["apiBaseUrl", "maxTextChars", "automaticProviderRetries"]
+}

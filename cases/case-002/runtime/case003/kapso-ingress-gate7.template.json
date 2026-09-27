@@ -1,0 +1,299 @@
+{
+  "id": "case003KapsoIngressGate7V1",
+  "name": "CASE-003 Kapso Ingress Gate 7",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "case003/adapters/kapso/whatsapp/messages",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "kapso-webhook",
+      "name": "CASE003 Kapso Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "case003-kapso-ingress-gate7-v1",
+      "notes": "Gate 7 isolated CASE-003 Kapso ingress. Does not modify CASE-002 receive workflow."
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "type": "SHA256",
+        "dataPropertyName": "signatureCalculated",
+        "encoding": "hex"
+      },
+      "id": "kapso-hmac",
+      "name": "Calculate Kapso HMAC",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Credential binding is injected from the already-bound live CASE-002 Kapso receive workflow. No credential is created or edited."
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$('CASE003 Kapso Webhook').first().json;\nconst headers=req.headers||{};\nconst calculated=String($input.first().json.signatureCalculated??$input.first().json.data??'').trim().toLowerCase();\nconst supplied=String(headers['x-webhook-signature']??'').trim().toLowerCase();\nconst safeEqual=(a,b)=>{let diff=a.length^b.length;const n=Math.max(a.length,b.length);for(let i=0;i<n;i++)diff|=(a.charCodeAt(i)||0)^(b.charCodeAt(i)||0);return diff===0;};\nconst event=String(headers['x-webhook-event']??'');\nconst version=String(headers['x-webhook-payload-version']??'');\nconst eventId=String(headers['x-idempotency-key']??'');\nreturn [{json:{\n  signatureValid:supplied.length>0&&calculated.length>0&&safeEqual(calculated,supplied),\n  eventValid:event==='whatsapp.message.received',\n  versionValid:version==='v2',\n  eventIdPresent:eventId.length>0,\n  event,version,eventId\n}}];"
+      },
+      "id": "verify-kapso-envelope",
+      "name": "Verify Kapso Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "gate7-valid-kapso",
+              "leftValue": "={{ $json.signatureValid && $json.eventValid && $json.versionValid && $json.eventIdPresent }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "kapso-security-gate",
+      "name": "Kapso Security Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok:false, code:'KAPSO_WEBHOOK_REJECTED' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "reject",
+      "name": "Reject Kapso Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        980,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const req=$('CASE003 Kapso Webhook').first().json;\nconst headers=req.headers||{};\nconst body=req.body||{};\nif(body.batch===true) throw new Error('KAPSO_BATCH_NOT_SUPPORTED_GATE7');\nconst entry=body.data&&!Array.isArray(body.data)?body.data:body;\nconst message=entry.message||body.message;\nconst conversation=entry.conversation||body.conversation||{};\nif(!message||!message.id) throw new Error('KAPSO_MESSAGE_ID_REQUIRED');\nconst kapso=message.kapso||{};\nconst direction=String(kapso.direction||'inbound');\nif(direction!=='inbound') throw new Error('KAPSO_NON_INBOUND_MESSAGE');\nconst type=String(message.type||'unknown');\nconst mediaTypes=new Set(['image','video','audio','document','sticker']);\nconst mediaObject=mediaTypes.has(type)&&message[type]&&typeof message[type]==='object'?message[type]:null;\nconst textRaw=kapso.content??message.text?.body??mediaObject?.caption??message.caption??'';\nconst text=String(textRaw).trim();\nif(!text) throw new Error('GATE7_TEXT_REQUIRED');\nconst providerPhoneNumberId=String(entry.phone_number_id||kapso.phone_number_id||conversation.phone_number_id||body.phone_number_id||'').trim();\nif(!providerPhoneNumberId) throw new Error('KAPSO_PHONE_NUMBER_ID_REQUIRED');\nconst senderId=String(message.from||kapso.phone_number||conversation.phone_number||'').trim();\nif(!senderId) throw new Error('KAPSO_SENDER_ID_REQUIRED');\nconst providerMessageId=String(message.id);\nconst providerEventId=String(headers['x-idempotency-key']||'');\nconst invoiceMatch=text.match(/(?:FACTURA|INVOICE)\\s*[:=#-]?\\s*([A-Z0-9-]{4,120})/i);\nconst taxMatch=text.match(/(?:RUC|TAX)\\s*[:=#-]?\\s*(\\d{8,20})/i);\nreturn [{json:{\n  provider:'kapso',\n  channel:'whatsapp',\n  providerPhoneNumberId,\n  providerEventId,\n  providerMessageId,\n  senderId,\n  text,\n  invoice_reference:invoiceMatch?.[1]||null,\n  claimed_tax_id:taxMatch?.[1]||null,\n  trace_id:providerEventId||providerMessageId,\n  messageType:type\n}}];"
+      },
+      "id": "normalize",
+      "name": "Normalize Kapso Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zqcwlnshtsectitagkca.supabase.co/rest/v1/rpc/case003_provider_channel_message_json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_iWaIWQJ66b49OcT_lwaJ9Q_-Hi_DoqP"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({p_provider:$json.provider,p_provider_channel_key:$json.providerPhoneNumberId,p_subject:$json.senderId,p_provider_message_id:$json.providerMessageId,p_text:$json.text,p_invoice_reference:$json.invoice_reference,p_claimed_tax_id:$json.claimed_tax_id,p_trace_id:$json.trace_id}) }}",
+        "options": {
+          "timeout": 3000
+        }
+      },
+      "id": "process-provider",
+      "name": "Process Provider Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        -80
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "case003RpcAuthV1",
+          "name": "CASE003 Supabase RPC Token"
+        }
+      },
+      "notes": "Tenant is resolved in PostgreSQL from provider + phone-number binding. Payload tenant IDs are never trusted."
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{};\nconst allowed=new Set(['FOUND','DUPLICATE','AUTH_REQUIRED','VERIFICATION_REQUIRED','NOT_FOUND_OR_NOT_AUTHORIZED','NEEDS_DISAMBIGUATION','CONNECTOR_NOT_BOUND']);\nif(!allowed.has(j.decision)) throw new Error('GATE7_UNEXPECTED_DECISION');\nif(j.channel_delivery!=='disabled') throw new Error('GATE7_OUTBOUND_MUST_BE_DISABLED');\nif(j.decision!=='FOUND'){\n  for(const k of ['company_code','fi_document_number','snapshot_id']){\n    if(j[k]!==undefined&&j[k]!==null) throw new Error('GATE7_DENIED_RESPONSE_LEAK:'+k);\n  }\n}\nreturn [{json:{...j,gate7Assertion:true}}];"
+      },
+      "id": "assert",
+      "name": "Assert Safe Provider Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok:true, decision:$json.decision, response_type:$json.response_type } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "ack",
+      "name": "Acknowledge Kapso Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1760,
+        -80
+      ]
+    }
+  ],
+  "connections": {
+    "CASE003 Kapso Webhook": {
+      "main": [
+        [
+          {
+            "node": "Calculate Kapso HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Kapso HMAC": {
+      "main": [
+        [
+          {
+            "node": "Verify Kapso Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Kapso Envelope": {
+      "main": [
+        [
+          {
+            "node": "Kapso Security Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kapso Security Gate": {
+      "main": [
+        [
+          {
+            "node": "Normalize Kapso Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Kapso Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Kapso Message": {
+      "main": [
+        [
+          {
+            "node": "Process Provider Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Provider Message": {
+      "main": [
+        [
+          {
+            "node": "Assert Safe Provider Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assert Safe Provider Decision": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge Kapso Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "caseId": "CASE-003",
+    "gate": "7",
+    "purpose": "Signed Kapso adapter -> persisted connector binding -> Gate-6 core. Outbound disabled."
+  },
+  "tags": []
+}
