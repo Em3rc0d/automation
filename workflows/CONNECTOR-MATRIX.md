@@ -410,3 +410,34 @@ Examples from current mining:
 - Cal.com: integration target; AGPL/open-core/commercial API distinctions.
 - ERPNext: integration target/reference; GPLv3.
 - Invoice Ninja: API/integration target; source-available/commercial reuse caveats.
+
+## WhatsApp Cloud API — MK1 priority adapter boundary
+
+Meta WhatsApp Cloud API is the **priority WhatsApp provider target for the first LeadFlow commercial motion**, subject to client discovery and live provider verification.
+
+Required adapter surface:
+
+```text
+messaging.receive
+messaging.send
+messaging.media.download   optional by workflow
+messaging.status.receive
+```
+
+Required provider evidence/configuration:
+- WABA ID;
+- phone-number ID;
+- tenant-scoped ConnectorAccount;
+- credential reference;
+- webhook subscription/verification state;
+- provider message ID (`wamid` or current equivalent);
+- outbound side-effect receipt;
+- delivery/status events where relevant;
+- current permissions/scopes;
+- provider cost telemetry when measurable.
+
+Production ingress requires a publicly reachable HTTPS webhook endpoint. Provider payloads must be verified, deduplicated and normalized before domain execution. Unknown/ambiguous WABA or phone mappings fail closed.
+
+See `../architecture/WHATSAPP-INGRESS-MK1.md` and ADR-0010.
+
+Provider API/policy behavior must be rechecked against current Meta documentation during each live activation; this matrix is an internal contract, not a frozen copy of Meta policy.

@@ -106,3 +106,22 @@ The preflight:
 - does not provision paid infrastructure.
 
 This tool does not replace client discovery or approval. It makes the transition from discovery to implementation reproducible.
+
+## 8. Messaging / WhatsApp discovery
+
+When WhatsApp or another messaging channel is in scope, capture before implementation:
+
+- percentage/volume of inbound work that actually arrives through the channel;
+- client-owned Meta Business Portfolio/WABA/phone-number ownership where applicable;
+- current WhatsApp Business/App/API state;
+- whether the number can be connected/migrated without disrupting operations;
+- who is allowed to send messages on behalf of the business;
+- which message classes require approved templates/provider rules;
+- expected inbound/outbound volume and provider-cost owner;
+- required human takeover path;
+- retention/PII expectations for message content/media;
+- source of truth after a message becomes a lead/case/appointment;
+- acceptable response/follow-up SLA;
+- explicit acceptance case for one inbound event and one outbound side effect.
+
+A WhatsApp-heavy business does not automatically justify an AI chatbot. First map the underlying process and decide what should remain deterministic, what may use semantic classification/extraction, and what must route to a human.
