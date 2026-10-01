@@ -196,3 +196,17 @@ Current zero-cost starting points live in `operations/savings/presets/catalog.js
 Each preset composes only `APPROVED_BASELINE` Savings Workflows and candidate Google Workspace adapters. It does not include client baseline values, credentials, acceptance or a pricing promise.
 
 Use `pilot_bootstrap.py from-preset` after discovery identifies a fit, then measure the real AS-IS process before quoting savings.
+
+## WhatsApp-first LeadFlow entrypoint
+
+For the first evidence clients, LeadFlow should be sold WhatsApp-first **when discovery shows WhatsApp is a material inbound channel**.
+
+Working commercial promise:
+
+> Convert the business WhatsApp into an organized sales process: relevant inquiries are registered, assigned and followed up instead of depending on memory and copy/paste.
+
+This is not a chatbot offer. The initial managed service favors deterministic process automation, explicit states and human review. AI classification/extraction is optional and must fail to human handling when uncertain.
+
+Delivery details: `WHATSAPP-FIRST-LEADFLOW.md`.
+
+The technical runtime remains provider-neutral. Meta WhatsApp Cloud API is the default first-party WhatsApp target, not the product boundary.

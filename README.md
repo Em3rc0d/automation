@@ -348,3 +348,26 @@ python tools/savings/launch_pilot.py --spec <pilot-preflight.json>
 ```
 
 It scaffolds the approved workflow bundles plus the MK1 evidence workspace and confirms the initial state is BLOCKED. No paid infrastructure or provider secret is created.
+
+## WhatsApp-first commercial entrypoint
+
+For the first LeadFlow commercial motion, WhatsApp is now a **priority ingress channel when discovery confirms it is material**, while the product remains provider-neutral and WhatsApp is not mandatory for every client.
+
+```text
+WhatsApp / other inbound channel
+→ connector
+→ shared multi-tenant ingress/runtime
+→ Savings Workflow
+→ client system of record
+→ follow-up / human action
+→ ProcessRecord + SavingsEvent
+```
+
+The customer receives an operated process, operational visibility, human-control rules and support — not a workflow file or architecture diagram as the product.
+
+The decision and boundary are defined in:
+- `decisions/ADR-0010-WHATSAPP-FIRST-COMMERCIAL-ENTRYPOINT.md`
+- `architecture/WHATSAPP-INGRESS-MK1.md`
+- `commercial/WHATSAPP-FIRST-LEADFLOW.md`
+
+This does not override the zero-fixed-cost rule: persistent public ingress is activated only when a funded pilot requires it.
