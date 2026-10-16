@@ -1,7 +1,7 @@
 /* MK1 local operator console. No third-party scripts, no HTML built from untrusted data. */
 const state = {
   token: "", view: "overview", tenant: "", overview: null, catalog: [],
-  detail: null, search: "", stage: "approved"
+  detail: null, search: "", stage: "all"
 };
 const $ = selector => document.querySelector(selector);
 const N = (tag, cls = "", text = null) => {
@@ -182,7 +182,7 @@ function renderInstallations() {
 function renderCatalog() {
   const root = currentContent();
   root.append(titleRow("Biblioteca de automatizaciones",
-    "Explora el repositorio real: las propuestas DESIGN_READY no pueden instalarse."));
+    "Catálogo cargado automáticamente al iniciar. Las propuestas DESIGN_READY no pueden instalarse."));
   const toolbar = N("div", "toolbar");
   const search = N("input", "search");
   search.type = "search"; search.placeholder = "Buscar automatización o proceso";
@@ -190,12 +190,12 @@ function renderCatalog() {
   search.value = state.search;
   const select = N("select");
   select.setAttribute("aria-label", "Filtrar por certificación");
-  select.add(new Option("Aprobadas para instalar", "approved"));
   select.add(new Option("Todas las etapas", "all"));
+  select.add(new Option("Aprobadas para instalar", "approved"));
   select.add(new Option("Solo propuestas", "drafts"));
   select.value = state.stage;
   const right = N("div", "right");
-  add(right, N("span", "muted", state.catalog.length + " en catálogo"), select);
+  add(right, N("span", "muted", state.catalog.length + " cargadas al iniciar · " + state.overview.approvedTotal + " aprobadas"), select);
   add(toolbar, search, right);
   root.append(toolbar);
   const grid = N("div", "catalog-grid");
