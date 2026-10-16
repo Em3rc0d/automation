@@ -226,10 +226,10 @@ function renderCatalog() {
 }
 function makeField(key, property, value) {
   const wrap = N("div", "field");
-  if (property.type === "array" || property.type === "object") wrap.classList.add("wide");
+  if (property.type === "array" || property.type === "object" || Array.isArray(property.type)) wrap.classList.add("wide");
   const label = N("label", "", key);
   let input;
-  const type = property.type || (property.enum ? "enum" : "string");
+  const type = Array.isArray(property.type) ? "nullable-object" : (property.type || (property.enum ? "enum" : "string"));
   if (property.enum) {
     input = N("select");
     property.enum.forEach(x => input.add(new Option(String(x), String(x))));
@@ -238,9 +238,9 @@ function makeField(key, property, value) {
     input = N("input");
     input.type = "checkbox";
     input.checked = value === true;
-  } else if (type === "array" || type === "object") {
+  } else if (type === "array" || type === "object" || type === "nullable-object") {
     input = N("textarea");
-    input.value = JSON.stringify(value ?? (type === "array" ? [] : {}), null, 2);
+    input.value = JSON.stringify(value === undefined ? (type === "array" ? [] : (type === "nullable-object" ? null : {})) : value, null, 2);
   } else {
     input = N("input");
     input.type = type === "number" || type === "integer" ? "number" : "text";
@@ -273,7 +273,7 @@ async function saveCurrentConfig(event) {
       else if (type === "integer" || type === "number") {
         if (input.value.trim() === "") throw new Error("Campo numérico requerido: " + key);
         config[key] = Number(input.value);
-      } else if (type === "array" || type === "object") {
+      } else if (type === "array" || type === "object" || type === "nullable-object") {
         try { config[key] = JSON.parse(input.value); }
         catch { throw new Error("JSON inválido: " + key); }
       } else config[key] = input.value;
