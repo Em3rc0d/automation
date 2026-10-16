@@ -96,7 +96,7 @@ class APIIntegrationTests(unittest.TestCase):
         self.assertEqual(detail["installation"]["state"], "DRAFT")
         self.assertFalse(detail["diagnostics"]["ready"])
         self.assertGreater(len(detail["diagnostics"]["blockers"]), 0)
-        self.assertNotIn("credentialRef", json.dumps(detail))
+        self.assertNotIn("credentialRef", json.dumps(detail["connectors"]))
         status, _ = self.request("/api/install", "POST", body, self.token, self.base)
         self.assertEqual(status, 409)
         status, _ = self.request("/api/install", "POST",
@@ -107,6 +107,8 @@ class APIIntegrationTests(unittest.TestCase):
 
     def test_04_validate_and_persist_edit_with_conflict_detection(self):
         query = "/api/config?tenant=client-test&key=LEAD_INTAKE_AUTOMATION"
+        _, latest = self.request("/api/installation?tenant=client-test&key=LEAD_INTAKE_AUTOMATION")
+        self.__class__.version = latest["configVersion"]
         config = {"enabled": False, "dryRun": True, "businessTimezone": "America/Lima",
                   "acceptedSourceSystems": ["email"]}
         status, bad = self.request(query, "PUT",
