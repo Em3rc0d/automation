@@ -38,7 +38,7 @@ class APIIntegrationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
-        cls.data = console.ConsoleData(Path(cls.tmp.name))
+        cls.data = console.ConsoleData(Path(cls.tmp.name) / "installations", Path(cls.tmp.name) / "catalog.sqlite3")
         cls.http = console.create_server(cls.data, port=0)
         cls.port = cls.http.server_address[1]
         cls.base = f"http://127.0.0.1:{cls.port}"
@@ -75,9 +75,13 @@ class APIIntegrationTests(unittest.TestCase):
         self.__class__.token = boot["token"]
         status, result = self.request("/api/catalog")
         self.assertEqual(status, 200)
-        self.assertGreaterEqual(len(result["entries"]), 12)
+        self.assertEqual(len(result["entries"]), 233)
         approved = [x for x in result["entries"] if x["installable"]]
-        self.assertGreaterEqual(len(approved), 12)
+        self.assertEqual(len(approved), 12)
+        self.assertEqual(len([x for x in result["entries"] if x["stage"] == "DESIGN_READY"]), 221)
+        _, overview = self.request("/api/overview")
+        self.assertEqual(overview["catalogSeed"]["catalogTotal"], 233)
+        self.assertEqual(overview["catalogSeed"]["approvedTotal"], 12)
         self.assertFalse(any(x["installable"] for x in result["entries"] if x["stage"] != "APPROVED_BASELINE"))
 
     def test_02_wrong_origin_and_token_blocked(self):
