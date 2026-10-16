@@ -1,0 +1,15 @@
+{
+  "monthlyUnits": 300,
+  "manualMinutesPerUnit": 5,
+  "exceptionMinutes": 60,
+  "oversightMinutes": 30,
+  "hourlyCostPen": 20,
+  "variableCostPerUnitPen": 0.1,
+  "allocatedFixedCostPen": 0,
+  "monthlyFeePen": 250,
+  "supportMinutesMonthly": 60,
+  "operatorHourlyCostPen": 30,
+  "expectedOtherCostPen": 0,
+  "targetMarginFraction": 0.5,
+  "preRevenue": true
+}
