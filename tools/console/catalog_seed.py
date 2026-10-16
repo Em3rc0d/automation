@@ -88,8 +88,9 @@ def seed_catalog(source_path: Path = SOURCE, db_path: Path = DEFAULT_DB) -> dict
     if db_path == Path(source_path).resolve():
         raise ValueError("Catalog DB cannot overwrite source registry")
     with _connect(db_path) as db:
-        db.execute("BEGIN IMMEDIATE")
+        # executescript() commits a pending transaction; create schema first.
         db.executescript(DDL)
+        db.execute("BEGIN IMMEDIATE")
         old = {
             (r["workflow_key"], r["version"]): (r["payload_sha256"], r["source_present"])
             for r in db.execute("SELECT workflow_key, version, payload_sha256, source_present FROM automation_catalog")
