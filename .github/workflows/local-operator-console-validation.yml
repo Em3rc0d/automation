@@ -1,0 +1,35 @@
+name: Local Operator Console Validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/console/**"
+      - ".github/workflows/local-operator-console-validation.yml"
+  push:
+    branches:
+      - "feature/local-operator-console-mk1"
+    paths:
+      - "tools/console/**"
+      - ".github/workflows/local-operator-console-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-console-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax validation
+        run: |
+          python -m py_compile tools/console/server.py
+          node --check tools/console/static/app.js
+      - name: Unit + API security tests
+        run: python -m unittest discover -s tools/console/tests -p 'test_*.py' -v
