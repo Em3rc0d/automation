@@ -28,6 +28,13 @@ if spec is None or spec.loader is None:
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
 
+SEED_PATH = Path(__file__).resolve().parent / "catalog_seed.py"
+seed_spec = importlib.util.spec_from_file_location("automation_console_catalog_seed", SEED_PATH)
+if seed_spec is None or seed_spec.loader is None:
+    raise RuntimeError("Automation catalog seeder cannot be loaded")
+seed_module = importlib.util.module_from_spec(seed_spec)
+seed_spec.loader.exec_module(seed_module)
+
 TENANT = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?\Z")
 WORKFLOW = re.compile(r"[A-Z][A-Z0-9_]{2,99}\Z")
 LOCK = threading.RLock()
@@ -155,22 +162,17 @@ def atomic_json(path: Path, value: dict) -> None:
 
 
 class ConsoleData:
-    def __init__(self, store: Path | None = None):
+    def __init__(self, store: Path | None = None, catalog_db: Path | None = None):
         self.store = (store or ROOT / ".local" / "installations").resolve()
         self.registry = installer.registry_by_key()
         self.store.mkdir(parents=True, exist_ok=True)
+        self.catalog_db = (catalog_db or self.store.parent / "console" / "catalog.sqlite3").resolve()
+        # Fail closed on seed failure: do not serve a partial/stale catalog.
+        self.seed_summary = seed_module.seed_catalog(installer.REGISTRY, self.catalog_db)
 
     def catalog(self) -> list[dict]:
-        return [
-            {
-                "key": i["key"], "name": i["name"], "domain": i["domain"],
-                "version": i["version"], "stage": i["stage"],
-                "manualWorkReduced": i.get("manual_work_reduced", ""),
-                "runtimeProfile": i.get("runtime_profile", ""),
-                "installable": i["stage"] == "APPROVED_BASELINE"
-            }
-            for i in sorted(self.registry.values(), key=lambda x: (x["stage"] != "APPROVED_BASELINE", x["domain"], x["name"]))
-        ]
+        # Read the seeded SQLite catalog, not the source JSON directly.
+        return seed_module.list_catalog(self.catalog_db)
 
     def tenants(self) -> list[str]:
         return sorted(p.name for p in self.store.iterdir()
@@ -285,6 +287,7 @@ class ConsoleData:
             "tenants": self.tenants(), "installations": installed,
             "catalogTotal": len(catalog), "approvedTotal": sum(i["installable"] for i in catalog),
             "installedTotal": len(installed), "blockedTotal": sum(not i["ready"] for i in installed),
+            "catalogSeed": self.seed_summary,
             "productionClaim": False
         }
 
@@ -418,8 +421,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--installations-root", type=Path, default=ROOT / ".local/installations")
+    parser.add_argument("--catalog-db", type=Path, help="SQLite catalog location (default: .local/console/catalog.sqlite3)")
     args = parser.parse_args()
-    server = create_server(ConsoleData(args.installations_root), args.port)
+    data = ConsoleData(args.installations_root, args.catalog_db)
+    print(f"Catalog seed: {data.seed_summary['catalogTotal']} workflows "
+          f"({data.seed_summary['approvedTotal']} approved, "
+          f"{data.seed_summary['designReadyTotal']} design-ready; "
+          f"{data.seed_summary['inserted']} inserted, "
+          f"{data.seed_summary['updated']} updated)", flush=True)
+    server = create_server(data, args.port)
     port = server.server_address[1]
     print(f"Operator Console LOCAL DEMO → http://127.0.0.1:{port}", flush=True)
     print("No autenticación ni ejecución real. No exponer por proxy o internet.", flush=True)
