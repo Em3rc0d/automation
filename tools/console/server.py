@@ -68,6 +68,13 @@ def validate_schema(value: object, schema: dict, path: str = "config") -> list[s
     if unknown:
         return [f"{path}: regla de esquema no soportada: {', '.join(sorted(unknown))}"]
     ty = schema.get("type")
+    if isinstance(ty, list):
+        if ty == ["object", "null"]:
+            if value is None:
+                return []
+            ty = "object"
+        else:
+            return [f"{path}: unión de tipos no soportada"]
     if ty == "object":
         if not isinstance(value, dict):
             return [f"{path}: debe ser un objeto"]
@@ -81,7 +88,7 @@ def validate_schema(value: object, schema: dict, path: str = "config") -> list[s
             if key not in props:
                 if schema.get("additionalProperties", True) is False:
                     errors.append(f"{path}.{key}: propiedad desconocida")
-                else:
+                elif props:
                     errors.append(f"{path}.{key}: no se permite editar campos sin esquema")
             else:
                 errors.extend(validate_schema(item, props[key], f"{path}.{key}"))
