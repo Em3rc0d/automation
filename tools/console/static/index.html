@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Automation · Operator Console (Local)</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">◈</span><div><strong>AUTOMATION</strong><small>OPERATIONS PLATFORM</small></div></div>
+      <div class="workspace-tag"><span class="live-dot"></span> LABORATORIO LOCAL <span>MK1</span></div>
+      <div class="sidebar-section">ESPACIO DE TRABAJO</div>
+      <nav aria-label="Navegación">
+        <button type="button" class="nav-link selected" data-view="overview"><span class="nav-icon">▦</span>Resumen</button>
+        <button type="button" class="nav-link" data-view="automations"><span class="nav-icon">⚙</span>Instalaciones</button>
+        <button type="button" class="nav-link" data-view="catalog"><span class="nav-icon">▤</span>Biblioteca de flujos</button>
+        <button type="button" class="nav-link" data-view="portal"><span class="nav-icon">◫</span>Vista del cliente</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="avatar">OP</div>
+        <div><strong>Operator Console</strong><small>Modo local · sin autenticación</small></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="path-label"><span>Automation</span><span class="sep">/</span><span id="page-crumb">Resumen</span></div>
+        <div class="top-actions">
+          <label class="tenant-picker-label" for="tenant-select">Cliente</label>
+          <select id="tenant-select" aria-label="Filtrar por cliente"></select>
+          <button id="install-open" type="button" class="button primary">+ Nueva instalación</button>
+        </div>
+      </header>
+      <div class="main-scroll">
+        <div class="notice"><span class="notice-icon">ⓘ</span>
+          <span><strong>Entorno local de configuración.</strong> Los cambios se guardan en archivos <code>.local/</code>.
+            No ejecutan proveedores, no activan automatizaciones y no sustituyen Auth/RLS de producción.</span>
+        </div>
+        <div id="flash" role="status" aria-live="polite"></div>
+        <div id="content" aria-live="polite"></div>
+      </div>
+    </main>
+  </div>
+  <dialog id="install-dialog" aria-labelledby="install-heading">
+    <form id="install-form">
+      <div class="dialog-top"><div><div class="eyebrow">NUEVA AUTOMATIZACIÓN</div><h2 id="install-heading">Instalar baseline</h2>
+        <p>Se creará un bundle en estado <strong>DRAFT</strong>. No se ejecutará el flujo.</p></div>
+        <button type="button" id="install-close" class="close" aria-label="Cerrar">×</button>
+      </div>
+      <label for="new-tenant">Identificador del cliente</label>
+      <input id="new-tenant" name="tenant" required pattern="[a-z0-9][a-z0-9-]*" maxlength="48" placeholder="ej. taller-san-miguel" autocomplete="off">
+      <p class="help">Minúsculas, números y guiones. Usa un ID sin datos personales.</p>
+      <label for="new-workflow">Automatización aprobada</label>
+      <select id="new-workflow" name="workflow" required></select>
+      <div class="dialog-actions"><button type="button" id="install-cancel" class="button secondary">Cancelar</button>
+        <button type="submit" class="button primary" id="install-submit">Crear borrador</button></div>
+    </form>
+  </dialog>
+</body>
+</html>
