@@ -49,6 +49,13 @@ if simulator_spec is None or simulator_spec.loader is None:
 simulator = importlib.util.module_from_spec(simulator_spec)
 simulator_spec.loader.exec_module(simulator)
 
+RESTAURANT_PATH = Path(__file__).resolve().parent / "restaurant_demo.py"
+restaurant_spec = importlib.util.spec_from_file_location("automation_restaurant_demo", RESTAURANT_PATH)
+if restaurant_spec is None or restaurant_spec.loader is None:
+    raise RuntimeError("Demo restaurant engine cannot be loaded")
+restaurant_demo = importlib.util.module_from_spec(restaurant_spec)
+restaurant_spec.loader.exec_module(restaurant_demo)
+
 TENANT = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?\Z")
 WORKFLOW = re.compile(r"[A-Z][A-Z0-9_]{2,99}\Z")
 LOCK = threading.RLock()
@@ -184,6 +191,8 @@ class ConsoleData:
         self.catalog_db = (catalog_db or self.store.parent / "console" / "catalog.sqlite3").resolve()
         # Fail closed on seed failure: do not serve a partial/stale catalog.
         self.seed_summary = seed_module.seed_catalog(installer.REGISTRY, self.catalog_db)
+        self.restaurant = restaurant_demo.RestaurantDemo(
+            self.catalog_db.parent / "restaurant-demo.sqlite3")
         self.tenant_seed_summary = None
         if seed_tenant_id:
             self.tenant_seed_summary = tenant_seed_module.seed_tenant(
@@ -427,7 +436,7 @@ def make_handler(data: ConsoleData, token: str):
             try:
                 self.guard_host()
                 fn()
-            except ConsoleError as exc:
+            except (ConsoleError, restaurant_demo.DemoError) as exc:
                 self.json(exc.status, {"error": str(exc)})
             except (ValueError, KeyError, FileNotFoundError, FileExistsError) as exc:
                 self.json(400, {"error": "Configuración o instalación inválida."})
@@ -442,6 +451,8 @@ def make_handler(data: ConsoleData, token: str):
                     return self.respond(200, (STATIC / "app.js").read_bytes(), "text/javascript; charset=utf-8")
                 if path == "/static/styles.css":
                     return self.respond(200, (STATIC / "styles.css").read_bytes(), "text/css; charset=utf-8")
+                if path == "/api/demo/state":
+                    return self.json(200, data.restaurant.state())
                 if path == "/api/bootstrap":
                     return self.json(200, {"token": token, "mode": "LOCAL_DEMO", "productionClaim": False})
                 if path == "/api/overview":
@@ -464,11 +475,20 @@ def make_handler(data: ConsoleData, token: str):
             def route():
                 self.guard_write()
                 action = urlsplit(self.path).path
-                if action not in ("/api/install", "/api/simulate", "/api/simulate-all"):
+                if action not in ("/api/install", "/api/simulate", "/api/simulate-all",
+                                  "/api/demo/orders", "/api/demo/orders/confirm", "/api/demo/tickets"):
                     raise ConsoleError("Ruta no encontrada.", 404)
                 body = self.input()
                 if not isinstance(body, dict):
                     raise ConsoleError("Objeto JSON requerido.")
+                if action == "/api/demo/orders":
+                    return self.json(201, data.restaurant.create_order(
+                        body.get("customerAlias"), body.get("sku"), body.get("quantity")))
+                if action == "/api/demo/orders/confirm":
+                    return self.json(200, data.restaurant.confirm_order(body.get("orderId")))
+                if action == "/api/demo/tickets":
+                    return self.json(201, data.restaurant.create_ticket(
+                        body.get("subject"), body.get("detail"), body.get("orderId")))
                 if action == "/api/simulate":
                     return self.json(200, data.simulate(body.get("tenantId"), body.get("workflowKey")))
                 if action == "/api/simulate-all":
