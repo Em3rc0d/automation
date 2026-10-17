@@ -146,4 +146,20 @@ dialog input,dialog select{width:100%}
 #tenant-simulation-status:empty{display:none}
 .tenant-roadmap .panel{margin-top:12px}
 .tenant-roadmap .table-wrap{max-height:620px;overflow-y:auto}
+.demo-pill-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.demo-main-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:25px}
+.demo-workspace>.panel{margin-bottom:25px}
+.demo-workspace>.cards{margin-top:8px}
+.demo-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;margin-top:20px}
+.demo-order-form,.demo-ticket-form{display:grid;gap:16px}
+.demo-list{padding:12px 20px;max-height:360px;overflow-y:auto}
+.demo-feed-item{padding:12px 4px;border-bottom:1px solid #eef1f6;display:flex;flex-direction:column;align-items:flex-start;gap:9px;font-size:12px;line-height:1.5}
+.demo-feed-item:last-child{border:0}
+.demo-event{padding:12px 4px;border-bottom:1px solid #eef1f6;display:flex;align-items:center;gap:13px;font-size:12px;flex-wrap:wrap}
+.demo-event:last-child{border-bottom:0}
+.demo-event strong{color:#344764;font-size:10px}
+.demo-event small{margin-left:auto}
+.demo-event-dot{height:8px;width:8px;border-radius:50%;background:#667ff5;flex-shrink:0}
+@media(max-width:900px){.demo-main-grid{grid-template-columns:1fr}}
+
 .tenant-roadmap thead th{position:sticky;top:0;background:#fafcff}
