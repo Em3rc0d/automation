@@ -102,7 +102,7 @@ async function api(path, method = "GET", body = null) {
   if (!response.ok) throw new Error(result.error || "Error inesperado en la consola");
   return result;
 }
-const viewTitles = {overview:"Resumen",automations:"Instalaciones",catalog:"Biblioteca",portal:"Vista del cliente"};
+const viewTitles = {overview:"Resumen",automations:"Instalaciones",catalog:"Biblioteca",portal:"Vista del cliente",restaurant:"Demo Chifa AV Perú"};
 function currentContent() {
   const area = $("#content");
   area.replaceChildren();
@@ -505,6 +505,9 @@ function render() {
   if (state.view === "catalog") return renderCatalog();
   if (state.view === "automations") return renderInstallations();
   if (state.view === "portal") return renderPortal();
+  if (state.view === "restaurant") return globalThis.renderAvPeruDemo({
+    root:currentContent(),api,N,button,badge,metric,panel,showFlash,titleRow
+  });
   return renderOverview();
 }
 function openInstall(key = "") {
