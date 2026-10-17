@@ -35,6 +35,20 @@ if seed_spec is None or seed_spec.loader is None:
 seed_module = importlib.util.module_from_spec(seed_spec)
 seed_spec.loader.exec_module(seed_module)
 
+TENANT_SEED_PATH = Path(__file__).resolve().parent / "tenant_seed.py"
+tenant_seed_spec = importlib.util.spec_from_file_location("automation_console_tenant_seed", TENANT_SEED_PATH)
+if tenant_seed_spec is None or tenant_seed_spec.loader is None:
+    raise RuntimeError("Automation tenant seeder cannot be loaded")
+tenant_seed_module = importlib.util.module_from_spec(tenant_seed_spec)
+tenant_seed_spec.loader.exec_module(tenant_seed_module)
+
+SIMULATOR_PATH = Path(__file__).resolve().parent / "simulation.py"
+simulator_spec = importlib.util.spec_from_file_location("automation_console_simulation", SIMULATOR_PATH)
+if simulator_spec is None or simulator_spec.loader is None:
+    raise RuntimeError("Automation simulator cannot be loaded")
+simulator = importlib.util.module_from_spec(simulator_spec)
+simulator_spec.loader.exec_module(simulator)
+
 TENANT = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?\Z")
 WORKFLOW = re.compile(r"[A-Z][A-Z0-9_]{2,99}\Z")
 LOCK = threading.RLock()
@@ -162,13 +176,18 @@ def atomic_json(path: Path, value: dict) -> None:
 
 
 class ConsoleData:
-    def __init__(self, store: Path | None = None, catalog_db: Path | None = None):
+    def __init__(self, store: Path | None = None, catalog_db: Path | None = None,
+                 seed_tenant_id: str | None = None):
         self.store = (store or ROOT / ".local" / "installations").resolve()
         self.registry = installer.registry_by_key()
         self.store.mkdir(parents=True, exist_ok=True)
         self.catalog_db = (catalog_db or self.store.parent / "console" / "catalog.sqlite3").resolve()
         # Fail closed on seed failure: do not serve a partial/stale catalog.
         self.seed_summary = seed_module.seed_catalog(installer.REGISTRY, self.catalog_db)
+        self.tenant_seed_summary = None
+        if seed_tenant_id:
+            self.tenant_seed_summary = tenant_seed_module.seed_tenant(
+                seed_tenant_id, self.catalog_db, self.store)
 
     def catalog(self) -> list[dict]:
         # Read the seeded SQLite catalog, not the source JSON directly.
@@ -280,6 +299,57 @@ class ConsoleData:
             atomic_json(path / "config.json", config)
             return self.detail(tenant, key)
 
+    def tenant_plan(self, tenant: str) -> dict:
+        return tenant_seed_module.tenant_plan(
+            valid_tenant(tenant), self.catalog_db, self.store)
+
+    def simulation_path(self, tenant: str, key: str) -> Path:
+        self.bundle(tenant, key)
+        return self.catalog_db.parent / "simulations" / valid_tenant(tenant) / (
+            valid_key(key) + ".json")
+
+    def last_simulation(self, tenant: str, key: str) -> dict | None:
+        path = self.simulation_path(tenant, key)
+        if path.is_symlink():
+            raise ConsoleError("No se admiten evidencias con enlaces simbólicos.")
+        if not path.is_file():
+            return None
+        data = installer.read_json(path)
+        if data.get("tenantId") != tenant or data.get("workflowKey") != key:
+            raise ConsoleError("Identidad de evidencia de simulación inválida.", 409)
+        return data
+
+    def simulate(self, tenant: str, key: str) -> dict:
+        tenant, key = valid_tenant(tenant), valid_key(key)
+        path = self.bundle(tenant, key)
+        if key not in simulator.FIXTURES:
+            raise ConsoleError("La automatización no tiene runtime de simulación aprobado.", 409)
+        with LOCK:
+            try:
+                summary = simulator.simulate(path)
+            except (RuntimeError, OSError, json.JSONDecodeError) as exc:
+                raise ConsoleError("La simulación local no pudo completarse. Verifica Node y el runtime.", 409) from exc
+            simulator.write_evidence(self.simulation_path(tenant, key), summary)
+            return summary
+
+    def simulate_all(self, tenant: str) -> dict:
+        tenant = valid_tenant(tenant)
+        installed = {x["key"] for x in self.installations(tenant)}
+        selected = [x["key"] for x in self.catalog()
+                    if x["installable"] and x["key"] in installed]
+        results = []
+        for key in selected:
+            try:
+                results.append(self.simulate(tenant, key))
+            except ConsoleError:
+                results.append({"tenantId": tenant, "workflowKey": key,
+                                "status": "SIMULATION_ERROR", "productionEvidence": False})
+        return {"tenantId": tenant, "tested": len(results),
+                "passed": sum(x["status"] == "SIMULATION_PASS" for x in results),
+                "failed": sum(x["status"] != "SIMULATION_PASS" for x in results),
+                "results": results, "evidenceType": "LOCAL_SIMULATION",
+                "productionEvidence": False}
+
     def overview(self) -> dict:
         installed = self.installations()
         catalog = self.catalog()
@@ -288,6 +358,7 @@ class ConsoleData:
             "catalogTotal": len(catalog), "approvedTotal": sum(i["installable"] for i in catalog),
             "installedTotal": len(installed), "blockedTotal": sum(not i["ready"] for i in installed),
             "catalogSeed": self.seed_summary,
+            "tenantSeed": self.tenant_seed_summary,
             "productionClaim": False
         }
 
@@ -381,17 +452,27 @@ def make_handler(data: ConsoleData, token: str):
                     return self.json(200, data.detail(query.get("tenant", [""])[0], query.get("key", [""])[0]))
                 if path == "/api/portal":
                     return self.json(200, data.portal(query.get("tenant", [""])[0]))
+                if path == "/api/tenant-plan":
+                    return self.json(200, data.tenant_plan(query.get("tenant", [""])[0]))
+                if path == "/api/simulation":
+                    return self.json(200, {"result": data.last_simulation(
+                        query.get("tenant", [""])[0], query.get("key", [""])[0])})
                 raise ConsoleError("Ruta no encontrada.", 404)
             self.safely(route)
 
         def do_POST(self):
             def route():
                 self.guard_write()
-                if urlsplit(self.path).path != "/api/install":
+                action = urlsplit(self.path).path
+                if action not in ("/api/install", "/api/simulate", "/api/simulate-all"):
                     raise ConsoleError("Ruta no encontrada.", 404)
                 body = self.input()
                 if not isinstance(body, dict):
                     raise ConsoleError("Objeto JSON requerido.")
+                if action == "/api/simulate":
+                    return self.json(200, data.simulate(body.get("tenantId"), body.get("workflowKey")))
+                if action == "/api/simulate-all":
+                    return self.json(200, data.simulate_all(body.get("tenantId")))
                 return self.json(201, data.install(body.get("tenantId"), body.get("workflowKey")))
             self.safely(route)
 
@@ -422,13 +503,24 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--installations-root", type=Path, default=ROOT / ".local/installations")
     parser.add_argument("--catalog-db", type=Path, help="SQLite catalog location (default: .local/console/catalog.sqlite3)")
+    parser.add_argument("--seed-tenant", default="chifaavperu",
+                        help="Seed all 233 references + 12 DRAFT baselines for this local tenant")
+    parser.add_argument("--no-tenant-seed", action="store_true",
+                        help="Do not seed a client workspace on startup")
     args = parser.parse_args()
-    data = ConsoleData(args.installations_root, args.catalog_db)
+    data = ConsoleData(args.installations_root, args.catalog_db,
+                       None if args.no_tenant_seed else args.seed_tenant)
     print(f"Catalog seed: {data.seed_summary['catalogTotal']} workflows "
           f"({data.seed_summary['approvedTotal']} approved, "
           f"{data.seed_summary['designReadyTotal']} design-ready; "
           f"{data.seed_summary['inserted']} inserted, "
           f"{data.seed_summary['updated']} updated)", flush=True)
+    if data.tenant_seed_summary:
+        s = data.tenant_seed_summary
+        print(f"Tenant {s['tenantId']}: {s['catalogAssigned']} catalog references, "
+              f"{s['newDraftBundles']} new DRAFT bundles, "
+              f"{s['existingBundlesPreserved']} preserved, "
+              f"{s['designOnly']} design-only. No production activation.", flush=True)
     server = create_server(data, args.port)
     port = server.server_address[1]
     print(f"Operator Console LOCAL DEMO → http://127.0.0.1:{port}", flush=True)
