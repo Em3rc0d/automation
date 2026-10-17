@@ -11,7 +11,7 @@ python3 tools/console/server.py
 # Abrir http://127.0.0.1:8765
 ```
 
-Sin pip, npm, n8n, Railway ni Supabase. Solo Python 3.10+.
+Sin pip, npm, n8n, Railway ni Supabase. Python 3.10+ y Node.js 20+ para pruebas del runtime.
 
 ## Seed automático del catálogo (nuevo)
 
@@ -55,6 +55,47 @@ Para utilizar otra raíz de instalaciones locales:
 python3 tools/console/server.py --installations-root .local/installations --port 8765
 ```
 
+## Espacio de AV Perú: catálogo completo + simulaciones
+
+Por defecto, ejecutar `python3 tools/console/server.py` realiza lo siguiente
+**antes de empezar a escuchar peticiones HTTP**:
+
+1. Actualiza el seed SQLite con las **233** entradas del registro canónico.
+2. Asocia las **233** referencias al tenant local `chifaavperu`, sin
+   confundir el catálogo con instalaciones operativas.
+3. Crea un bundle **DRAFT** para cada uno de los **12 APPROVED_BASELINE**
+   que todavía no esté instalado. Si ya existe (por ejemplo, `Support Intake`
+   o `Document Archive`), conserva exactamente su configuración.
+4. Conserva los **221 DESIGN_READY** como `DESIGN_ONLY`: planificación
+   visible sin instalación ni código ejecutable aprobado.
+5. Ejecuta automáticamente las **12 simulaciones locales** con el runner
+   aprobado `operations/savings/runtime/run_bundle.mjs` y fixtures sintéticas.
+   Conserva resúmenes de las pruebas bajo `.local/console/simulations/`.
+6. Muestra resultados `LOCAL_SIMULATION` en Resumen, configuración de
+   automatización y plan del cliente. Ninguna prueba contacta proveedores.
+
+Requiere **Python 3.10+ y Node.js 20+** para las simulaciones.
+Los elementos en `DESIGN_READY` nunca reciben etiqueta de funcionamiento.
+
+Comandos opcionales:
+
+```bash
+python3 tools/console/tenant_seed.py --tenant chifaavperu
+python3 tools/console/server.py --seed-tenant chifaavperu
+python3 tools/console/server.py --skip-startup-simulations
+python3 tools/console/server.py --no-tenant-seed
+```
+
+**Importante**: `SIMULATION_PASS` solo demuestra que el workflow ejecutó
+código aprobado con datos ficticios y adaptadores en memoria.
+**No demuestra que esté funcionando en el negocio real de AV Perú**.
+Para eso necesitamos los proveedores reales, sus autorizaciones,
+el esquema de sus procesos, una baseline acordada y pruebas end-to-end.
+Está prohibido promover automáticamente `DRAFT` a `CLIENT_CONFIGURED` o
+`CLIENT_ACCEPTED` a partir del seed o de estas simulaciones.
+
+El plan del cliente enseña 233 entradas: 12 con bundles y 221 por desarrollar;
+la tabla de instalaciones reales sigue mostrando únicamente los bundles.
 ## Qué funciona
 
 1. **Resumen** de tenants e instalaciones locales, sin métricas inventadas.
