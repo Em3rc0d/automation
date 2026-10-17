@@ -19,6 +19,14 @@ globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
   add(tip,N("span","notice-icon","ⓘ"),
     N("span","", "Aquí sí puedes realizar operaciones reales dentro del sistema de demostración: crear pedidos, confirmar, descontar stock y auditar resultados. No procesa ventas reales, no conecta POS ni envía WhatsApp/correos."));
   root.append(tip);
+  const controls = N("div","demo-controls");
+  const resetButton = button("↺ Reiniciar datos de ejemplo", async () => {
+    if (!globalThis.confirm("¿Reiniciar solo los pedidos, stock, tickets y alertas de la DEMO? Las instalaciones reales NO se modificarán.")) return;
+    await action("/api/demo/reset", {confirm:"RESET_DEMO_ONLY"},
+      "Datos de demostración reiniciados. Tus instalaciones y configuraciones no se tocaron.");
+  }, "button secondary");
+  controls.append(resetButton);
+  root.append(controls);
   const area = N("div","demo-workspace");
   root.append(area);
   let busy = false;
