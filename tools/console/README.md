@@ -11,7 +11,7 @@ python3 tools/console/server.py
 # Abrir http://127.0.0.1:8765
 ```
 
-Sin pip, npm, n8n, Railway ni Supabase. Python 3.10+ y Node.js 20+ para pruebas del runtime.
+Sin pip, npm, n8n, Railway ni Supabase. Python 3.10+ para la consola y demo; Node.js 20+ solo para simulaciones del runtime aprobado.
 
 ## Seed automático del catálogo (nuevo)
 
@@ -55,6 +55,52 @@ Para utilizar otra raíz de instalaciones locales:
 python3 tools/console/server.py --installations-root .local/installations --port 8765
 ```
 
+## Demo funcional: Chifa AV Perú (sin Node, sin proveedores)
+
+**No es una maqueta de solo lectura.** Desde el menú **Demo Chifa AV Perú**:
+- Registrar un pedido de prueba (`PENDING`) en SQLite.
+- Confirmarlo y descontar stock dentro de una transacción.
+- Generar una alerta cuando el stock cruza su umbral mínimo.
+- Generar una notificación en **bandeja simulada** (sin WhatsApp, SMTP ni otro servicio).
+- Crear tickets y consultar un historial persistente de eventos.
+- Reiniciar solo el escenario ficticio desde la UI para repetir la prueba.
+
+**Prueba sugerida**: "Wantán frito" × 4. El stock inicia en 5; al confirmar
+pasa a 1, se registra un evento `LOW_STOCK_ALERT`, aparece una alerta visible
+y un mensaje simulado. Confirmar el mismo pedido una segunda vez debe fallar
+sin descontar stock adicional.
+
+La base está en `.local/console/restaurant-demo.sqlite3`, ignorada por Git.
+Los datos son **100 % sintéticos**, no ventas reales del Chifa AV Perú.
+Se trata de un **motor demo local** aparte de los 12 workflows
+`zero-deps-node-v1` certificados. Su funcionamiento no implica que las
+233 referencias del catálogo estén ejecutándose ni permite cambiar estados
+de aceptación sin evidencia.
+
+### Diagnóstico Windows / Node
+
+La app de pedidos, inventario y tickets funciona con **Python 3.10+**,
+aunque Node esté ausente. Las 12 simulaciones con runtime certificado sí
+requieren **Node.js 20+**. Se corrigió el subprocess para preservar variables
+imprescindibles de Windows y decodificar salida UTF-8.
+
+Abre PowerShell en la raíz:
+
+```powershell
+node --version
+python3 tools/console/server.py
+```
+
+La salida mostrará `LOCAL_SIMULATION: X/Y PASS, ... skipped ... Reason: ...`.
+Si Node no está instalado se mostrará `NODE_NOT_FOUND`; la consola sigue
+funcionando. Para omitir las 12 simulaciones al inicio (pero conservar la demo):
+
+```powershell
+python3 tools/console/server.py --skip-startup-simulations
+```
+
+Hay CI en `ubuntu-latest` y `windows-latest` para detectar discrepancias
+de rutas, conexiones SQLite y subprocess.
 ## Espacio de AV Perú: catálogo completo + simulaciones
 
 Por defecto, ejecutar `python3 tools/console/server.py` realiza lo siguiente
