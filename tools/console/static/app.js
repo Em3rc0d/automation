@@ -119,7 +119,8 @@ async function refresh() {
   const picker = $("#tenant-select"), desired = state.tenant;
   picker.replaceChildren(new Option("Todos los clientes", ""));
   overview.tenants.forEach(tenant => picker.add(new Option(tenant, tenant)));
-  state.tenant = overview.tenants.includes(desired) ? desired : "";
+  state.tenant = overview.tenants.includes(desired) ? desired :
+    (overview.tenants.includes(overview.tenantSeed?.tenantId) ? overview.tenantSeed.tenantId : "");
   picker.value = state.tenant;
 }
 function getFiltered() {
@@ -325,6 +326,28 @@ function renderDetail() {
   add(right, panel("Gate de instalación", d.diagnostics.blockers.length + " bloqueos", diag),
     N("div", "", ""));
   right.append(panel("Conectores", "Estado observado, solo lectura", conns));
+  const simulation = N("div", "panel-body");
+  add(simulation, paragraph("Ejecuta el workflow real con una fixture sintética y adaptadores en memoria. No envía mensajes ni usa datos del cliente."));
+  const resultSlot = N("div", "simulation-result");
+  const tryButton = button("▶ Probar localmente", async () => {
+    try {
+      tryButton.disabled = true;
+      tryButton.textContent = "Ejecutando...";
+      const result = await api("/api/simulate", "POST", {tenantId:d.tenantId,workflowKey:d.key});
+      showSimulationResult(resultSlot, result);
+      showFlash(result.status === "SIMULATION_PASS" ?
+        "Simulación completada con datos ficticios. El workflow sigue sin estar activo." :
+        "Simulación requiere revisión.", result.status !== "SIMULATION_PASS");
+    } catch (err) { showFlash(err.message, true); }
+    finally { tryButton.disabled = false; tryButton.textContent = "▶ Probar localmente"; }
+  }, "button secondary");
+  add(simulation, tryButton, resultSlot);
+  right.append(panel("Prueba del runtime", "Solo LOCAL_SIMULATION", simulation));
+  const runQuery = new URLSearchParams({tenant:d.tenantId,key:d.key});
+  api("/api/simulation?" + runQuery).then(x => {
+    if (state.detail?.tenantId === d.tenantId && state.detail?.key === d.key && x.result)
+      showSimulationResult(resultSlot, x.result);
+  }).catch(() => {});
   add(grid, panel("Parámetros del workflow", "Versión local · validada contra schema", editor), right);
   root.append(grid);
 }
@@ -336,11 +359,42 @@ async function openDetail(tenant, key) {
     renderDetail();
   } catch (err) { showFlash(err.message, true); }
 }
+function showSimulationResult(parent, result) {
+  parent.replaceChildren();
+  if (!result) return;
+  parent.append(badge(result.status === "SIMULATION_PASS" ? "SIMULACIÓN OK" : "REVISAR SIMULACIÓN",
+    result.status === "SIMULATION_PASS" ? "approved" : "blocked"));
+  const list = N("div", "simulation-metrics");
+  add(list,
+    N("small", "", "Procesos: " + (result.processRecords ?? 0)),
+    N("small", "", "Mensajes simulados: " + (result.simulatedMessages ?? 0)),
+    N("small", "", "Incidentes: " + (result.incidents ?? 0)));
+  parent.append(list);
+  parent.append(N("p", "help", "Prueba sintética · no demuestra operación con proveedores reales."));
+}
+async function simulateTenant(tenant, action) {
+  action.disabled = true;
+  const old = action.textContent;
+  action.textContent = "Ejecutando pruebas...";
+  try {
+    const result = await api("/api/simulate-all", "POST", {tenantId:tenant});
+    showFlash("Simulaciones locales: " + result.passed + "/" + result.tested +
+      " correctas; " + result.failed + " por revisar. No hay activaciones en producción.",
+      result.failed > 0);
+    return result;
+  } catch (error) {
+    showFlash(error.message, true);
+    return null;
+  } finally {
+    action.disabled = false;
+    action.textContent = old;
+  }
+}
 function renderPortal() {
   const root = currentContent();
   root.append(titleRow("Portal del cliente · vista previa",
-    "Proyección local de las instalaciones. No hay inicio de sesión de clientes."));
-  const tenant = state.tenant || state.overview.tenants[0];
+    "Plan completo de automatizaciones del tenant. Sin login, datos productivos ni activaciones."));
+  const tenant = state.tenant || state.overview.tenantSeed?.tenantId || state.overview.tenants[0];
   if (!tenant) {
     root.append(empty("No hay un cliente de prueba", "Crea una instalación desde Operator Console."));
     return;
@@ -349,16 +403,91 @@ function renderPortal() {
   const hero = N("div", "portal-hero");
   add(hero, N("div", "eyebrow", "ESPACIO CLIENTE · DEMOSTRACIÓN"),
     N("h2", "", tenant),
-    N("p", "", "Transparencia del estado de configuración. No se muestran ahorros ni ejecuciones inventadas."));
+    N("p", "", "Los flujos aprobados pueden ejecutarse en simulación. Los que están en diseño NO funcionan aún."));
   const cards = N("div", "portal-cards");
-  add(cards, metric("Automatizaciones", items.length, "Instalaciones de este cliente"),
+  add(cards,
+    metric("Instaladas como borrador", items.length, "No equivale a automatizaciones activas"),
     metric("Configuradas", items.filter(x => x.ready).length, "Sin bloqueos de instalación"),
-    metric("Pendientes", items.filter(x => !x.ready).length, "Todavía requieren revisión"));
+    metric("Pendientes", items.filter(x => !x.ready).length, "Conectores, baseline y aceptación"));
   root.append(hero, cards);
-  const body = items.length ? table(["Proceso", "Estado", "Preparación"], items.map(x => [
-    nameCell(x), badge(x.state, "draft"), statusCell(x)
+  const ops = N("div", "toolbar");
+  const runAll = button("▶ Probar baselines en local", async () => {
+    const result = await simulateTenant(tenant, runAll);
+    if (result && state.view === "portal") {
+      const slot = $("#tenant-simulation-status");
+      if (slot) {
+        slot.replaceChildren();
+        slot.append(badge(result.failed === 0 ? "SIMULACIONES COMPLETADAS" : "SIMULACIONES PARCIALES",
+          result.failed === 0 ? "approved" : "blocked"));
+        slot.append(N("span", "muted", " " + result.passed + "/" + result.tested +
+          " baselines. No hay ejecuciones reales."));
+      }
+    }
+  }, "button secondary");
+  const label = N("span", "muted", "Pruebas solo con fixtures sintéticas y runtime aprobado");
+  add(ops, label, runAll);
+  root.append(ops);
+  const simulationStatus = N("div");
+  simulationStatus.id = "tenant-simulation-status";
+  root.append(simulationStatus);
+  const body = items.length ? table(["Proceso", "Estado", "Preparación", ""], items.map(x => [
+    nameCell(x), badge(x.state, "draft"), statusCell(x),
+    button("Configurar →", () => openDetail(x.tenantId, x.key))
   ])) : empty("Sin automatizaciones configuradas", "Este cliente no tiene bundles locales.");
-  root.append(panel("Mis automatizaciones", "Vista sin datos productivos", body));
+  root.append(panel("Mis instalaciones", "No equivale a producción", body));
+  const loading = N("div", "tenant-roadmap");
+  loading.append(paragraph("Cargando las automatizaciones asociadas al cliente..."));
+  root.append(loading);
+  api("/api/tenant-plan?" + new URLSearchParams({tenant})).then(plan => {
+    if (state.view !== "portal" || (state.tenant && state.tenant !== tenant)) return;
+    loading.replaceChildren();
+    if (!plan.assignedTotal) {
+      loading.append(panel("Plan de automatizaciones", "Sin seed para el tenant",
+        empty("No hay planificación inicializada", "Inicia el servidor con --seed-tenant " + tenant)));
+      return;
+    }
+    const heading = N("div", "heading-row roadmap-title");
+    const words = N("div");
+    add(words, N("h2", "", "Plan completo de automatización"),
+      paragraph(plan.assignedTotal + " automatizaciones asociadas a " + tenant +
+        " · " + plan.installedTotal + " con bundle · " + plan.designOnlyTotal + " en diseño"));
+    heading.append(words);
+    loading.append(heading);
+    const filterBar = N("div", "toolbar");
+    const search = N("input", "search");
+    search.type = "search"; search.placeholder = "Buscar entre las " + plan.assignedTotal + " automatizaciones";
+    search.setAttribute("aria-label", "Buscar automatizaciones asociadas");
+    const select = N("select");
+    select.setAttribute("aria-label", "Filtrar estado del plan");
+    select.add(new Option("Todas", "all"));
+    select.add(new Option("Instalables", "approved"));
+    select.add(new Option("En diseño", "design"));
+    add(filterBar, search, select);
+    loading.append(filterBar);
+    const view = N("div", "panel");
+    loading.append(view);
+    function fill() {
+      const q = search.value.trim().toLowerCase();
+      const filtered = plan.entries.filter(x =>
+        (select.value === "all" || (select.value === "approved" ? x.installable : !x.installable)) &&
+        (x.name + " " + x.key + " " + x.domain).toLowerCase().includes(q));
+      const rows = filtered.map(x => [
+        nameCell(x), x.domain.replaceAll("_", " · "),
+        badge(x.state === "DESIGN_ONLY" ? "POR DESARROLLAR" : x.state,
+          x.state === "DESIGN_ONLY" ? "draft" : "blocked"),
+        x.installable ? button("Configurar →", () => openDetail(tenant, x.key)) :
+          N("span", "muted", "Sin runtime aprobado")
+      ]);
+      view.replaceChildren(panel("Automatizaciones de " + tenant, filtered.length + " resultados",
+        rows.length ? table(["Automatización", "Área", "Estado real", ""], rows) :
+          empty("Sin resultados", "Prueba otra búsqueda.")));
+    }
+    search.addEventListener("input", fill);
+    select.addEventListener("change", fill);
+    fill();
+  }).catch(err => {
+    if (state.view === "portal") loading.replaceChildren(empty("No fue posible cargar el plan", err.message));
+  });
 }
 function render() {
   if (state.detail) return renderDetail();
