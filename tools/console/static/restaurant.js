@@ -3,6 +3,10 @@
  */
 globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
   const {root,api,N,button,badge,metric,panel,showFlash,titleRow} = ctx;
+  const add = (parent,...children) => {
+    children.filter(x => x !== undefined && x !== null).forEach(x => parent.append(x));
+    return parent;
+  };
   root.replaceChildren();
   root.append(titleRow("Chifa AV Perú · sistema demo funcional",
     "Registra pedidos, reserva inventario, genera alertas y tickets. Los cambios persisten en SQLite local."));
@@ -19,10 +23,6 @@ globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
   root.append(area);
   let busy = false;
 
-  const add = (parent,...children) => {
-    children.filter(x => x !== undefined && x !== null).forEach(x => parent.append(x));
-    return parent;
-  };
   const money = cents => "S/ " + (cents / 100).toFixed(2);
   const chip = (text,type) => badge(text,type);
   const buildTable = (headers,rows) => {
