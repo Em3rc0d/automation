@@ -18,7 +18,11 @@ permissions:
 
 jobs:
   local-console-tests:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,5 +35,6 @@ jobs:
         run: |
           python -m py_compile tools/console/server.py
           node --check tools/console/static/app.js
+          node --check tools/console/static/restaurant.js
       - name: Unit + API security tests
         run: python -m unittest discover -s tools/console/tests -p 'test_*.py' -v
