@@ -187,6 +187,37 @@ class APIIntegrationTests(unittest.TestCase):
         self.assertEqual(next(x["stock"] for x in latest["menu"] if x["sku"]=="WANTAN"),1)
         self.assertTrue(all(x["state"]=="SIMULATED" for x in latest["outbox"]))
 
+    def test_08_multiple_products_post_api_and_legacy_data(self):
+        # The order endpoint persists one order containing multiple SKU lines.
+        status, response = self.request("/api/demo/orders", "POST",
+            {"customerAlias": "Mesa combinada",
+             "items": [
+                 {"sku": "CHAUFA", "quantity": 2},
+                 {"sku": "GASEOSA", "quantity": 2}
+             ]}, self.token, self.base)
+        self.assertEqual(status, 201)
+        self.assertEqual(response["itemCount"], 2)
+        self.assertEqual(response["totalCents"], 4600)
+        order_id = response["orderId"]
+        _, state = self.request("/api/demo/state")
+        found = [o for o in state["orders"] if o["id"] == order_id]
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0]["itemCount"], 2)
+        self.assertEqual(len(found[0]["items"]), 2)
+        status, confirm = self.request("/api/demo/orders/confirm", "POST",
+            {"orderId": order_id}, self.token, self.base)
+        self.assertEqual(status, 200)
+        self.assertEqual(confirm["status"], "CONFIRMED")
+        _, final = self.request("/api/demo/state")
+        self.assertEqual(len([o for o in final["orders"] if o["id"] == order_id]), 1)
+        self.assertEqual(next(o for o in final["orders"] if o["id"] == order_id)["itemCount"], 2)
+
+    def test_09_reject_empty_cart_and_client_supplied_prices(self):
+        for items in ([], [{"sku":"WANTAN","quantity":2,"unitPriceCents":0}]):
+            status, _ = self.request("/api/demo/orders", "POST",
+                {"customerAlias": "bad", "items": items}, self.token, self.base)
+            self.assertEqual(status, 400)
+
     def test_08_runtime_preflight_exposes_actionable_status(self):
         status, info = self.request("/api/runtime-preflight")
         self.assertEqual(status, 200)
