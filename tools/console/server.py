@@ -503,6 +503,11 @@ def make_handler(data: ConsoleData, token: str):
                         raise ConsoleError("Se requiere confirmación explícita para reiniciar la demo.")
                     return self.json(200, data.restaurant.reset())
                 if action == "/api/demo/orders":
+                    # New canonical contract: items[]; accept the legacy single SKU
+                    # only when no items key was supplied.
+                    if "items" in body:
+                        return self.json(201, data.restaurant.create_order(
+                            body.get("customerAlias"), body["items"]))
                     return self.json(201, data.restaurant.create_order(
                         body.get("customerAlias"), body.get("sku"), body.get("quantity")))
                 if action == "/api/demo/orders/confirm":
