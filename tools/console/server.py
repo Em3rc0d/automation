@@ -449,6 +449,8 @@ def make_handler(data: ConsoleData, token: str):
                     return self.respond(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
                 if path == "/static/app.js":
                     return self.respond(200, (STATIC / "app.js").read_bytes(), "text/javascript; charset=utf-8")
+                if path == "/static/restaurant.js":
+                    return self.respond(200, (STATIC / "restaurant.js").read_bytes(), "text/javascript; charset=utf-8")
                 if path == "/static/styles.css":
                     return self.respond(200, (STATIC / "styles.css").read_bytes(), "text/css; charset=utf-8")
                 if path == "/api/demo/state":
