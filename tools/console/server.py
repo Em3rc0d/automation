@@ -337,7 +337,8 @@ class ConsoleData:
             try:
                 summary = simulator.simulate(path)
             except (RuntimeError, OSError, json.JSONDecodeError) as exc:
-                raise ConsoleError("La simulación local no pudo completarse. Verifica Node y el runtime.", 409) from exc
+                raise ConsoleError(str(exc)[:240] if isinstance(exc, RuntimeError)
+                                   else "No se pudo completar la simulación local.", 409) from exc
             simulator.write_evidence(self.simulation_path(tenant, key), summary)
             return summary
 
@@ -346,16 +347,27 @@ class ConsoleData:
         installed = {x["key"] for x in self.installations(tenant)}
         selected = [x["key"] for x in self.catalog()
                     if x["installable"] and x["key"] in installed]
+        preflight = simulator.runtime_preflight()
+        if not preflight["available"]:
+            return {"tenantId": tenant, "tested": 0, "passed": 0,
+                    "failed": 0, "skipped": len(selected),
+                    "reason": preflight["code"], "message": preflight["message"],
+                    "results": [], "evidenceType": "LOCAL_SIMULATION",
+                    "productionEvidence": False}
         results = []
         for key in selected:
             try:
                 results.append(self.simulate(tenant, key))
-            except ConsoleError:
+            except ConsoleError as error:
                 results.append({"tenantId": tenant, "workflowKey": key,
-                                "status": "SIMULATION_ERROR", "productionEvidence": False})
+                                "status": "SIMULATION_ERROR",
+                                "reason": str(error)[:240], "productionEvidence": False})
         return {"tenantId": tenant, "tested": len(results),
                 "passed": sum(x["status"] == "SIMULATION_PASS" for x in results),
                 "failed": sum(x["status"] != "SIMULATION_PASS" for x in results),
+                "skipped": 0,
+                "firstFailure": next((x.get("reason") for x in results
+                                      if x["status"] != "SIMULATION_PASS"), None),
                 "results": results, "evidenceType": "LOCAL_SIMULATION",
                 "productionEvidence": False}
 
@@ -453,6 +465,8 @@ def make_handler(data: ConsoleData, token: str):
                     return self.respond(200, (STATIC / "restaurant.js").read_bytes(), "text/javascript; charset=utf-8")
                 if path == "/static/styles.css":
                     return self.respond(200, (STATIC / "styles.css").read_bytes(), "text/css; charset=utf-8")
+                if path == "/api/runtime-preflight":
+                    return self.json(200, simulator.runtime_preflight())
                 if path == "/api/demo/state":
                     return self.json(200, data.restaurant.state())
                 if path == "/api/bootstrap":
@@ -549,11 +563,14 @@ def main() -> None:
         summary = data.simulate_all(data.tenant_seed_summary["tenantId"])
         data.tenant_seed_summary["simulationSummary"] = {
             "tested": summary["tested"], "passed": summary["passed"],
-            "failed": summary["failed"], "evidenceType": "LOCAL_SIMULATION",
-            "productionEvidence": False,
+            "failed": summary["failed"], "skipped": summary.get("skipped", 0),
+            "reason": summary.get("reason") or summary.get("firstFailure"),
+            "evidenceType": "LOCAL_SIMULATION", "productionEvidence": False,
         }
         print(f"LOCAL_SIMULATION: {summary['passed']}/{summary['tested']} PASS, "
-              f"{summary['failed']} require review. No real providers.", flush=True)
+              f"{summary['failed']} failed, {summary.get('skipped', 0)} skipped. "
+              f"Reason: {summary.get('reason') or summary.get('firstFailure') or 'none'}. "
+              "No real providers.", flush=True)
     server = create_server(data, args.port)
     port = server.server_address[1]
     print(f"Operator Console LOCAL DEMO → http://127.0.0.1:{port}", flush=True)
