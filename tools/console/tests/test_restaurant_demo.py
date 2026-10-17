@@ -73,6 +73,20 @@ class RestaurantDemoTests(unittest.TestCase):
         with self.assertRaises(demo.DemoError):
             restarted.create_ticket("a", "b", 9999)
 
+    def test_reset_only_demo_and_restore_stock(self):
+        order = self.engine.create_order("mesa 2", "WANTAN", 4)
+        self.engine.confirm_order(order["orderId"])
+        self.engine.create_ticket("Prueba", "No es un cliente real")
+        before = self.engine.state()
+        self.assertEqual(before["metrics"]["alerts"], 1)
+        reset = self.engine.reset()
+        self.assertTrue(reset["onlyDemoData"])
+        after = self.engine.state()
+        self.assertEqual(after["metrics"]["orders"], 0)
+        self.assertEqual(after["metrics"]["alerts"], 0)
+        self.assertEqual(after["metrics"]["openTickets"], 0)
+        self.assertEqual(next(p["stock"] for p in after["menu"] if p["sku"]=="WANTAN"), 5)
+
     def test_invalid_payloads_rejected(self):
         for qty in (True, 0, -1, 51, 1.1, "5"):
             with self.assertRaises(demo.DemoError):
