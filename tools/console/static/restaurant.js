@@ -30,6 +30,8 @@ globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
   const area = N("div","demo-workspace");
   root.append(area);
   let busy = false;
+  let draftCart = [];
+  let draftAlias = "Mesa 3 (demo)";
 
   const money = cents => "S/ " + (cents / 100).toFixed(2);
   const chip = (text,type) => badge(text,type);
@@ -95,7 +97,9 @@ globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
     const orderBox=N("section","panel");
     const orderBody=N("div","panel-body");
     const orderForm=N("form","demo-order-form");
-    const customer=inputField("demo-alias","Referencia del cliente ficticio","Mesa 3 (demo)",64);
+    const customer=inputField("demo-alias","Referencia del cliente ficticio",draftAlias,64);
+    customer.input.addEventListener("input", () => { draftAlias = customer.input.value; });
+    const pickRow=N("div","demo-item-picker");
     const skuField=N("div","field"),skuLabel=N("label","","Producto"),skuSelect=N("select");
     skuLabel.htmlFor="demo-sku";skuSelect.id="demo-sku";
     data.menu.forEach(p => skuSelect.add(new Option(
@@ -105,21 +109,113 @@ globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
     const qty=N("div","field");
     const qtyLabel=N("label","","Cantidad"),qtyInput=N("input");
     qtyLabel.htmlFor="demo-qty";qtyInput.id="demo-qty";
-    qtyInput.type="number";qtyInput.step="1";qtyInput.min="1";qtyInput.max="50";qtyInput.value="4";qtyInput.required=true;
+    qtyInput.type="number";qtyInput.step="1";qtyInput.min="1";qtyInput.max="50";
+    qtyInput.value="1";qtyInput.required=true;
     add(qty,qtyLabel,qtyInput);
+    const addButton=button("+ Agregar", () => {
+      const quantity=Number(qtyInput.value);
+      if (!Number.isInteger(quantity) || quantity<1 || quantity>50) {
+        showFlash("Indica una cantidad entera entre 1 y 50.",true);
+        return;
+      }
+      const sku=skuSelect.value;
+      const current=draftCart.find(x=>x.sku===sku);
+      if (current) {
+        if (current.quantity + quantity > 50) {
+          showFlash("Máximo 50 unidades del mismo producto por pedido.",true);
+          return;
+        }
+        current.quantity+=quantity;
+      } else {
+        if (draftCart.length>=30) {
+          showFlash("Máximo 30 productos distintos por pedido.",true);
+          return;
+        }
+        draftCart.push({sku,quantity});
+      }
+      renderCart();
+    }, "button secondary");
+    addButton.classList.add("demo-add-item");
+    add(pickRow,skuField,qty,addButton);
+    const cartTitle=N("h3","","Detalle del pedido");
+    const cartBody=N("div","demo-cart-body");
+    const totalRow=N("div","demo-cart-total");
     const orderAction=N("button","button primary","Registrar pedido");
     orderAction.type="submit";
-    add(orderForm,customer.field,skuField,qty,orderAction);
+    function renderCart() {
+      cartBody.replaceChildren();
+      const rows=[];
+      let total=0;
+      for (const item of draftCart) {
+        const product=data.menu.find(p=>p.sku===item.sku);
+        if (!product) continue;
+        const subtotal=product.price_cents * item.quantity;
+        total+=subtotal;
+        const quantityEditor=N("input","demo-cart-qty");
+        quantityEditor.type="number";quantityEditor.min="1";quantityEditor.max="50";
+        quantityEditor.step="1";quantityEditor.value=String(item.quantity);
+        quantityEditor.setAttribute("aria-label","Cantidad de "+product.name);
+        quantityEditor.addEventListener("change", () => {
+          const next=Number(quantityEditor.value);
+          if (!Number.isInteger(next) || next<1 || next>50) {
+            showFlash("La cantidad debe ser un entero entre 1 y 50.",true);
+            quantityEditor.value=String(item.quantity);
+            return;
+          }
+          item.quantity=next;
+          renderCart();
+        });
+        rows.push([
+          N("strong","",product.name),
+          money(product.price_cents),
+          quantityEditor,
+          money(subtotal),
+          button("Quitar", () => {
+            draftCart=draftCart.filter(x=>x.sku!==item.sku);
+            renderCart();
+          })
+        ]);
+      }
+      if (rows.length) {
+        cartBody.append(buildTable(["Producto","Precio","Cantidad","Subtotal",""],rows));
+      } else {
+        cartBody.append(N("p","demo-cart-empty",
+          "Añade al menos un producto. Puedes combinar varios platos y bebidas en un solo pedido."));
+      }
+      totalRow.replaceChildren();
+      add(totalRow,N("span","","Total del pedido"),
+        N("strong","",money(total)));
+      orderAction.disabled=rows.length===0;
+      orderAction.textContent="Registrar pedido · "+money(total);
+    }
     orderForm.addEventListener("submit",async e=>{
       e.preventDefault();
-      const number=Number(qtyInput.value);
-      await action("/api/demo/orders",{
-        customerAlias:customer.input.value,
-        sku:skuSelect.value,
-        quantity:number
-      },"Pedido registrado. Confírmalo abajo para reservar stock y activar alertas.");
+      if (!draftCart.length) {
+        showFlash("Agrega al menos un producto al pedido.",true);
+        return;
+      }
+      if (busy) return;
+      busy=true;
+      orderAction.disabled=true;
+      try {
+        const result=await api("/api/demo/orders","POST",{
+          customerAlias:customer.input.value,
+          items:draftCart.map(x=>({sku:x.sku,quantity:x.quantity}))
+        });
+        draftCart=[];
+        draftAlias=customer.input.value;
+        showFlash("Pedido #"+result.orderId+" registrado con "+result.itemCount+
+          " productos. Confírmalo abajo para reservar todo el stock.");
+        await reload();
+      } catch(error) {
+        showFlash(error.message,true);
+        orderAction.disabled=false;
+      } finally {busy=false;}
     });
-    add(orderBody,orderForm,N("p","help","Prueba sugerida: Wantán × 4. Al confirmar quedará 1 unidad y se generará una alerta automáticamente."));
+    add(orderForm,customer.field,pickRow,cartTitle,cartBody,totalRow,orderAction);
+    renderCart();
+    add(orderBody,orderForm,N("p","help",
+      "Ejemplo: Wantán × 4 + Gaseosa × 2. El stock se descuenta para todos los productos al confirmar, nunca al agregar al carrito."));
     add(orderBox,sectionTitle("01 · Nuevo pedido","Alta persistente"),orderBody);
 
     const ticketBox=N("section","panel");
@@ -154,18 +250,28 @@ globalThis.renderAvPeruDemo = async function renderAvPeruDemo(ctx) {
       buildTable(["Producto","SKU","Precio","Stock","Mínimo","Estado"],invRows)));
 
     area.append(sectionTitle("Pedidos", "Confirmar reserva stock en una sola transacción."));
-    const orderRows=data.orders.map(o => [
-      "#"+o.id,
-      o.customer_alias,
-      o.product_name+" × "+o.quantity,
-      money(o.total_cents),
-      chip(o.status==="PENDING"?"PENDIENTE":"CONFIRMADO",o.status==="PENDING"?"blocked":"approved"),
-      o.status==="PENDING"?
-        button("✓ Confirmar",()=>action(
-          "/api/demo/orders/confirm",{orderId:o.id},
-          "Pedido #"+o.id+" confirmado: se descontó stock y se generó una notificación simulada."
-        ),"button primary") : N("span","muted","Stock reservado")
-    ]);
+    const orderRows=data.orders.map(o => {
+      const lines=N("div","demo-order-lines");
+      for (const item of o.items || []) {
+        const row=N("div","demo-order-line");
+        add(row,N("span","",item.name+" × "+item.quantity),
+          N("small","muted",money(item.lineTotalCents)));
+        lines.append(row);
+      }
+      if (!(o.items || []).length) lines.append(N("span","muted","Sin ítems registrados"));
+      return [
+        "#"+o.id,
+        o.customer_alias,
+        lines,
+        money(o.total_cents),
+        chip(o.status==="PENDING"?"PENDIENTE":"CONFIRMADO",o.status==="PENDING"?"blocked":"approved"),
+        o.status==="PENDING"?
+          button("✓ Confirmar",()=>action(
+            "/api/demo/orders/confirm",{orderId:o.id},
+            "Pedido #"+o.id+" confirmado: se reservó el stock de todas sus líneas."
+          ),"button primary") : N("span","muted","Stock reservado")
+      ];
+    });
     area.append(panel("Órdenes registradas",data.orders.length+" últimas",
       orderRows.length ? buildTable(["ID","Cliente","Detalle","Total","Estado","Acción"],orderRows) :
         N("div","empty","Todavía no hay pedidos. Registra uno con el formulario superior.")));
