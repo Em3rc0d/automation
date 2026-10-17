@@ -139,6 +139,14 @@ function renderOverview() {
     metric("Instalaciones con bloqueos", items.filter(x => !x.ready).length, "Pendientes de configuración / evidencia")
   );
   root.append(cards);
+  const sim = state.overview.tenantSeed?.simulationSummary;
+  if (sim) {
+    const strip = N("div", "notice");
+    strip.append(N("span", "notice-icon", "ⓘ"));
+    strip.append(N("span", "", "Pruebas locales del tenant " + state.overview.tenantSeed.tenantId +
+      ": " + sim.passed + "/" + sim.tested + " completadas. Solo simulación con datos sintéticos; ninguna automatización está activa en proveedores reales."));
+    root.append(strip);
+  }
   const grid = N("div", "grid-two");
   const activity = N("div");
   const rows = items.slice(0, 9).map(item => [
@@ -475,11 +483,14 @@ function renderPortal() {
         nameCell(x), x.domain.replaceAll("_", " · "),
         badge(x.state === "DESIGN_ONLY" ? "POR DESARROLLAR" : x.state,
           x.state === "DESIGN_ONLY" ? "draft" : "blocked"),
+        x.installable ? badge(x.localSimulationStatus === "SIMULATION_PASS" ? "LOCAL OK" : "SIN PRUEBA LOCAL",
+          x.localSimulationStatus === "SIMULATION_PASS" ? "approved" : "blocked") :
+          N("span", "muted", "No implementada"),
         x.installable ? button("Configurar →", () => openDetail(tenant, x.key)) :
           N("span", "muted", "Sin runtime aprobado")
       ]);
       view.replaceChildren(panel("Automatizaciones de " + tenant, filtered.length + " resultados",
-        rows.length ? table(["Automatización", "Área", "Estado real", ""], rows) :
+        rows.length ? table(["Automatización", "Área", "Estado de instalación", "Prueba local", ""], rows) :
           empty("Sin resultados", "Prueba otra búsqueda.")));
     }
     search.addEventListener("input", fill);
