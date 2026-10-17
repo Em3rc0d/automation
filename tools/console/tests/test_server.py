@@ -155,6 +155,44 @@ class APIIntegrationTests(unittest.TestCase):
             self.data.update_config("client-test", "LEAD_INTAKE_AUTOMATION",
                                     conf["config"], conf["configVersion"])
 
+    def test_07_restaurant_end_to_end_api(self):
+        status, initial = self.request("/api/demo/state")
+        self.assertEqual(status, 200)
+        self.assertFalse(initial["productionClaim"])
+        self.assertEqual(len(initial["menu"]), 5)
+        status, denied = self.request("/api/demo/orders", "POST",
+                                      {"customerAlias":"Mesa demo","sku":"WANTAN","quantity":4},
+                                      None, self.base)
+        self.assertEqual(status, 403)
+        status, order = self.request("/api/demo/orders", "POST",
+                                     {"customerAlias":"Mesa demo","sku":"WANTAN","quantity":4},
+                                     self.token, self.base)
+        self.assertEqual(status, 201)
+        status, outcome = self.request("/api/demo/orders/confirm", "POST",
+                                      {"orderId":order["orderId"]},self.token,self.base)
+        self.assertEqual(status, 200)
+        self.assertEqual(outcome["lowStockSkus"], ["WANTAN"])
+        status, again = self.request("/api/demo/orders/confirm", "POST",
+                                     {"orderId":order["orderId"]},self.token,self.base)
+        self.assertEqual(status, 409)
+        status, ticket = self.request("/api/demo/tickets", "POST",
+                                     {"subject":"Demora ficticia","detail":"Verificar pedido de prueba",
+                                      "orderId":order["orderId"]},
+                                     self.token,self.base)
+        self.assertEqual(status, 201)
+        _, latest = self.request("/api/demo/state")
+        self.assertEqual(latest["metrics"]["confirmed"],1)
+        self.assertEqual(latest["metrics"]["alerts"],1)
+        self.assertEqual(latest["metrics"]["openTickets"],1)
+        self.assertEqual(next(x["stock"] for x in latest["menu"] if x["sku"]=="WANTAN"),1)
+        self.assertTrue(all(x["state"]=="SIMULATED" for x in latest["outbox"]))
+
+    def test_08_runtime_preflight_exposes_actionable_status(self):
+        status, info = self.request("/api/runtime-preflight")
+        self.assertEqual(status, 200)
+        self.assertIn("available", info)
+        self.assertIn("code", info)
+
 
 if __name__ == "__main__":
     unittest.main()
