@@ -164,3 +164,23 @@ dialog input,dialog select{width:100%}
 @media(max-width:900px){.demo-main-grid{grid-template-columns:1fr}}
 
 .tenant-roadmap thead th{position:sticky;top:0;background:#fafcff}
+
+/* Multi-item order cart. One order can contain many SKU lines. */
+.demo-item-picker{display:grid;grid-template-columns:minmax(0,1fr) 100px auto;align-items:end;gap:10px}
+.demo-item-picker .field{min-width:0}
+.demo-item-picker select{width:100%;min-width:0}
+.demo-add-item{white-space:nowrap}
+.demo-cart-body{border:1px solid #e3e9f2;border-radius:10px;overflow:hidden;margin-top:3px}
+.demo-cart-body th,.demo-cart-body td{padding:11px 9px}
+.demo-cart-body th:first-child,.demo-cart-body td:first-child{padding-left:13px}
+.demo-cart-body td strong{font-size:11px;font-weight:650}
+.demo-cart-qty{width:64px;min-width:60px;padding:8px 6px;text-align:center}
+.demo-cart-empty{padding:16px;color:#8795a8;font-size:12px;margin:0;line-height:1.55}
+.demo-cart-total{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-top:1px solid #e7edf6;font-size:13px;color:#53647d}
+.demo-cart-total strong{font-size:19px;color:#1e2f49}
+.demo-order-lines{display:flex;flex-direction:column;gap:8px;min-width:180px}
+.demo-order-line{display:flex;gap:15px;justify-content:space-between;align-items:center}
+.demo-order-line:not(:last-child){padding-bottom:7px;border-bottom:1px solid #eef2f8}
+.demo-order-line span{min-width:135px;flex:1}
+.demo-order-line small{white-space:nowrap}
+@media(max-width:560px){.demo-item-picker{grid-template-columns:minmax(0,1fr) 80px}.demo-add-item{grid-column:1/-1}.demo-cart-body{overflow-x:auto}.demo-order-line{flex-wrap:wrap}}
