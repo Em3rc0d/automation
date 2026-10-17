@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -68,6 +69,51 @@ FIXTURES: dict[str, dict] = {
 }
 
 
+def node_subprocess_environment() -> dict[str, str]:
+    """Preserve Windows runtime environment without passing arbitrary credentials."""
+    allowed = {"PATH", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT",
+               "TEMP", "TMP", "USERPROFILE", "APPDATA", "LOCALAPPDATA",
+               "HOMEDRIVE", "HOMEPATH", "SystemDrive", "HOME", "TMPDIR"}
+    # Environment names on Windows are case-insensitive; preserve casing.
+    env = {name: value for name, value in os.environ.items()
+           if name.upper() in {x.upper() for x in allowed}}
+    env["NODE_ENV"] = "test"
+    return env
+
+
+def runtime_preflight() -> dict:
+    executable = shutil.which("node")
+    if not executable:
+        return {
+            "available": False, "code": "NODE_NOT_FOUND",
+            "message": "No se encontró Node.js en PATH. Instala Node.js 20+ y abre una nueva terminal.",
+        }
+    try:
+        check = subprocess.run(
+            [executable, "--version"], cwd=ROOT, capture_output=True,
+            text=True, encoding="utf-8", errors="replace", timeout=8,
+            env=node_subprocess_environment(), check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return {
+            "available": False, "code": "NODE_LAUNCH_FAILED",
+            "message": "Node.js está en PATH pero Windows no consigue iniciarlo.",
+        }
+    match = re.fullmatch(r"v(\d+)\.\d+\.\d+", check.stdout.strip())
+    if check.returncode != 0 or not match:
+        return {
+            "available": False, "code": "NODE_VERSION_FAILED",
+            "message": "No fue posible verificar la versión de Node.js.",
+        }
+    if int(match.group(1)) < 20:
+        return {
+            "available": False, "code": "NODE_TOO_OLD",
+            "message": "Se requiere Node.js 20+ para los 12 runtimes; actualiza tu versión.",
+            "version": check.stdout.strip(),
+        }
+    return {"available": True, "code": "OK", "version": check.stdout.strip()}
+
+
 def simulate(bundle: Path) -> dict:
     """Run canonical approved code with in-memory adapters; no external side effects."""
     bundle = Path(bundle).resolve()
@@ -76,9 +122,10 @@ def simulate(bundle: Path) -> dict:
     tenant = installation["tenantId"]
     if key not in FIXTURES or installation.get("runtimeProfile") != "zero-deps-node-v1":
         raise ValueError("Only certified zero-deps approved baselines can be simulated")
+    preflight = runtime_preflight()
+    if not preflight["available"]:
+        raise RuntimeError(preflight["code"] + ": " + preflight["message"])
     node = shutil.which("node")
-    if node is None:
-        raise RuntimeError("Node.js 20+ is required for a local workflow simulation")
     fixture = {**FIXTURES[key], "clock": CLOCK, "asOf": CLOCK,
                "asOfDate": DATE, "simulationCostPerMessagePen": 0}
     # Launch a fixed executable/script with a static fixture; never accept user paths.
@@ -88,13 +135,23 @@ def simulate(bundle: Path) -> dict:
         try:
             proc = subprocess.run(
                 [node, str(RUNNER), "--bundle", str(bundle), "--fixture", str(fixture_path)],
-                cwd=ROOT, capture_output=True, text=True, timeout=20, check=False,
-                env={"PATH": os.environ.get("PATH", ""), "NODE_ENV": "test"},
+                cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                errors="replace", stdin=subprocess.DEVNULL, timeout=20, check=False,
+                env=node_subprocess_environment(),
             )
         except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("Local simulation exceeded 20 seconds") from exc
+            raise RuntimeError("SIMULATION_TIMEOUT: la ejecución local excedió 20 segundos") from exc
+        except OSError as exc:
+            raise RuntimeError("NODE_LAUNCH_FAILED: no se pudo iniciar el proceso Node.js") from exc
     if proc.returncode != 0:
-        raise RuntimeError("Local simulation failed; see operator CI/runbook (no provider was contacted)")
+        # Do not reflect provider payloads or arbitrary stderr in the browser.
+        if "ERR_MODULE_NOT_FOUND" in proc.stderr or "MODULE_NOT_FOUND" in proc.stderr:
+            reason = "MODULE_NOT_FOUND"
+        elif "unsupported approved workflow" in proc.stderr:
+            reason = "UNSUPPORTED_WORKFLOW"
+        else:
+            reason = "RUNNER_EXIT_NONZERO"
+        raise RuntimeError(f"{reason}: el runner local terminó con código {proc.returncode}")
     if len(proc.stdout) > 1_000_000:
         raise RuntimeError("Local simulation output limit exceeded")
     result = json.loads(proc.stdout)
