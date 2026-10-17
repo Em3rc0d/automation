@@ -8,6 +8,7 @@ and notifications are traceable local records; no outbound communication.
 from __future__ import annotations
 
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -110,12 +111,20 @@ class RestaurantDemo:
                 VALUES (?,?,?,?,?)
             """, MENU)
 
-    def connect(self) -> sqlite3.Connection:
+    @contextmanager
+    def connect(self):
         db = sqlite3.connect(self.db_path, timeout=10)
-        db.row_factory = sqlite3.Row
-        db.execute("PRAGMA foreign_keys=ON")
-        db.execute("PRAGMA busy_timeout=10000")
-        return db
+        try:
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("PRAGMA busy_timeout=10000")
+            yield db
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
+        finally:
+            db.close()
 
     @staticmethod
     def event(db: sqlite3.Connection, kind: str, message: str,
