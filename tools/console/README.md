@@ -65,10 +65,47 @@ python3 tools/console/server.py --installations-root .local/installations --port
 - Crear tickets y consultar un historial persistente de eventos.
 - Reiniciar solo el escenario ficticio desde la UI para repetir la prueba.
 
-**Prueba sugerida**: "Wantán frito" × 4. El stock inicia en 5; al confirmar
-pasa a 1, se registra un evento `LOW_STOCK_ALERT`, aparece una alerta visible
-y un mensaje simulado. Confirmar el mismo pedido una segunda vez debe fallar
-sin descontar stock adicional.
+### Pedidos con múltiples ítems
+
+Un pedido posee una **cabecera única** (cliente, estado, total) y **una o
+más líneas** con SKU, cantidad, precio unitario al momento de crear el
+pedido y subtotal. Desde el navegador, selecciona productos, agrégalos
+al carrito, modifica cantidades o quita líneas; el total se calcula
+automáticamente. El servidor valida todas las líneas y determina precios
+desde el menú, no desde valores enviados por el navegador.
+
+**Prueba sugerida**: agrega **Wantán × 4**, **Aeropuerto × 4** y
+**Gaseosa × 2** al mismo pedido. Antes de confirmar, revisa una sola
+orden pendiente por **S/ 154.00**, con **3 líneas**. Al confirmar:
+
+- Wantán: 5 → 1 (alerta por mínimo 2).
+- Aeropuerto: 6 → 2 (alerta por mínimo 2).
+- Gaseosa: 9 → 7 (sin alerta).
+- Se registran 3 movimientos de inventario, 2 alertas y un único
+  `ORDER_CONFIRMED` con una notificación simulada.
+
+Si un producto está sin stock, **ninguno de los ítems del pedido se
+descuenta**: el pedido sigue pendiente hasta resolver el bloqueo.
+Una segunda confirmación del mismo pedido tampoco descuenta dos veces.
+
+La API principal es `POST /api/demo/orders`:
+
+```json
+{
+  "customerAlias": "Mesa 3 (demo)",
+  "items": [
+    {"sku": "WANTAN", "quantity": 4},
+    {"sku": "AEROPUERTO", "quantity": 4},
+    {"sku": "GASEOSA", "quantity": 2}
+  ]
+}
+```
+
+Se mantiene compatibilidad temporal con solicitudes antiguas
+`{"sku":"WANTAN","quantity":4}` para no romper pruebas previas.
+El inventario ficticio actualmente representa **productos terminados**
+(platillos/bebidas), no recetas ni consumo de ingredientes; para una
+cocina productiva habrá que registrar insumos y recetas (BOM).
 
 La base está en `.local/console/restaurant-demo.sqlite3`, ignorada por Git.
 Los datos son **100 % sintéticos**, no ventas reales del Chifa AV Perú.
