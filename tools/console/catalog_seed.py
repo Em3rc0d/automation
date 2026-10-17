@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -71,14 +72,23 @@ def _load_source(path: Path) -> tuple[list[dict], str]:
     return entries, hashlib.sha256(raw).hexdigest()
 
 
-def _connect(db_path: Path) -> sqlite3.Connection:
+@contextmanager
+def _connect(db_path: Path):
+    """Commit/rollback AND explicitly close handles (critical on Windows)."""
     if db_path.exists() and db_path.is_symlink():
         raise ValueError("Refusing to seed through a symlinked catalog DB")
     db_path.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(db_path, timeout=10)
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA busy_timeout=10000")
-    return db
+    try:
+        db.row_factory = sqlite3.Row
+        db.execute("PRAGMA busy_timeout=10000")
+        yield db
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 def seed_catalog(source_path: Path = SOURCE, db_path: Path = DEFAULT_DB) -> dict:
