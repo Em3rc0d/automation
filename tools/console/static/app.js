@@ -144,7 +144,10 @@ function renderOverview() {
     const strip = N("div", "notice");
     strip.append(N("span", "notice-icon", "ⓘ"));
     strip.append(N("span", "", "Pruebas locales del tenant " + state.overview.tenantSeed.tenantId +
-      ": " + sim.passed + "/" + sim.tested + " completadas. Solo simulación con datos sintéticos; ninguna automatización está activa en proveedores reales."));
+      ": " + sim.passed + "/" + sim.tested + " completadas, " +
+      (sim.skipped || 0) + " omitidas. " +
+      (sim.reason ? "Diagnóstico: " + sim.reason + ". " : "") +
+      "Solo simulación con datos sintéticos; ninguna automatización está activa en proveedores reales."));
     root.append(strip);
   }
   const grid = N("div", "grid-two");
@@ -387,8 +390,10 @@ async function simulateTenant(tenant, action) {
   try {
     const result = await api("/api/simulate-all", "POST", {tenantId:tenant});
     showFlash("Simulaciones locales: " + result.passed + "/" + result.tested +
-      " correctas; " + result.failed + " por revisar. No hay activaciones en producción.",
-      result.failed > 0);
+      " correctas; " + result.failed + " por revisar; " + (result.skipped || 0) +
+      " omitidas. " + (result.message || result.firstFailure || "") +
+      " No hay activaciones en producción.",
+      result.failed > 0 || (result.skipped || 0) > 0);
     return result;
   } catch (error) {
     showFlash(error.message, true);
