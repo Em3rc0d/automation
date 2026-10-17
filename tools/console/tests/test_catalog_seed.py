@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import sqlite3
+from contextlib import closing
 import tempfile
 import unittest
 from pathlib import Path
@@ -36,7 +37,7 @@ class CatalogSeedTests(unittest.TestCase):
         self.assertEqual(again["updated"], 0)
         self.assertEqual(again["unchanged"], 233)
         self.assertEqual(again["withdrawn"], 0)
-        with sqlite3.connect(self.db) as db:
+        with closing(sqlite3.connect(self.db)) as db:
             self.assertEqual(db.execute("SELECT COUNT(*) FROM automation_catalog").fetchone()[0], 233)
 
     def test_changes_upsert_and_removed_entries_are_retained_inactive(self):
@@ -59,7 +60,7 @@ class CatalogSeedTests(unittest.TestCase):
         self.assertNotIn(removed_key, {x["key"] for x in catalog})
         self.assertEqual(next(x["name"] for x in catalog if x["key"] == changed_key),
                          "New name after versioned registry update")
-        with sqlite3.connect(self.db) as db:
+        with closing(sqlite3.connect(self.db)) as db:
             self.assertEqual(db.execute(
                 "SELECT source_present FROM automation_catalog WHERE workflow_key=?",
                 (removed_key,)).fetchone()[0], 0)
