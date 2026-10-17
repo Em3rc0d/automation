@@ -147,6 +147,7 @@ dialog input,dialog select{width:100%}
 .tenant-roadmap .panel{margin-top:12px}
 .tenant-roadmap .table-wrap{max-height:620px;overflow-y:auto}
 .demo-pill-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.demo-controls{display:flex;justify-content:flex-end;margin-bottom:15px}
 .demo-main-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:25px}
 .demo-workspace>.panel{margin-bottom:25px}
 .demo-workspace>.cards{margin-top:8px}
