@@ -142,30 +142,66 @@ class RestaurantDemo:
             VALUES (?,?,?,'SIMULATED',?)
         """, (kind, destination, message, now()))
 
-    def create_order(self, alias: object, sku: object, quantity: object) -> dict:
+    def create_order(self, alias: object, items: object, quantity: object = None) -> dict:
+        """Create one order with one or many lines; snapshot each catalog price.
+
+        Legacy create_order(alias, sku, quantity) remains supported for
+        existing test clients. Clients may NOT supply prices or totals.
+        """
         alias = required_text(alias, "Nombre de prueba", 64)
-        sku = required_text(sku, "Producto", 32)
-        quantity = proper_int(quantity, "Cantidad", 50)
+        if isinstance(items, str) and quantity is not None:
+            items = [{"sku": items, "quantity": quantity}]
+        if not isinstance(items, list) or not 1 <= len(items) <= 30:
+            raise DemoError("Un pedido debe contener entre 1 y 30 líneas de productos.")
+
+        # Merge duplicate SKUs in a single order, enforce the per-SKU cap.
+        quantities: dict[str, int] = {}
+        for index, item in enumerate(items):
+            if not isinstance(item, dict) or set(item) != {"sku", "quantity"}:
+                raise DemoError(f"Ítem {index + 1}: se requiere solo SKU y cantidad.")
+            sku = required_text(item["sku"], "Producto", 32)
+            count = proper_int(item["quantity"], "Cantidad", 50)
+            quantities[sku] = quantities.get(sku, 0) + count
+            if quantities[sku] > 50:
+                raise DemoError(f"{sku}: cantidad acumulada máxima 50 unidades.")
+
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            product = db.execute(
-                "SELECT sku, name, price_cents FROM demo_menu WHERE sku=?", (sku,)
-            ).fetchone()
-            if product is None:
-                raise DemoError("Producto no disponible en el menú.", 404)
-            total = product["price_cents"] * quantity
+            order_lines: list[dict] = []
+            total = 0
+            for sku, count in quantities.items():
+                product = db.execute(
+                    "SELECT sku, name, price_cents FROM demo_menu WHERE sku=?", (sku,)
+                ).fetchone()
+                if product is None:
+                    raise DemoError(f"Producto no disponible en el menú: {sku}.", 404)
+                line_total = product["price_cents"] * count
+                total += line_total
+                order_lines.append({
+                    "sku": sku, "name": product["name"], "quantity": count,
+                    "unitPriceCents": product["price_cents"], "lineTotalCents": line_total
+                })
+            if total > 100_000_000:
+                raise DemoError("El total excede el límite de esta demostración.")
+
             cur = db.execute("""
                 INSERT INTO demo_orders(customer_alias,status,total_cents,created_at)
                 VALUES (?,'PENDING',?,?)
             """, (alias, total, now()))
             order_id = cur.lastrowid
-            db.execute("""
-                INSERT INTO demo_order_lines(order_id,sku,quantity,unit_price_cents)
-                VALUES (?,?,?,?)
-            """, (order_id, sku, quantity, product["price_cents"]))
+            for line in order_lines:
+                db.execute("""
+                    INSERT INTO demo_order_lines(order_id,sku,quantity,unit_price_cents)
+                    VALUES (?,?,?,?)
+                """, (order_id, line["sku"], line["quantity"], line["unitPriceCents"]))
+            description = ", ".join(
+                f"{line['quantity']} × {line['name']}" for line in order_lines
+            )
             self.event(db, "ORDER_RECEIVED",
-                       f"Pedido #{order_id} recibido: {quantity} × {product['name']}.", order_id)
+                       f"Pedido #{order_id} recibido ({len(order_lines)} productos): "
+                       f"{description}.", order_id)
         return {"orderId": order_id, "status": "PENDING",
+                "itemCount": len(order_lines), "items": order_lines,
                 "totalCents": total, "productionClaim": False}
 
     def confirm_order(self, order_id: object) -> dict:
@@ -269,13 +305,35 @@ class RestaurantDemo:
                 "SELECT sku,name,price_cents,stock,low_at FROM demo_menu ORDER BY name"
             )]
             orders = [dict(x) for x in db.execute("""
-                SELECT o.id,o.customer_alias,o.status,o.total_cents,o.created_at,
-                       l.sku,l.quantity,m.name AS product_name
-                FROM demo_orders o
-                JOIN demo_order_lines l ON l.order_id=o.id
-                JOIN demo_menu m ON m.sku=l.sku
-                ORDER BY o.id DESC LIMIT 40
+                SELECT id,customer_alias,status,total_cents,created_at,confirmed_at
+                  FROM demo_orders ORDER BY id DESC LIMIT 40
             """)]
+            if orders:
+                placeholders = ",".join("?" for _ in orders)
+                lines = db.execute(f"""
+                    SELECT l.order_id,l.sku,l.quantity,l.unit_price_cents,
+                           m.name AS product_name
+                    FROM demo_order_lines l
+                    JOIN demo_menu m ON m.sku=l.sku
+                    WHERE l.order_id IN ({placeholders})
+                    ORDER BY l.order_id DESC,l.rowid
+                """, tuple(order["id"] for order in orders)).fetchall()
+                by_order: dict[int, list[dict]] = {
+                    order["id"]: [] for order in orders
+                }
+                for line in lines:
+                    by_order[line["order_id"]].append({
+                        "sku": line["sku"], "name": line["product_name"],
+                        "quantity": line["quantity"],
+                        "unitPriceCents": line["unit_price_cents"],
+                        "lineTotalCents": line["unit_price_cents"] * line["quantity"]
+                    })
+                for order in orders:
+                    order["items"] = by_order[order["id"]]
+                    order["itemCount"] = len(order["items"])
+                    order["unitCount"] = sum(
+                        item["quantity"] for item in order["items"]
+                    )
             alerts = [dict(x) for x in db.execute(
                 "SELECT id,sku,order_id,message,created_at FROM demo_alerts ORDER BY id DESC LIMIT 30"
             )]
