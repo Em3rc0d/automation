@@ -11,6 +11,7 @@ import importlib.util
 import json
 import re
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,6 +44,21 @@ CREATE INDEX IF NOT EXISTS tenant_workflow_plans_lookup_idx
  ON tenant_workflow_plans(tenant_id, source_present, stage_snapshot);
 """
 
+@contextmanager
+def _connect(db_path: Path):
+    """Never leave SQLite files locked after closing a Windows test/server request."""
+    db = sqlite3.connect(db_path, timeout=10)
+    try:
+        db.row_factory = sqlite3.Row
+        db.execute("PRAGMA busy_timeout=10000")
+        yield db
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
 
 def validate_tenant(tenant: str) -> str:
     if not isinstance(tenant, str) or not TENANT_PATTERN.fullmatch(tenant):
@@ -64,9 +80,7 @@ def seed_tenant(tenant: str, db_path: Path, installations_root: Path,
         raise ValueError("Catalog seed must succeed before seeding a tenant")
     if (installations_root / tenant).is_symlink():
         raise ValueError("Tenant installation directory is a symlink")
-    with sqlite3.connect(db_path, timeout=10) as db:
-        db.row_factory = sqlite3.Row
-        db.execute("PRAGMA busy_timeout=10000")
+    with _connect(db_path) as db:
         db.executescript(DDL)
         db.execute("BEGIN IMMEDIATE")
         rows = db.execute("""
@@ -141,8 +155,7 @@ def tenant_plan(tenant: str, db_path: Path, installations_root: Path) -> dict:
     if not Path(db_path).is_file():
         return {"tenantId": tenant, "entries": [], "assignedTotal": 0,
                 "installedTotal": 0, "designOnlyTotal": 0, "productionClaim": False}
-    with sqlite3.connect(db_path) as db:
-        db.row_factory = sqlite3.Row
+    with _connect(db_path) as db:
         rows = db.execute("""
             SELECT c.workflow_key, c.version, c.name, c.domain, c.stage,
                    c.manual_work_reduced, c.runtime_profile
