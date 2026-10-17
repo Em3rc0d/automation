@@ -249,6 +249,20 @@ class RestaurantDemo:
         return {"ticketId": cur.lastrowid, "status": "OPEN",
                 "notification": "SIMULATED", "productionClaim": False}
 
+    def reset(self) -> dict:
+        """Reset only the synthetic demo database; never tenant installation files."""
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            for table in ("demo_order_lines", "demo_tickets", "demo_alerts",
+                          "demo_outbox", "demo_events", "demo_orders", "demo_menu"):
+                db.execute(f"DELETE FROM {table}")
+            db.executemany("""
+                INSERT INTO demo_menu(sku,name,price_cents,stock,low_at)
+                VALUES (?,?,?,?,?)
+            """, MENU)
+        return {"reset": True, "tenantId": "chifaavperu",
+                "onlyDemoData": True, "productionClaim": False}
+
     def state(self) -> dict:
         with self.connect() as db:
             menu = [dict(x) for x in db.execute(
