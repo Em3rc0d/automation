@@ -169,7 +169,21 @@ def tenant_plan(tenant: str, db_path: Path, installations_root: Path) -> dict:
                         state = identity.get("state", "DRAFT")
                 except (FileNotFoundError, ValueError, json.JSONDecodeError):
                     state = "INVALID_BUNDLE"
+        local_simulation = "NOT_TESTED"
+        evidence = Path(db_path).resolve().parent / "simulations" / tenant / (
+            row["workflow_key"] + ".json")
+        if approved and evidence.is_file() and not evidence.is_symlink():
+            try:
+                result = json.loads(evidence.read_text(encoding="utf-8"))
+                if (result.get("tenantId") == tenant
+                        and result.get("workflowKey") == row["workflow_key"]
+                        and result.get("evidenceType") == "LOCAL_SIMULATION"
+                        and result.get("productionEvidence") is False):
+                    local_simulation = result.get("status", "NOT_TESTED")
+            except (ValueError, OSError):
+                pass
         assigned.append({
+            "localSimulationStatus": local_simulation,
             "key": row["workflow_key"], "version": row["version"],
             "name": row["name"], "domain": row["domain"],
             "stage": row["stage"], "state": state,
