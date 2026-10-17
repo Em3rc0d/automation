@@ -507,6 +507,8 @@ def main() -> None:
                         help="Seed all 233 references + 12 DRAFT baselines for this local tenant")
     parser.add_argument("--no-tenant-seed", action="store_true",
                         help="Do not seed a client workspace on startup")
+    parser.add_argument("--skip-startup-simulations", action="store_true",
+                        help="Do not run synthetic local tests at launch")
     args = parser.parse_args()
     data = ConsoleData(args.installations_root, args.catalog_db,
                        None if args.no_tenant_seed else args.seed_tenant)
@@ -521,6 +523,15 @@ def main() -> None:
               f"{s['newDraftBundles']} new DRAFT bundles, "
               f"{s['existingBundlesPreserved']} preserved, "
               f"{s['designOnly']} design-only. No production activation.", flush=True)
+    if data.tenant_seed_summary and not args.skip_startup_simulations:
+        summary = data.simulate_all(data.tenant_seed_summary["tenantId"])
+        data.tenant_seed_summary["simulationSummary"] = {
+            "tested": summary["tested"], "passed": summary["passed"],
+            "failed": summary["failed"], "evidenceType": "LOCAL_SIMULATION",
+            "productionEvidence": False,
+        }
+        print(f"LOCAL_SIMULATION: {summary['passed']}/{summary['tested']} PASS, "
+              f"{summary['failed']} require review. No real providers.", flush=True)
     server = create_server(data, args.port)
     port = server.server_address[1]
     print(f"Operator Console LOCAL DEMO → http://127.0.0.1:{port}", flush=True)
