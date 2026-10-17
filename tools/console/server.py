@@ -492,11 +492,16 @@ def make_handler(data: ConsoleData, token: str):
                 self.guard_write()
                 action = urlsplit(self.path).path
                 if action not in ("/api/install", "/api/simulate", "/api/simulate-all",
-                                  "/api/demo/orders", "/api/demo/orders/confirm", "/api/demo/tickets"):
+                                  "/api/demo/orders", "/api/demo/orders/confirm", "/api/demo/tickets",
+                                  "/api/demo/reset"):
                     raise ConsoleError("Ruta no encontrada.", 404)
                 body = self.input()
                 if not isinstance(body, dict):
                     raise ConsoleError("Objeto JSON requerido.")
+                if action == "/api/demo/reset":
+                    if body.get("confirm") != "RESET_DEMO_ONLY":
+                        raise ConsoleError("Se requiere confirmación explícita para reiniciar la demo.")
+                    return self.json(200, data.restaurant.reset())
                 if action == "/api/demo/orders":
                     return self.json(201, data.restaurant.create_order(
                         body.get("customerAlias"), body.get("sku"), body.get("quantity")))
